@@ -25,6 +25,37 @@ android {
         resourceConfigurations += listOf("en")
     }
 
+    // Release signing config. Only wired up when the four environment
+    // variables below are populated — in local dev + on PR builds they're
+    // unset so Gradle skips the block and `assembleRelease` fails cleanly
+    // instead of silently signing with the debug key. In CI (release.yml)
+    // we decode the keystore from a GitHub Secret into $RUNNER_TEMP and
+    // export the paths before invoking `./gradlew :app:bundleRelease`.
+    val releaseKeystorePath: String? = System.getenv("ONLYTRUSTED_RELEASE_KEYSTORE")
+    val releaseKeystorePassword: String? = System.getenv("ONLYTRUSTED_RELEASE_KEYSTORE_PASSWORD")
+    val releaseKeyAlias: String? = System.getenv("ONLYTRUSTED_RELEASE_KEY_ALIAS")
+    val releaseKeyPassword: String? = System.getenv("ONLYTRUSTED_RELEASE_KEY_PASSWORD")
+    val hasReleaseSigningEnv = !releaseKeystorePath.isNullOrBlank() &&
+        !releaseKeystorePassword.isNullOrBlank() &&
+        !releaseKeyAlias.isNullOrBlank() &&
+        !releaseKeyPassword.isNullOrBlank()
+
+    if (hasReleaseSigningEnv) {
+        signingConfigs {
+            create("release") {
+                storeFile = file(releaseKeystorePath!!)
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                // Enable v1 (JAR), v2 (APK), v3 (APK rotation), and v4 (fs-verity).
+                enableV1Signing = true
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -33,6 +64,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (hasReleaseSigningEnv) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         debug {
             isMinifyEnabled = false

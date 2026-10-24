@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: 2026 VanPaulTek Inc
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# RFC 9116 security contact file for OnlyTrusted.
+# This file is served at https://vanpaultek.com/.well-known/security.txt
+# once the site is live. It also lives at the repository root under
+# `.well-known/security.txt` so researchers who find the repo first can
+# reach us without hunting through issues.
+
+Contact: mailto:security@vanpaultek.com
+Contact: mailto:admin@vanpaultek.com
+Expires: 2027-10-24T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://vanpaultek.com/.well-known/security.txt
+Policy: https://github.com/Vanpaultek/OnlyTrusted/blob/main/SECURITY.md
+Acknowledgments: https://github.com/Vanpaultek/OnlyTrusted/blob/main/SECURITY.md#credits

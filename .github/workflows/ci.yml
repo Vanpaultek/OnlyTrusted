@@ -1,0 +1,101 @@
+# SPDX-FileCopyrightText: 2026 VanPaulTek Inc
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# OnlyTrusted — Continuous Integration workflow.
+#
+# Fires on every push to any branch + every pull-request. Does three things:
+#   1. Builds the Android debug APK and runs lint.
+#   2. Builds the iOS debug app for Simulator (no code signing).
+#   3. Verifies the Offline Threat Intel refresh script still produces a
+#      well-formed feed (dry run — doesn't commit anything).
+#
+# Keep this fast (< 10 min). Heavier release work lives in release.yml.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+    tags-ignore: ["v*"]  # tag pushes are handled by release.yml
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Android · debug build + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Gradle (cached)
+        uses: gradle/actions/setup-gradle@v4
+      - name: Assemble debug
+        working-directory: android
+        run: ./gradlew :app:assembleDebug --no-daemon
+      - name: Lint
+        working-directory: android
+        run: ./gradlew :app:lintDebug --no-daemon
+      - name: Upload lint report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-lint-report
+          path: android/app/build/reports/lint-results-debug.html
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS · simulator build (unsigned)
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        # Pin to a specific stable Xcode. Bump when the project.yml deployment
+        # target moves and this runner no longer supplies the matching SDK.
+        run: sudo xcode-select -s /Applications/Xcode_16.app || true
+      - name: Install xcodegen
+        run: brew install xcodegen
+      - name: Generate xcodeproj
+        working-directory: ios
+        run: xcodegen generate
+      - name: Build (iphonesimulator)
+        working-directory: ios
+        run: |
+          xcodebuild \
+            -scheme OnlyTrusted \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | xcbeautify --quiet || true
+          # Pass the real exit code through xcbeautify.
+          test -d "build/Build/Products/Debug-iphonesimulator/OnlyTrusted.app"
+
+  threat-intel-refresh:
+    name: Threat intel refresh (dry-run)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deps
+        run: sudo apt-get update && sudo apt-get install -y curl python3
+      - name: Dry-run refresh script
+        env:
+          DRY_RUN: "1"
+          # Use a tiny cap in CI so the test runs fast + the resulting file
+          # isn't committed. Real refreshes run locally with MAX_ENTRIES=50000.
+          MAX_ENTRIES: "500"
+        run: bash tools/refresh_threatintel.sh

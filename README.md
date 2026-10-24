@@ -6,6 +6,8 @@ A privacy-focused Android app that gives you visibility and control over who tou
 
 > **If you deploy a modified version of this software — including over a network — you must publish the full source of your modifications to its users under the same license.** This is the AGPL-3.0 network clause. It prevents commercial forks from stripping the privacy guarantees without their users seeing the code.
 
+**Security & release verification.** Report vulnerabilities privately via [`SECURITY.md`](SECURITY.md). Every tagged release ships with a CycloneDX SBOM + SLSA Build Provenance attestation — verify with `gh attestation verify OnlyTrusted-<tag>.aab -R Vanpaultek/OnlyTrusted` so you can confirm the published artifact was built by [this exact CI workflow](.github/workflows/release.yml) from a specific commit SHA.
+
 ## What it does (and what it doesn't)
 
 **What it does**
