@@ -120,30 +120,17 @@ fun DashboardScreen(
     val runtime by vm.runtimeState.collectAsStateWithLifecycle()
     var showHonestLimitsSheet by remember { mutableStateOf(false) }
     var showNoContactAlert by remember { mutableStateOf(false) }
-    // Distress signal 3-second cancel countdown (replaces the old single-contact
-    // AlertDialog confirm — see DistressCountdownOverlay for the UX rationale and
-    // DistressSender for how we broadcast to every emergency contact).
-    var showDistressCountdown by remember { mutableStateOf(false) }
-    var distressResultMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    // Distress Signal: the countdown overlay + dispatcher + result dialog all live at
+    // MainActivity level so they work above any screen (triggered by SOS button, shake
+    // from MainActivity, or volume-down 4× from MainActivity.onKeyDown). This Dashboard
+    // just publishes to DistressTriggerBus when the user taps the FAB.
 
     // F4 weekly digest + F5 refresher state.
     var showWeeklyDigest by remember { mutableStateOf(false) }
     var showHonestLimitsRefresher by remember { mutableStateOf(false) }
     var weeklyCallsBlocked by remember { mutableStateOf(0) }
     var weeklyTextsBlocked by remember { mutableStateOf(0) }
-
-    // Shake-to-trigger: start accelerometer while Dashboard is in composition, stop on
-    // leave. Fires the same countdown as the SOS FAB. Can be disabled per-user via
-    // Settings → Panic → "Shake phone to trigger SOS" toggle (default ON).
-    DisposableEffect(Unit) {
-        val detector = if (com.onlytrusted.app.ui.distress.ShakeDetector.Prefs.isEnabled(context)) {
-            com.onlytrusted.app.ui.distress.ShakeDetector(
-                onShakePatternDetected = { showDistressCountdown = true }
-            ).also { it.start(context) }
-        } else null
-        onDispose { detector?.stop() }
-    }
 
     LaunchedEffect(Unit) {
         vm.refreshRuntime()
@@ -259,7 +246,7 @@ fun DashboardScreen(
                 if (list.isEmpty()) {
                     showNoContactAlert = true
                 } else {
-                    showDistressCountdown = true
+                    com.onlytrusted.app.ui.distress.DistressTriggerBus.fire()
                 }
             },
             containerColor = DangerDark,
@@ -276,67 +263,6 @@ fun DashboardScreen(
         }
     }
 
-    if (showDistressCountdown) {
-        com.onlytrusted.app.ui.distress.DistressCountdownOverlay(
-            onCancel = { showDistressCountdown = false },
-            onFire = {
-                showDistressCountdown = false
-                scope.launch {
-                    // 1. Best-effort one-shot location fetch (3 s timeout).
-                    val loc = com.onlytrusted.app.ui.distress.LocationFetcher.fetchOnce(context)
-                    // 2. Pair name + first-number per trusted contact for the recipient list.
-                    val contacts = app.trustedContacts.allContacts.first()
-                    val recipients = contacts.mapNotNull { c ->
-                        c.numbers.firstOrNull()?.let { num ->
-                            com.onlytrusted.app.ui.distress.DistressRecipient(
-                                phoneNumber = num.normalisedNumber,
-                                displayName = c.contact.displayName
-                            )
-                        }
-                    }
-                    // 3. Build the pre-filled distress message.
-                    val ownerName = com.onlytrusted.app.ui.duress.DuressState.ownerName(context)
-                    val body = com.onlytrusted.app.ui.distress.DistressMessageBuilder
-                        .build(ownerName = ownerName, location = loc)
-                    // 4. Fire SMS composer (multi-recipient) + auto-open dialer for first contact.
-                    val result = com.onlytrusted.app.ui.distress.DistressSender.fire(
-                        context = context,
-                        recipients = recipients,
-                        body = body,
-                        alsoAutoDialFirst = true
-                    )
-                    // 5. Also log a SecurityEvent so the audit trail shows the signal fired.
-                    app.repository.log(
-                        type = com.onlytrusted.app.data.db.entities.SecurityEvent.TYPE_DISTRESS_FIRED,
-                        packageName = null,
-                        detail = "Distress signal fired to ${recipients.size} recipient(s); " +
-                            "location=${if (loc != null) "yes" else "unavailable"}"
-                    )
-                    distressResultMessage = when (result) {
-                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.Dispatched ->
-                            "Distress alert ready — tap Send in Messages."
-                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.NoRecipients ->
-                            "No emergency contacts configured."
-                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.ComposerFailed ->
-                            "Couldn't open Messages. Dial a trusted contact manually."
-                    }
-                }
-            }
-        )
-    }
-    distressResultMessage?.let { msg ->
-        AlertDialog(
-            onDismissRequest = { distressResultMessage = null },
-            title = { Text("EMERGENCY alert", color = PrimaryTextDark) },
-            text = { Text(msg, color = SecondaryTextDark) },
-            confirmButton = {
-                TextButton(onClick = { distressResultMessage = null }) {
-                    Text("OK", color = BrandAccentDark)
-                }
-            },
-            containerColor = MidnightCard
-        )
-    }
     if (showNoContactAlert) {
         AlertDialog(
             onDismissRequest = { showNoContactAlert = false },

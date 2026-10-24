@@ -7,7 +7,12 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.view.KeyEvent
 import android.view.WindowManager
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import kotlinx.coroutines.launch
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
@@ -15,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -43,6 +49,17 @@ class MainActivity : FragmentActivity() {
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { onPermissionsResult() }
+
+    // App-wide distress triggers — detectors live here so they fire from any screen,
+    // not just Dashboard. Pattern-match → DistressTriggerBus.fire() → the top-level
+    // overlay composable in setContent catches it, shows the countdown, and runs
+    // DistressDispatcher.dispatch() on fire.
+    private val shakeDetector by lazy {
+        com.onlytrusted.app.ui.distress.ShakeDetector(
+            onShakePatternDetected = { com.onlytrusted.app.ui.distress.DistressTriggerBus.fire() }
+        )
+    }
+    private val volumeDownTrigger = com.onlytrusted.app.ui.distress.VolumeDownTrigger()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -104,6 +121,21 @@ class MainActivity : FragmentActivity() {
                     onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
                 }
 
+                // App-wide Distress Signal overlay — any trigger (SOS FAB, shake,
+                // volume-down 4×) publishes to DistressTriggerBus; here we collect it
+                // and show the countdown + result dialog ABOVE whatever screen is
+                // currently rendered. Lives at Activity level so the overlay works
+                // from any route, not just Dashboard.
+                var showDistressCountdown by remember { mutableStateOf(false) }
+                var distressResult by remember { mutableStateOf<String?>(null) }
+                val activityScope = rememberCoroutineScope()
+                val distressCtx = this@MainActivity
+                LaunchedEffect(Unit) {
+                    com.onlytrusted.app.ui.distress.DistressTriggerBus.events.collect {
+                        showDistressCountdown = true
+                    }
+                }
+
                 when {
                     !splashDone || !initialStateLoaded ->
                         SplashScreen(onDone = { splashDone = true })
@@ -119,6 +151,29 @@ class MainActivity : FragmentActivity() {
                         unlocked = false
                     })
                 }
+
+                if (showDistressCountdown) {
+                    com.onlytrusted.app.ui.distress.DistressCountdownOverlay(
+                        onCancel = { showDistressCountdown = false },
+                        onFire = {
+                            showDistressCountdown = false
+                            activityScope.launch {
+                                distressResult = com.onlytrusted.app.ui.distress
+                                    .DistressDispatcher.dispatch(distressCtx)
+                            }
+                        }
+                    )
+                }
+                distressResult?.let { msg ->
+                    AlertDialog(
+                        onDismissRequest = { distressResult = null },
+                        title = { Text("EMERGENCY alert") },
+                        text = { Text(msg) },
+                        confirmButton = {
+                            TextButton(onClick = { distressResult = null }) { Text("OK") }
+                        }
+                    )
+                }
             }
         }
 
@@ -129,6 +184,32 @@ class MainActivity : FragmentActivity() {
         super.onResume()
         applyScreenshotProtection()
         maybeStartServices()
+        // Start shake detector on resume if the user hasn't disabled it. Stopped in
+        // onPause so we don't sample the accelerometer while the app is backgrounded.
+        if (com.onlytrusted.app.ui.distress.ShakeDetector.Prefs.isEnabled(this)) {
+            shakeDetector.start(this)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        shakeDetector.stop()
+    }
+
+    /**
+     * Volume-down 4× distress trigger. Fires only when the user has enabled it in
+     * Settings → Distress Signal (default OFF — swallowing a volume press is surprising).
+     * When the pattern matches we return true to consume the event; the final press
+     * does not actually change the volume. This mirrors what the user asked for:
+     * "press volume-down 4 times → SOS fires".
+     */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN &&
+            com.onlytrusted.app.ui.distress.VolumeDownTrigger.Prefs.isEnabled(this)
+        ) {
+            if (volumeDownTrigger.consume(keyCode)) return true
+        }
+        return super.onKeyDown(keyCode, event)
     }
 
     private fun applyScreenshotProtection() {
