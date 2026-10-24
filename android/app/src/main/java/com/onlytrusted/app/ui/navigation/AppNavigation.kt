@@ -123,6 +123,9 @@ sealed class Destination(val route: String, val label: String, val icon: ImageVe
     // FREE — Scam SMS Scan: cross-checks the SMS inbox against bundled scam-numbers +
     // phishing-URLs + classic scam phrases on-device.
     data object SmsScan : Destination("sms_scan", "Scam SMS Scan", Icons.Filled.Shield)
+    // FREE — Distress Signal: SOS button + shake + volume-down → multi-recipient SMS +
+    // dialer + WhatsApp group fan-out. Settings for triggers + WhatsApp group URL.
+    data object DistressSignal : Destination("distress_signal", "Distress Signal", Icons.Filled.Security)
 }
 
 private val bottomBarDestinations = listOf(
@@ -270,7 +273,8 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onOpenWeeklyDigest = { navController.navigate(Destination.WeeklyDigest.route) },
                     onOpenAdvancedBlocking = { navController.navigate(Destination.AdvancedBlocking.route) },
                     onOpenContactScan = { navController.navigate(Destination.ContactScan.route) },
-                    onOpenSmsScan = { navController.navigate(Destination.SmsScan.route) }
+                    onOpenSmsScan = { navController.navigate(Destination.SmsScan.route) },
+                    onOpenDistressSignal = { navController.navigate(Destination.DistressSignal.route) }
                 )
             }
             composable(Destination.PrivacyShield.route) {
@@ -334,6 +338,11 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
             }
             composable(Destination.SmsScan.route) {
                 com.onlytrusted.app.ui.smsscan.SmsScanScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Destination.DistressSignal.route) {
+                com.onlytrusted.app.ui.distress.DistressSettingsScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

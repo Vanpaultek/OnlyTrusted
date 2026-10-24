@@ -175,7 +175,8 @@ fun SettingsScreen(
     onOpenWeeklyDigest: () -> Unit = {},
     onOpenAdvancedBlocking: () -> Unit = {},
     onOpenContactScan: () -> Unit = {},
-    onOpenSmsScan: () -> Unit = {}
+    onOpenSmsScan: () -> Unit = {},
+    onOpenDistressSignal: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as OnlyTrustedApp
@@ -599,6 +600,16 @@ fun SettingsScreen(
                     tint = settingsBlue,
                     title = "Scam SMS Scan",
                     onClick = onOpenSmsScan
+                )
+                RowDivider()
+                // Distress Signal — SOS button + shake + volume-down 4× triggers.
+                // Multi-recipient SMS with current location + phone dialer + WhatsApp
+                // group fan-out. See ui/distress/.
+                SettingsNavRow(
+                    icon = Icons.Filled.Warning,
+                    tint = DangerDark,
+                    title = "Distress Signal",
+                    onClick = onOpenDistressSignal
                 )
                 RowDivider()
                 SettingsNavRow(

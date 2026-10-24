@@ -645,6 +645,16 @@ struct SettingsScreen: View {
                     )
                 }
                 SettingsDivider()
+                // Distress Signal — SOS button + shake trigger → multi-recipient SMS +
+                // dialer + WhatsApp group fan-out. See Sources/Distress/.
+                NavigationLink { DistressSettingsScreen() } label: {
+                    SettingsNavRow(
+                        icon: "exclamationmark.triangle.fill",
+                        iconTint: Color.appDanger,
+                        label: "Distress Signal"
+                    )
+                }
+                SettingsDivider()
                 NavigationLink { BlockListScreen() } label: {
                     SettingsNavRow(icon: "shield.lefthalf.filled", iconTint: Color.settingsBlue, label: "Blocking & Unknown")
                 }
