@@ -128,8 +128,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
     // Coroutines
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0")
 
     // Biometric
     implementation("androidx.biometric:biometric:1.1.0")
@@ -138,7 +138,7 @@ dependencies {
     implementation("androidx.documentfile:documentfile:1.0.1")
 
     // JSON (bundled with Android, but kotlinx-serialization keeps us typed)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.12.0")
 
     // --- Smart Link Guard (Pro) -----------------------------------------------
     // CameraX for the in-app QR scanner surface.
