@@ -21,3 +21,9 @@ ios/OnlyTrusted.xcodeproj/xcuserdata/
 
 # Design references + alternate source bundles — kept locally, not in repo.
 Images/
+
+# Android release keystore — must never be committed. Lives at
+# ~/Documents/OnlyTrusted-signing/ by local-dev convention.
+*.jks
+*.keystore
+SECRETS.txt

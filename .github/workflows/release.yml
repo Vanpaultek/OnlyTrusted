@@ -65,14 +65,23 @@ jobs:
 
       - name: Decode release keystore (if provided)
         id: keystore
-        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+        # Can't gate this step with `if: env.ANDROID_KEYSTORE_BASE64 != ''` because
+        # GitHub Actions evaluates `if:` BEFORE the step's `env:` block runs — the
+        # expression would always be empty. Instead run unconditionally and have the
+        # script no-op when the secret is absent (local devs, forks, PR builds).
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
+          if [[ -z "${ANDROID_KEYSTORE_BASE64:-}" ]]; then
+            echo "::notice::ANDROID_KEYSTORE_BASE64 secret not set — release AAB will be unsigned."
+            exit 0
+          fi
           mkdir -p "$RUNNER_TEMP/keystore"
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/keystore/release.jks"
+          test -s "$RUNNER_TEMP/keystore/release.jks"
           echo "jks=$RUNNER_TEMP/keystore/release.jks" >> "$GITHUB_OUTPUT"
           echo "signed=true" >> "$GITHUB_OUTPUT"
+          echo "::notice::Release keystore decoded (jks=$RUNNER_TEMP/keystore/release.jks)."
 
       - name: Build release AAB
         working-directory: android
