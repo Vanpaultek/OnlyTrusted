@@ -148,7 +148,9 @@ fun DashboardScreen(
         vm.setHasAnyTrustedContact(state.trustedContactCount > 0)
     }
 
-    val protectionActive = state.trustedContactCount > 0 && runtime.trustedOnlyCalls
+    val hasTrustedContacts = state.trustedContactCount > 0
+    val trustedOnlyEnabled = runtime.trustedOnlyCalls
+    val protectionActive = hasTrustedContacts && trustedOnlyEnabled
 
     Box(modifier = Modifier.fillMaxSize().background(MidnightBackground)) {
         Column(
@@ -207,7 +209,10 @@ fun DashboardScreen(
                     }
                 }
             ) {
-                ProtectionActiveCard(isActive = protectionActive)
+                ProtectionActiveCard(
+                    isActive = protectionActive,
+                    awaitingToggle = hasTrustedContacts && !trustedOnlyEnabled
+                )
             }
             val scamContactsCount = remember {
                 com.onlytrusted.app.ui.contactscan.ContactScanState.matchCount(context)
@@ -460,7 +465,26 @@ private fun CinematicHeader_Unused(name: String?, onSettings: () -> Unit) {
 // MARK: - Protection active card (previous version)
 
 @Composable
-private fun ProtectionActiveCard(isActive: Boolean) {
+private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = false) {
+    // Three distinct states:
+    //   isActive=true  → contacts + "Silence calls not in vault" both on
+    //   awaitingToggle → at least one contact added, but the toggle is still off
+    //   else           → no contacts yet
+    // Previously the subtitle was always "Add trusted contacts to begin.", which was
+    // misleading after the user added a contact (the real blocker became the toggle,
+    // not the contact).
+    val headline = when {
+        isActive -> "Protection is active"
+        awaitingToggle -> "Almost there"
+        else -> "Setup needed"
+    }
+    val subtitle = when {
+        isActive -> "Only trusted contacts can reach you."
+        awaitingToggle -> "Turn on \"Silence calls not in vault\" to activate."
+        else -> "Add trusted contacts to begin."
+    }
+    val emphasised = isActive || awaitingToggle
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -468,7 +492,7 @@ private fun ProtectionActiveCard(isActive: Boolean) {
             .background(MidnightElevated)
             .border(
                 1.dp,
-                BrandCyanDark.copy(alpha = if (isActive) 0.4f else 0.15f),
+                BrandCyanDark.copy(alpha = if (emphasised) 0.4f else 0.15f),
                 RoundedCornerShape(20.dp)
             )
             .padding(18.dp),
@@ -478,7 +502,7 @@ private fun ProtectionActiveCard(isActive: Boolean) {
         // Full OnlyTrusted brand-logo tile (shield + wordmark on midnight bg with
         // baked-in cyan ring + sparkles). The asset already carries its own ring
         // treatment, so we drop the extra Circle border/glow that used to wrap the
-        // glyph and just add a soft cyan drop shadow when protection is active.
+        // glyph and just add a soft cyan drop shadow when protection is fully active.
         androidx.compose.foundation.Image(
             painter = androidx.compose.ui.res.painterResource(
                 id = com.onlytrusted.app.R.drawable.brand_logo
@@ -493,19 +517,22 @@ private fun ProtectionActiveCard(isActive: Boolean) {
                     ambientColor = BrandCyanDark,
                     spotColor = BrandCyanDark
                 ),
-            alpha = if (isActive) 1.0f else 0.55f
+            alpha = when {
+                isActive -> 1.0f
+                awaitingToggle -> 0.85f
+                else -> 0.55f
+            }
         )
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
-                if (isActive) "Protection is active" else "Setup needed",
+                headline,
                 color = BrandCyanDark,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                if (isActive) "Only trusted contacts can reach you."
-                else "Add trusted contacts to begin.",
+                subtitle,
                 color = SecondaryTextDark,
                 fontSize = 14.sp
             )
