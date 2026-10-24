@@ -65,11 +65,15 @@ struct MainTabs: View {
 private struct PanicSOSButton: View {
     let onNavigateToContacts: () -> Void
 
-    @State private var confirming = false
+    // Distress Signal (Phase 1) state. Replaces the old single-contact confirmation
+    // dialog with a 3-second cancel countdown + multi-recipient broadcast; see the
+    // Distress/ folder for the full flow doc.
+    @State private var showCountdown = false
     @State private var showNoContactAlert = false
     @State private var showSMSComposer = false
     @State private var smsBody: String = ""
-    @State private var smsRecipient: String = ""
+    @State private var smsRecipients: [String] = []
+    @State private var postFireMessage: String?
 
     var body: some View {
         Button(action: { tapped() }) {
@@ -79,7 +83,7 @@ private struct PanicSOSButton: View {
                     .frame(width: 64, height: 64)
                     .shadow(color: Color.appDanger.opacity(0.6), radius: 14, x: 0, y: 0)
                 VStack(spacing: 0) {
-                    Image(systemName: "phone.fill")
+                    Image(systemName: "exclamationmark.triangle.fill")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(.white)
                     Text("SOS")
@@ -90,32 +94,34 @@ private struct PanicSOSButton: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Panic — call first trusted contact")
+        .accessibilityLabel("Emergency distress signal")
         .accessibilityAddTraits(.isButton)
-        .confirmationDialog("Panic alert?", isPresented: $confirming, titleVisibility: .visible) {
-            if let name = PanicContact.firstTrustedContactName() {
-                Button("Call \(name) now", role: .destructive) { triggerPanic() }
-                if MessageComposerView.canSendText {
-                    Button("Only send Messages alert") { prepareSMSOnly() }
-                }
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            if let name = PanicContact.firstTrustedContactName() {
-                Text("This will dial \(name) and open a pre-filled panic SMS. iOS requires you to tap Send on the SMS.")
-            } else {
-                Text("Add a trusted contact first.")
-            }
+        .fullScreenCover(isPresented: $showCountdown) {
+            DistressCountdownOverlay(
+                onFire: {
+                    showCountdown = false
+                    Task { await dispatchDistress() }
+                },
+                onCancel: { showCountdown = false }
+            )
         }
         .alert("Add a trusted contact first", isPresented: $showNoContactAlert) {
             Button("Open Contacts") { onNavigateToContacts() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("The SOS button dials your first trusted contact. Add one in the Contacts tab to use this.")
+            Text("The SOS button alerts every trusted contact. Add at least one in the Contacts tab to use this.")
+        }
+        .alert("EMERGENCY alert", isPresented: Binding(
+            get: { postFireMessage != nil },
+            set: { if !$0 { postFireMessage = nil } }
+        )) {
+            Button("OK") { postFireMessage = nil }
+        } message: {
+            Text(postFireMessage ?? "")
         }
         .sheet(isPresented: $showSMSComposer) {
             MessageComposerView(
-                recipients: [smsRecipient],
+                recipients: smsRecipients,
                 body: smsBody,
                 onFinish: { _ in showSMSComposer = false }
             )
@@ -128,67 +134,54 @@ private struct PanicSOSButton: View {
             showNoContactAlert = true
             return
         }
-        confirming = true
+        showCountdown = true
     }
 
-    private func triggerPanic() {
-        guard let number = PanicContact.firstTrustedContactNumber(),
-              let name = PanicContact.firstTrustedContactName()
-        else { return }
-        // Dial via tel: — iOS has no silent-call API; the Phone app opens with the number
-        // preloaded and the call starts on confirmation.
-        if let url = URL(string: "tel:\(number)") {
-            UIApplication.shared.open(url)
-        }
-
-        // If the user has configured their own Panic SOS backend (Settings → Security &
-        // data → Panic SOS backend), POST the alert to it so SMS goes out silently via
-        // their server. Otherwise fall back to the pre-filled Messages composer that
-        // requires the user to tap Send.
-        if PanicBackend.isConfigured {
-            let allRecipients = allTrustedContactNumbers()
-            let body = "\u{26A0}\u{FE0F} OnlyTrusted panic alert from \(name): I need help."
-            Task.detached {
-                let result = await PanicBackend.send(
-                    recipients: allRecipients,
-                    isDuress: false,
-                    location: ""
-                )
-                if case .ok = result { return }
-                // Backend failed — fall back to composer so the user still has a path.
-                await MainActor.run {
-                    self.smsRecipient = number
-                    self.smsBody = body
-                    self.showSMSComposer = true
-                }
-            }
+    /// Executes the distress flow: location fetch → message build → multi-recipient
+    /// composer + auto-dial first contact.
+    private func dispatchDistress() async {
+        let recipients = allTrustedRecipients()
+        guard !recipients.isEmpty else {
+            postFireMessage = "No emergency contacts configured."
             return
         }
 
-        // iOS limitation: there is no silent SMS send. We open the system Messages
-        // composer with recipient + body pre-filled; the user must tap Send.
+        // 1. Best-effort one-shot location fetch (3-second timeout).
+        let location = await DistressLocationFetcher.shared.fetchOnce()
+
+        // 2. Pre-filled distress body (location-enriched, timestamped).
+        let ownerName = ProfileStore.shared.email.components(separatedBy: "@").first ?? ""
+        let body = DistressMessageBuilder.build(ownerName: ownerName, location: location)
+
+        // 3. Open the Phone app with the first contact's number pre-dialed — happens
+        //    first so the Phone app comes forward, then the SMS composer slides on top
+        //    when the user dismisses it after sending.
+        if let first = recipients.first,
+           let url = URL(string: "tel:\(first.phoneNumber)") {
+            await UIApplication.shared.open(url)
+        }
+
+        // 4. Open the system Messages composer with every recipient + body pre-filled.
+        //    iOS has no silent-send API — the user must tap Send once, which broadcasts
+        //    to all pre-selected recipients at once.
+        smsRecipients = recipients.map(\.phoneNumber)
+        smsBody = body
         if MessageComposerView.canSendText {
-            smsRecipient = number
-            smsBody = "\u{26A0}\u{FE0F} OnlyTrusted panic alert from \(name): I need help."
-            // Give the Phone app a beat to come forward before presenting SMS so both
-            // actions complete cleanly from a single tap.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                showSMSComposer = true
-            }
+            // Brief delay so the Phone app renders first; keeps the sequence legible.
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            showSMSComposer = true
+            postFireMessage = "Distress alert ready — tap Send in Messages to broadcast to \(recipients.count) contact(s)."
+        } else {
+            postFireMessage = "Device cannot send SMS. The Phone app is dialing \(recipients.first?.displayName ?? "your first contact")."
         }
     }
 
-    private func allTrustedContactNumbers() -> [String] {
-        VaultStore.shared.contacts.flatMap { $0.normalisedNumbers }
-    }
-
-    private func prepareSMSOnly() {
-        guard let number = PanicContact.firstTrustedContactNumber(),
-              let name = PanicContact.firstTrustedContactName()
-        else { return }
-        smsRecipient = number
-        smsBody = "\u{26A0}\u{FE0F} OnlyTrusted panic alert from \(name): I need help."
-        showSMSComposer = true
+    private func allTrustedRecipients() -> [DistressRecipient] {
+        VaultStore.shared.contacts.compactMap { c in
+            c.normalisedNumbers.first.map { num in
+                DistressRecipient(phoneNumber: num, displayName: c.displayName)
+            }
+        }
     }
 }
 

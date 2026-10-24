@@ -119,7 +119,11 @@ fun DashboardScreen(
     val runtime by vm.runtimeState.collectAsStateWithLifecycle()
     var showHonestLimitsSheet by remember { mutableStateOf(false) }
     var showNoContactAlert by remember { mutableStateOf(false) }
-    var confirmPanic by remember { mutableStateOf(false) }
+    // Distress signal 3-second cancel countdown (replaces the old single-contact
+    // AlertDialog confirm — see DistressCountdownOverlay for the UX rationale and
+    // DistressSender for how we broadcast to every emergency contact).
+    var showDistressCountdown by remember { mutableStateOf(false) }
+    var distressResultMessage by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     // F4 weekly digest + F5 refresher state.
@@ -242,7 +246,7 @@ fun DashboardScreen(
                 if (list.isEmpty()) {
                     showNoContactAlert = true
                 } else {
-                    confirmPanic = true
+                    showDistressCountdown = true
                 }
             },
             containerColor = DangerDark,
@@ -259,28 +263,63 @@ fun DashboardScreen(
         }
     }
 
-    if (confirmPanic) {
-        val name = runtime.contactNames.firstOrNull() ?: "trusted contact"
+    if (showDistressCountdown) {
+        com.onlytrusted.app.ui.distress.DistressCountdownOverlay(
+            onCancel = { showDistressCountdown = false },
+            onFire = {
+                showDistressCountdown = false
+                scope.launch {
+                    // 1. Best-effort one-shot location fetch (3 s timeout).
+                    val loc = com.onlytrusted.app.ui.distress.LocationFetcher.fetchOnce(context)
+                    // 2. Pair name + first-number per trusted contact for the recipient list.
+                    val contacts = app.trustedContacts.allContacts.first()
+                    val recipients = contacts.mapNotNull { c ->
+                        c.numbers.firstOrNull()?.let { num ->
+                            com.onlytrusted.app.ui.distress.DistressRecipient(
+                                phoneNumber = num.normalisedNumber,
+                                displayName = c.contact.displayName
+                            )
+                        }
+                    }
+                    // 3. Build the pre-filled distress message.
+                    val ownerName = com.onlytrusted.app.ui.duress.DuressState.ownerName(context)
+                    val body = com.onlytrusted.app.ui.distress.DistressMessageBuilder
+                        .build(ownerName = ownerName, location = loc)
+                    // 4. Fire SMS composer (multi-recipient) + auto-open dialer for first contact.
+                    val result = com.onlytrusted.app.ui.distress.DistressSender.fire(
+                        context = context,
+                        recipients = recipients,
+                        body = body,
+                        alsoAutoDialFirst = true
+                    )
+                    // 5. Also log a SecurityEvent so the audit trail shows the signal fired.
+                    app.repository.log(
+                        type = com.onlytrusted.app.data.db.entities.SecurityEvent.TYPE_DISTRESS_FIRED,
+                        packageName = null,
+                        detail = "Distress signal fired to ${recipients.size} recipient(s); " +
+                            "location=${if (loc != null) "yes" else "unavailable"}"
+                    )
+                    distressResultMessage = when (result) {
+                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.Dispatched ->
+                            "Distress alert ready — tap Send in Messages."
+                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.NoRecipients ->
+                            "No emergency contacts configured."
+                        is com.onlytrusted.app.ui.distress.DistressSender.FireResult.ComposerFailed ->
+                            "Couldn't open Messages. Dial a trusted contact manually."
+                    }
+                }
+            }
+        )
+    }
+    distressResultMessage?.let { msg ->
         AlertDialog(
-            onDismissRequest = { confirmPanic = false },
-            title = { Text("Panic alert?", color = PrimaryTextDark) },
-            text = {
-                Text(
-                    "This will dial $name and send a pre-filled panic SMS. If SMS send permission isn't granted, Android will open your Messages app with the text pre-filled.",
-                    color = SecondaryTextDark
-                )
-            },
+            onDismissRequest = { distressResultMessage = null },
+            title = { Text("EMERGENCY alert", color = PrimaryTextDark) },
+            text = { Text(msg, color = SecondaryTextDark) },
             confirmButton = {
-                TextButton(onClick = {
-                    confirmPanic = false
-                    val number = runtime.contactNumbers.firstOrNull() ?: return@TextButton
-                    PanicContact.dial(context, number)
-                    val body = "⚠️ OnlyTrusted panic alert from $name: I need help."
-                    PanicContact.sendPanicSms(context, number, body)
-                }) { Text("Call & send SMS", color = DangerDark) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmPanic = false }) { Text("Cancel") }
+                TextButton(onClick = { distressResultMessage = null }) {
+                    Text("OK", color = BrandAccentDark)
+                }
             },
             containerColor = MidnightCard
         )

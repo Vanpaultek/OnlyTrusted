@@ -45,5 +45,7 @@ data class SecurityEvent(
         const val TYPE_PANIC_LOCKDOWN_ACTIVATED = "PANIC_LOCKDOWN_ACTIVATED"
         /** Panic Lockdown (Elite): owner disarmed with biometric + PIN (+ hardware key). */
         const val TYPE_PANIC_LOCKDOWN_DISARMED = "PANIC_LOCKDOWN_DISARMED"
+        /** Distress Signal fired from the Dashboard SOS button (or future shake/volume trigger). */
+        const val TYPE_DISTRESS_FIRED = "DISTRESS_FIRED"
     }
 }
