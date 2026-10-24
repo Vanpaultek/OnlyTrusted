@@ -6,9 +6,15 @@ import SwiftUI
 ///
 /// Shows:
 ///  - A master toggle (default ON).
-///  - This month's blocked count.
+///  - This month's detected count.
 ///  - The 20 most recent wangiri hangups observed by `CXCallObserver`.
 ///  - An iOS limitation note explaining why the specific caller number is not auto-blocked.
+///
+/// Important: on iOS this is a DETECTOR, not a blocker. iOS CallKit does not expose
+/// the caller number to third-party apps, so we can only count the pattern and alert
+/// the owner — we cannot programmatically add the number to the block list the way
+/// the Android equivalent (via `PhoneStateListener`) can. UI copy throughout this
+/// screen says "detected" / "flagged", never "blocked", for honest-claim reasons.
 struct WangiriSettingsScreen: View {
     @StateObject private var watcher = WangiriWatcher.shared
     @State private var enabledToggle: Bool = WangiriWatcher.shared.isEnabled
@@ -40,7 +46,7 @@ struct WangiriSettingsScreen: View {
         PremiumCard {
             VStack(alignment: .leading, spacing: 14) {
                 CardHeader(icon: "phone.down.waveform.fill",
-                           title: "One-ring hangup blocker",
+                           title: "One-ring hangup detector",
                            tint: Color.appAccent)
 
                 Toggle(isOn: $enabledToggle) {
@@ -63,10 +69,10 @@ struct WangiriSettingsScreen: View {
 
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Blocked this month")
+                        Text("Detected this month")
                             .font(.caption)
                             .foregroundStyle(Color.appSecondaryText)
-                        Text("\(watcher.blockedThisMonth)")
+                        Text("\(watcher.detectedThisMonth)")
                             .font(.system(size: 32, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.appAccent)
                     }

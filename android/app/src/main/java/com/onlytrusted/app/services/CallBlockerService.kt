@@ -43,11 +43,32 @@ class CallBlockerService : CallScreeningService() {
         val isBlocked = app.repository.isCallBlockedSync(raw)
         val isTrusted = app.trustedContacts.isTrustedSync(raw)
 
+        // Call-storm detector: pull the last ~15 min of CALL events and extract
+        // the "from=<number>" tokens so RobocallHeuristics can detect bursts of
+        // calls sharing an area/exchange prefix. Previously hard-coded to empty
+        // list — the storm signal was dead code in prod.
+        val stormWindowMs = 15L * 60L * 1000L
+        val recentCallers = runCatching {
+            app.database.eventDao().recentOfTypesSinceSync(
+                types = listOf(
+                    SecurityEvent.TYPE_CALL_ALLOWED,
+                    SecurityEvent.TYPE_CALL_BLOCKED,
+                    SecurityEvent.TYPE_UNTRUSTED_CALL
+                ),
+                since = System.currentTimeMillis() - stormWindowMs,
+                limit = 50
+            )
+        }.getOrDefault(emptyList())
+            .mapNotNull { ev ->
+                // detail is formatted "from=<number> ..." in every call-event log site.
+                FROM_NUMBER_REGEX.find(ev.detail.orEmpty())?.groupValues?.getOrNull(1)
+            }
+
         val insight = CallerInsight.analyse(raw, isTrusted = isTrusted)
         val verdict = RobocallHeuristics.evaluate(
             rawNumber = raw,
             ownerNumber = ownerNumber,
-            recentCallers = emptyList(),
+            recentCallers = recentCallers,
             insight = insight
         )
 
@@ -137,6 +158,12 @@ class CallBlockerService : CallScreeningService() {
                 }
             }
         }
+    }
+
+    companion object {
+        // Extracts the caller number from a logged call event's `detail` field,
+        // which is formatted as "from=<number> ..." throughout this file.
+        private val FROM_NUMBER_REGEX = Regex("from=([+0-9][0-9]*)")
     }
 
     private fun respondWith(details: Call.Details, block: Boolean) {

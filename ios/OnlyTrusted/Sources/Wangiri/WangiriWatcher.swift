@@ -36,7 +36,7 @@ final class WangiriWatcher: NSObject, ObservableObject {
     /// Tracks the first time we saw a given `CXCall.uuid` so we can diff on end.
     private var ringStartByCallID: [UUID: Date] = [:]
 
-    @Published private(set) var blockedThisMonth: Int = 0
+    @Published private(set) var detectedThisMonth: Int = 0
     @Published private(set) var recentBlocks: [WangiriBlockRecord] = []
 
     private let d = UserDefaults.standard
@@ -111,9 +111,9 @@ final class WangiriWatcher: NSObject, ObservableObject {
         let currentKey = monthKey(for: Date())
         let savedKey = d.string(forKey: Keys.monthlyKey)
         if savedKey == currentKey {
-            blockedThisMonth = d.integer(forKey: Keys.monthlyCount)
+            detectedThisMonth = d.integer(forKey: Keys.monthlyCount)
         } else {
-            blockedThisMonth = 0
+            detectedThisMonth = 0
             d.set(currentKey, forKey: Keys.monthlyKey)
             d.set(0, forKey: Keys.monthlyCount)
         }
@@ -121,8 +121,8 @@ final class WangiriWatcher: NSObject, ObservableObject {
 
     private func incrementMonthlyCount() {
         reloadMonthlyCount()
-        blockedThisMonth += 1
-        d.set(blockedThisMonth, forKey: Keys.monthlyCount)
+        detectedThisMonth += 1
+        d.set(detectedThisMonth, forKey: Keys.monthlyCount)
     }
 
     private func monthKey(for date: Date) -> String {

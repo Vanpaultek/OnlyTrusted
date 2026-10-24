@@ -192,6 +192,15 @@ A short list of what this app can and cannot do, so you set realistic expectatio
 - Hide your phone from the cellular network, your carrier, or your ISP.
 - Guarantee that every spam call will be caught. Some carrier-level call paths bypass Android call screening.
 - Replace security updates, hardened operating systems, or careful app-permission hygiene.
+- Detect in-call voice-cloning / deepfake audio in real time. Platforms do not expose a third-party app's access to the live call audio stream. If a cloned-voice scam is a concern for you, pre-share a secret word with family and ask for it on any emergency call.
+
+## Threat Intel feed status (reality, as of this release)
+
+- **Phishing hosts** (`phishing_urls.v1.txt`): ~50 000 real entries, sampled from the public Mitchell Krogza Phishing.Database aggregator + PhishTank, refreshed via `tools/refresh_threatintel.sh` in the repo. Shipped bundle is a build-time snapshot — no live refresh.
+- **Scam phone numbers** (`scam_numbers.v1.txt`): currently a 41-entry hand-curated list of publicly-documented scam ranges. There is no free bulk source for global scam-number feeds — the comprehensive ones (Nomorobo, Hiya, Truecaller) are commercial. We'd rather admit this than ship an empty-coverage feed labeled "comprehensive".
+- **Breach hashes** (`breach_hashes.v1.txt`): a 37-entry placeholder today; a top-N shipment from Have-I-Been-Pwned is the honest next step and not yet wired.
+
+The honest claim ("no cloud, no server, no account, zero-network") is preserved — all feeds are bundled at build time; the runtime never phones home.
 
 If anything inside this app or in its listing suggests otherwise, treat this page as the source of truth.
     """.trimIndent()

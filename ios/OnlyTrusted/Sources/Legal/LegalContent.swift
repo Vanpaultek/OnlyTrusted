@@ -235,6 +235,13 @@ enum LegalContent {
     • Draw a watermark overlay on top of other apps. iOS does not allow it.
     • Enumerate other apps' permissions. iOS does not expose this.
     • Encrypt cellular voice/video calls. Nobody but your carrier can.
+    • Programmatically add a Wangiri (one-ring) scammer's number to iOS's block list. iOS CallKit does NOT expose incoming caller numbers to third-party apps. OnlyTrusted on iOS DETECTS the one-ring pattern and alerts you, but you must add the number to the block list manually by long-pressing it in the Recents list → Block Contact.
+    • Detect in-call voice-cloning / deepfake audio in real time. Apple does not expose a third-party app's access to the live call audio stream. If a cloned-voice scam is a concern for you, pre-share a secret word with family and ask for it on any emergency call.
+
+    Threat Intel feed status (reality, as of this release)
+    • Phishing hosts (phishing_urls.v1.txt): ~50 000 real entries, sampled from the public Mitchell Krogza Phishing.Database + PhishTank aggregators, refreshed via tools/refresh_threatintel.sh in the repo. Build-time snapshot; the runtime never phones home.
+    • Scam phone numbers (scam_numbers.v1.txt): currently a 41-entry hand-curated list of publicly documented scam ranges. The free bulk sources for global scam-number feeds do not exist — the comprehensive ones (Nomorobo, Hiya, Truecaller) are commercial. We'd rather admit this than ship an empty-coverage feed labeled "comprehensive".
+    • Breach hashes (breach_hashes.v1.txt): a 37-entry placeholder today; a top-N shipment from Have-I-Been-Pwned is the honest next step and not yet wired.
 
     If anything inside this app or in its listing suggests otherwise, treat this page as the source of truth.
     """

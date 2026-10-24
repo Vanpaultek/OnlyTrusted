@@ -46,6 +46,23 @@ interface EventDao {
     @Query("SELECT * FROM security_events ORDER BY id DESC LIMIT :limit")
     suspend fun tail(limit: Int): List<SecurityEvent>
 
+    /**
+     * Blocking (non-suspend) read of recent call-related events for the
+     * CallScreeningService storm detector. The service runs on a binder thread
+     * where synchronous DB reads are safe — see [SecurityRepository.isCallBlockedSync]
+     * for the same pattern.
+     */
+    @Query("""
+        SELECT * FROM security_events
+         WHERE type IN (:types) AND timestamp >= :since
+         ORDER BY timestamp DESC LIMIT :limit
+    """)
+    fun recentOfTypesSinceSync(
+        types: List<String>,
+        since: Long,
+        limit: Int = 50
+    ): List<SecurityEvent>
+
     @Query("SELECT COUNT(*) FROM security_events")
     suspend fun totalCount(): Int
 
