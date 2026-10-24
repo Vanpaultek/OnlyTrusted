@@ -49,6 +49,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -131,6 +132,18 @@ fun DashboardScreen(
     var showHonestLimitsRefresher by remember { mutableStateOf(false) }
     var weeklyCallsBlocked by remember { mutableStateOf(0) }
     var weeklyTextsBlocked by remember { mutableStateOf(0) }
+
+    // Shake-to-trigger: start accelerometer while Dashboard is in composition, stop on
+    // leave. Fires the same countdown as the SOS FAB. Can be disabled per-user via
+    // Settings → Panic → "Shake phone to trigger SOS" toggle (default ON).
+    DisposableEffect(Unit) {
+        val detector = if (com.onlytrusted.app.ui.distress.ShakeDetector.Prefs.isEnabled(context)) {
+            com.onlytrusted.app.ui.distress.ShakeDetector(
+                onShakePatternDetected = { showDistressCountdown = true }
+            ).also { it.start(context) }
+        } else null
+        onDispose { detector?.stop() }
+    }
 
     LaunchedEffect(Unit) {
         vm.refreshRuntime()

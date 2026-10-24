@@ -65,15 +65,16 @@ struct MainTabs: View {
 private struct PanicSOSButton: View {
     let onNavigateToContacts: () -> Void
 
-    // Distress Signal (Phase 1) state. Replaces the old single-contact confirmation
-    // dialog with a 3-second cancel countdown + multi-recipient broadcast; see the
-    // Distress/ folder for the full flow doc.
+    // Distress Signal state. Replaces the old single-contact confirmation dialog with
+    // a 3-second cancel countdown + multi-recipient broadcast; see the Distress/ folder
+    // for the full flow doc.
     @State private var showCountdown = false
     @State private var showNoContactAlert = false
     @State private var showSMSComposer = false
     @State private var smsBody: String = ""
     @State private var smsRecipients: [String] = []
     @State private var postFireMessage: String?
+    @State private var shakeDetector = ShakeDetector()
 
     var body: some View {
         Button(action: { tapped() }) {
@@ -127,6 +128,14 @@ private struct PanicSOSButton: View {
             )
             .ignoresSafeArea()
         }
+        // Shake-to-trigger: start CMMotionManager when the button is onscreen (always
+        // visible on the Dashboard), stop on leave. Fires the same countdown overlay
+        // as a button tap. Honours the per-user toggle in ShakeTriggerPrefs.
+        .onAppear {
+            guard ShakeTriggerPrefs.isEnabled else { return }
+            shakeDetector.start { showCountdown = true }
+        }
+        .onDisappear { shakeDetector.stop() }
     }
 
     private func tapped() {
