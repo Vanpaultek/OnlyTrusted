@@ -50,7 +50,7 @@ jobs:
         run: ./gradlew :app:lintDebug --no-daemon
       - name: Upload lint report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-lint-report
           path: android/app/build/reports/lint-results-debug.html
