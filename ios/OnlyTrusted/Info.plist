@@ -64,6 +64,7 @@
         <string>vzcallfilter</string>
         <string>tel</string>
         <string>sms</string>
+        <string>whatsapp</string>
     </array>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>

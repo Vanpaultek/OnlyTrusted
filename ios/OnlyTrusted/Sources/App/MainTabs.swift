@@ -175,14 +175,27 @@ private struct PanicSOSButton: View {
         //    to all pre-selected recipients at once.
         smsRecipients = recipients.map(\.phoneNumber)
         smsBody = body
+        var baseMessage: String
         if MessageComposerView.canSendText {
             // Brief delay so the Phone app renders first; keeps the sequence legible.
             try? await Task.sleep(nanoseconds: 600_000_000)
             showSMSComposer = true
-            postFireMessage = "Distress alert ready — tap Send in Messages to broadcast to \(recipients.count) contact(s)."
+            baseMessage = "Distress alert ready. Tap Send in Messages to broadcast to \(recipients.count) contact(s)"
         } else {
-            postFireMessage = "Device cannot send SMS. The Phone app is dialing \(recipients.first?.displayName ?? "your first contact")."
+            baseMessage = "Device cannot send SMS. The Phone app is dialing \(recipients.first?.displayName ?? "your first contact")"
         }
+
+        // 5. WhatsApp fan-out (optional): if WhatsApp is installed, open it with the
+        //    distress text pre-filled so the owner can one-tap-send to their saved
+        //    emergency group. Group invite link (if saved) is also copied to the
+        //    clipboard — paste into WhatsApp's search bar to open the group directly.
+        let whatsAppLaunched = await WhatsAppDistressSender.fire(body: body)
+        if whatsAppLaunched {
+            baseMessage += ", then tap Send in WhatsApp."
+        } else {
+            baseMessage += "."
+        }
+        postFireMessage = baseMessage
     }
 
     private func allTrustedRecipients() -> [DistressRecipient] {

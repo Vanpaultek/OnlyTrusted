@@ -72,6 +72,7 @@
 		619D10664FD5CCCF8D99E778 /* DataRemovalReminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = F409661393923747F1B7FC48 /* DataRemovalReminders.swift */; };
 		63302E65BD76169E845C3814 /* TrackerFinderScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C66099C7EE48ABCF66D354FD /* TrackerFinderScreen.swift */; };
 		636BDD0135549321356A2CF3 /* ThreatIntelScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C1E4647F6100EDB64A27C53 /* ThreatIntelScreen.swift */; };
+		675DA127827E7609EDFF97BA /* WhatsAppDistressSender.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AA9FD301C5B27B3FED1D84 /* WhatsAppDistressSender.swift */; };
 		68C1782A2C3E52DE72EF04A4 /* HardwareKeyState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86ACF06C58669C735244AE6 /* HardwareKeyState.swift */; };
 		6977DB921C17609B9ACDFB9D /* CheckInState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A322615CAB3BF4B117D1EEB4 /* CheckInState.swift */; };
 		6A993A61736317DC193099BC /* AliasesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C90C8E097D1A3EBB7F2FC1AC /* AliasesScreen.swift */; };
@@ -251,6 +252,7 @@
 		49669B533AB496A677885A3F /* ContactScanScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactScanScreen.swift; sourceTree = "<group>"; };
 		501D17326F04F78A780C80B5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		528559BBE2D0AE609BD1D884 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		52AA9FD301C5B27B3FED1D84 /* WhatsAppDistressSender.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsAppDistressSender.swift; sourceTree = "<group>"; };
 		541C6D8691948E04267DF9C8 /* ContactPickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactPickerSheet.swift; sourceTree = "<group>"; };
 		5446E4ED8EF9B425975F7CED /* WangiriSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WangiriSettingsScreen.swift; sourceTree = "<group>"; };
 		544B263871B4083B1535C862 /* AppShieldUpsellSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShieldUpsellSheet.swift; sourceTree = "<group>"; };
@@ -381,6 +383,7 @@
 				0856F83C7D184A4C3F672DD0 /* DistressSignal.swift */,
 				C770F6DD95BAB3621208F4E7 /* LocationFetcher.swift */,
 				FEAF60E3EA0FD9E8AA7ED585 /* ShakeDetector.swift */,
+				52AA9FD301C5B27B3FED1D84 /* WhatsAppDistressSender.swift */,
 			);
 			path = Distress;
 			sourceTree = "<group>";
@@ -1228,6 +1231,7 @@
 				0976EB7ACDF08305020837DE /* WangiriSettingsScreen.swift in Sources */,
 				FD52E2394CD39132E36205A0 /* WangiriWatcher.swift in Sources */,
 				3C1C6C2177CCE80DFC703555 /* WeeklyDigestScreen.swift in Sources */,
+				675DA127827E7609EDFF97BA /* WhatsAppDistressSender.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -44,15 +44,23 @@ object DistressDispatcher {
             body = body,
             alsoAutoDialFirst = true
         )
+        // WhatsApp fan-out (optional): if WhatsApp is installed, open it with the
+        // distress text pre-filled so the owner can one-tap-send to their saved
+        // emergency group. Group invite link (if saved) is also copied to the
+        // clipboard — paste into WhatsApp's search bar to open the group directly.
+        val whatsAppLaunched = WhatsAppDistressSender.fire(context, body)
         app.repository.log(
             type = SecurityEvent.TYPE_DISTRESS_FIRED,
             packageName = null,
             detail = "Distress signal fired to ${recipients.size} recipient(s); " +
-                "location=${if (location != null) "yes" else "unavailable"}"
+                "location=${if (location != null) "yes" else "unavailable"}; " +
+                "whatsapp=${if (whatsAppLaunched) "launched" else "skipped"}"
         )
         return when (result) {
             is DistressSender.FireResult.Dispatched ->
-                "Distress alert ready — tap Send in Messages to broadcast to ${recipients.size} contact(s)."
+                "Distress alert ready. Tap Send in Messages to broadcast to " +
+                    "${recipients.size} contact(s)" +
+                    if (whatsAppLaunched) ", then tap Send in WhatsApp." else "."
             is DistressSender.FireResult.NoRecipients ->
                 "No emergency contacts configured — add at least one in Contacts."
             is DistressSender.FireResult.ComposerFailed ->
