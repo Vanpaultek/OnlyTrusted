@@ -58,14 +58,16 @@ jobs:
 
   ios:
     name: iOS · simulator build (unsigned)
-    runs-on: macos-15
+    # The project.yml declares `xcodeVersion: "26.0"` + SWIFT_STRICT_CONCURRENCY=complete.
+    # macos-15 / Xcode 16 drops dozens of pre-existing files on Swift 6 strict-isolation
+    # errors that Xcode 26 accepts. Use the macos-26 runner which ships Xcode 26 by
+    # default — matches what local devs use.
+    runs-on: macos-26
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Select Xcode
-        # Pin to a specific stable Xcode. Bump when the project.yml deployment
-        # target moves and this runner no longer supplies the matching SDK.
-        run: sudo xcode-select -s /Applications/Xcode_16.app || true
+      - name: Show Xcode version
+        run: xcodebuild -version
       - name: Install xcodegen
         run: brew install xcodegen
       - name: Generate xcodeproj

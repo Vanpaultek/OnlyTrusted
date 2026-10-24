@@ -121,7 +121,11 @@ jobs:
 
   ios:
     name: iOS · unsigned IPA + build provenance
-    runs-on: macos-15
+    # Needs macos-26 to pick up Xcode 26 — the project.yml declares SWIFT_6 /
+    # SWIFT_STRICT_CONCURRENCY=complete and the strict-isolation diagnostics
+    # drifted between Xcode 16 (fails) and Xcode 26 (passes). See the matching
+    # comment in ci.yml for details.
+    runs-on: macos-26
     timeout-minutes: 30
     outputs:
       ipa_path: ${{ steps.pack.outputs.ipa_path }}
