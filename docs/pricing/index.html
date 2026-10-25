@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0B1F2D">
+  <meta name="description" content="OnlyTrusted — zero-cloud privacy & security plans. Free forever, with Individual and Family paid tiers.">
+  <title>OnlyTrusted · Plans &amp; Protection</title>
+  <link rel="icon" type="image/png" href="assets/brand_logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="#top" class="brand" aria-label="OnlyTrusted home">
+      <img src="assets/brand_logo.png" class="logo" alt="OnlyTrusted">
+      <span>Only<span class="accent-text">Trusted</span></span>
+    </a>
+    <a class="manage" id="manage"
+       href="https://play.google.com/store/account/subscriptions?package=com.onlytrusted.app"
+       target="_blank" rel="noopener">
+      Manage subscription ↗
+    </a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="eyebrow"><span class="dot"></span> ZERO-CLOUD PRIVACY · ON-DEVICE SECURITY</div>
+      <h1>Protection for your<br><em>digital everyday.</em></h1>
+      <p class="lede">
+        Choose an OnlyTrusted plan for your device, identity, communications, and peace of mind.
+        Everything runs on your phone — no server, no account, no network traffic from OnlyTrusted.
+        Start Free. Upgrade when you need more.
+      </p>
+      <div class="hero-stats">
+        <span>Free forever available</span>
+        <span>Individual &amp; family plans</span>
+        <span>iOS + Android</span>
+      </div>
+    </section>
+
+    <section class="pricing" id="plans">
+      <div class="heading-row">
+        <div>
+          <span class="kicker">THE RIGHT LEVEL OF PROTECTION</span>
+          <h2>Simple plans. Clear benefits.</h2>
+        </div>
+        <div class="controls">
+          <div class="seg" role="group" aria-label="Membership">
+            <button id="individual" class="active" aria-pressed="true">Individual</button>
+            <button id="family" aria-pressed="false">Family · 5 seats</button>
+          </div>
+          <div class="seg" role="group" aria-label="Billing period">
+            <button id="yearly" class="active" aria-pressed="true">Yearly <small>save more</small></button>
+            <button id="monthly" aria-pressed="false">Monthly</button>
+          </div>
+        </div>
+      </div>
+      <div id="cards" class="cards" aria-live="polite"></div>
+      <p class="disclaimer">
+        Prices in USD from the OnlyTrusted v0.3.4 price sheet. Actual localized prices, availability
+        and renewals are determined by the App Store or Google Play purchase sheet at checkout.
+        Family sharing requires an implemented and store-approved entitlement mechanism.
+      </p>
+    </section>
+
+    <section class="compare" id="compare">
+      <div class="center">
+        <span class="kicker">EVERY DETAIL, TRANSPARENT</span>
+        <h2>Compare what matters.</h2>
+        <p>Higher tiers include features of lower tiers. Availability depends on platform permissions and service configuration.</p>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>Free</th><th>Premium</th><th>Pro</th><th>Elite</th></tr></thead>
+          <tbody id="featureRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="trust">
+      <div class="trust-panel">
+        <div>
+          <span class="kicker">BUILT AROUND HONEST SECURITY</span>
+          <h2>Know exactly what you're protected against.</h2>
+          <p>
+            OnlyTrusted never claims a regular consumer app can switch off every other app's
+            microphone or camera when the screen locks. Permission rules, recording detection,
+            and selected-app shielding vary by device and platform — we document every limit
+            inside the app's <strong>Honest Limits</strong> screen.
+          </p>
+        </div>
+        <div class="pill-list">
+          <span>Transparent coverage</span>
+          <span>User-controlled features</span>
+          <span>Clear platform limits</span>
+          <span>Zero cloud · Zero server</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <span class="kicker">QUESTIONS &amp; ANSWERS</span>
+      <h2>Good to know</h2>
+      <details>
+        <summary>What does a Family plan cover?</summary>
+        <p>Up to five household members on one subscription. Multi-account access must be provisioned
+        by OnlyTrusted and validated separately on iOS and Android; neither store automatically grants
+        five OnlyTrusted accounts on purchase.</p>
+      </details>
+      <details>
+        <summary>Are Android and iPhone features identical?</summary>
+        <p>No. Apple and Android expose different protections. SMS inbox scanning is Android-specific
+        (iOS blocks third-party apps from reading SMS); iOS uses approved filtering and sharing
+        extensions where implemented. Features such as app shielding, Wangiri auto-block, and
+        tracker detection have platform-specific limits documented inside the app.</p>
+      </details>
+      <details>
+        <summary>Can I manage or cancel my subscription?</summary>
+        <p>Yes. Use the store's subscription management screen for the account that purchased the plan.
+        Cancellation and renewal rules are displayed by the store at purchase time.</p>
+      </details>
+      <details>
+        <summary>Do yearly plans renew automatically?</summary>
+        <p>Yes — all paid tiers are auto-renewing subscriptions. The native checkout sheet shows the
+        exact period, terms, price, and cancellation instructions before you confirm.</p>
+      </details>
+      <details>
+        <summary>Does OnlyTrusted ever send my data anywhere?</summary>
+        <p>No. The app has no network capability at all for its core features — no account creation,
+        no cloud sync, no analytics, no crash reporter that transmits data. In-app purchases flow
+        through Google Play Billing / Apple StoreKit (your store account, not us); carrier SMS and
+        call screening use your own carrier channel; nothing is routed through a VanPaulTek server
+        because there isn't one.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer>
+    <div class="brand">
+      <img src="assets/brand_logo.png" class="logo" alt="">
+      <span>Only<span class="accent-text">Trusted</span></span>
+    </div>
+    <p>Personal security, with clarity and control.</p>
+    <div class="foot-links">
+      <a href="#plans">Plans</a>
+      <a href="#compare">Compare</a>
+      <a href="#faq">FAQ</a>
+      <a id="footerManage"
+         href="https://play.google.com/store/account/subscriptions?package=com.onlytrusted.app">
+        Subscriptions
+      </a>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted" target="_blank" rel="noopener">
+        GitHub ↗
+      </a>
+    </div>
+    <small>© <span id="year"></span> VanPaulTek Inc. · OnlyTrusted is Free with optional paid tiers · <a href="mailto:admin@vanpaultek.com">admin@vanpaultek.com</a></small>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js" defer></script>
+</body>
+</html>
