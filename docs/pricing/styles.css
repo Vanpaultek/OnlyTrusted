@@ -475,6 +475,79 @@ tr:last-child td { border: 0; }
   color: var(--text);
 }
 
+/* --- Mobile Compare: per-tier accordion stack ---------------------
+   Shown instead of the matrix table at narrow viewports (<620px). JS
+   populates both layouts from the same matrix data, CSS swaps which
+   is visible via the media queries below. Default: desktop table on,
+   stack off; mobile breakpoint flips it. */
+.tier-stack { display: none; flex-direction: column; gap: 12px; }
+.tier-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(30, 42, 58, 0.85);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+.tier-card.featured {
+  border-color: rgba(0, 209, 193, 0.6);
+  background: linear-gradient(170deg, rgba(15, 106, 102, 0.3), rgba(30, 42, 58, 0.9) 55%);
+}
+.tier-card summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+}
+.tier-card summary::-webkit-details-marker { display: none; }
+.tier-card summary::after {
+  content: "+";
+  font-size: 22px;
+  color: var(--accent);
+  width: 24px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.tier-card[open] summary::after { content: "−"; }
+.tier-card .tier-name {
+  font-size: 16px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tier-card .tier-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 50px;
+  border: 1px solid rgba(0, 209, 193, 0.4);
+  margin-left: 8px;
+}
+.tier-card .tier-features {
+  list-style: none;
+  padding: 0 18px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tier-card .tier-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tier-card .tier-features .included { color: var(--accent); font-weight: 800; }
+.tier-card .tier-features .excluded { color: var(--text-quiet); }
+.tier-card .tier-features .excluded .included { color: var(--text-quiet); }
+
 /* --- Honest-claim trust panel --- */
 .trust-panel {
   border: 1px solid rgba(0,209,193,.35);
@@ -586,6 +659,12 @@ footer small {
   .trust-panel { flex-direction: column; padding: 26px; }
   .pill-list span { white-space: normal; }
   .amount { font-size: 37px; }
+  .sticky-controls { padding: 10px 15px; margin: 0 -15px 16px; }
+
+  /* Hide the horizontal matrix on mobile — swap to the per-tier
+     accordion stack so all 4 tiers fit without horizontal scrolling. */
+  .table-wrap { display: none; }
+  .tier-stack { display: flex; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
