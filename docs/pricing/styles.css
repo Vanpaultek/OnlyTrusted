@@ -215,6 +215,37 @@ h1 em {
 }
 
 .sticky-controls .seg { background: rgba(30, 42, 58, 0.9); }
+
+/* Live-updating price readout — shows the cheapest paid-tier price
+   (Premium) for the currently-selected Individual/Family × Monthly/Yearly
+   combination so users scrolling through Compare still see the price
+   change immediately when they flip toggles. */
+.starting-at {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4px 14px 4px 4px;
+  border-right: 1px solid var(--line);
+  margin-right: 4px;
+  min-width: 140px;
+}
+.starting-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-quiet);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.starting-price {
+  font: 800 20px 'Manrope', sans-serif;
+  color: var(--accent);
+  margin-top: 4px;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  transition: color .18s;
+}
 h2 {
   font-size: clamp(28px, 3vw, 40px);
   margin: 12px 0;
@@ -659,7 +690,25 @@ footer small {
   .trust-panel { flex-direction: column; padding: 26px; }
   .pill-list span { white-space: normal; }
   .amount { font-size: 37px; }
-  .sticky-controls { padding: 10px 15px; margin: 0 -15px 16px; }
+  .sticky-controls {
+    padding: 10px 12px;
+    margin: 0 -15px 16px;
+    gap: 8px;
+  }
+  .starting-at {
+    width: 100%;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 0 6px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    margin-right: 0;
+    min-width: 0;
+  }
+  .starting-label { font-size: 11px; }
+  .starting-price { font-size: 18px; margin-top: 0; }
 
   /* Hide the horizontal matrix on mobile — swap to the per-tier
      accordion stack so all 4 tiers fit without horizontal scrolling. */

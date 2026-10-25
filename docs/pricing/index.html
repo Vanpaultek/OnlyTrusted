@@ -47,8 +47,13 @@
       </div>
       <!-- Sticky toggle bar: pins to top when scrolled so prices can be
            compared across Individual/Family × Yearly/Monthly without
-           scrolling back up to the heading. -->
+           scrolling back up to the heading. The "Starting at" readout
+           updates live as the user flips toggles. -->
       <div class="sticky-controls" role="group" aria-label="Plan options">
+        <div class="starting-at" aria-live="polite">
+          <span class="starting-label">Paid plans from</span>
+          <span class="starting-price" id="startingPrice">$4.99/yr</span>
+        </div>
         <div class="seg" role="group" aria-label="Membership">
           <button id="individual" class="active" aria-pressed="true">Individual</button>
           <button id="family" aria-pressed="false">Family · 5 seats</button>

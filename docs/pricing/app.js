@@ -16,7 +16,20 @@ if(window.OnlyTrustedAndroid?.purchase){window.OnlyTrustedAndroid.purchase(JSON.
 // Optional hosting site integration, MUST validate server-side and use legal region-specific flow.
 if(typeof window.onlyTrustedPurchase==='function'){window.onlyTrustedPurchase(payload);return;}
 notify('Open this page inside the OnlyTrusted app to purchase securely with '+(platform==='ios'?'Apple In-App Purchase':platform==='android'?'Google Play Billing':'the mobile app')+'. Checkout is not enabled in this website preview.');}
-function render(){for(const [id,choice,field] of [['individual','individual','audience'],['family','family','audience'],['yearly','yearly','cycle'],['monthly','monthly','cycle']]){const e=document.getElementById(id);e.classList.toggle('active',state[field]===choice);e.setAttribute('aria-pressed',String(state[field]===choice));}
+function updateStartingAt(){
+  // The cheapest paid tier is Premium — use that as the "starting from"
+  // reference. Reads the current audience + cycle from state and formats
+  // "$X.XX/yr" or "$X.XX/mo" so the sticky bar always shows what the
+  // user would pay to upgrade from Free given their current selections.
+  const p = PLANS.Premium;
+  const amount = state.audience === 'family'
+    ? p[state.cycle === 'yearly' ? 'familyYearly' : 'familyMonthly']
+    : p[state.cycle];
+  const unit = state.cycle === 'yearly' ? '/yr' : '/mo';
+  const el = document.getElementById('startingPrice');
+  if (el) el.textContent = fmt(amount) + unit;
+}
+function render(){updateStartingAt();for(const [id,choice,field] of [['individual','individual','audience'],['family','family','audience'],['yearly','yearly','cycle'],['monthly','monthly','cycle']]){const e=document.getElementById(id);e.classList.toggle('active',state[field]===choice);e.setAttribute('aria-pressed',String(state[field]===choice));}
 const cards=document.getElementById('cards');cards.replaceChildren();tierNames.forEach((tier,index)=>{const t=PLANS[tier];const amount=tier==='Free'?0:state.audience==='family'?t[state.cycle==='yearly'?'familyYearly':'familyMonthly']:t[state.cycle];const payPeriod=state.cycle==='yearly'?'/year':'/month';const monthly=state.audience==='family'?t.familyMonthly:t.monthly;const savings=tier==='Free'||state.cycle==='monthly'?null:Math.round((1-amount/(monthly*12))*100);const seatText=state.audience==='family'&&tier!=='Free'?`Up to 5 members · ${fmt(amount/(state.cycle==='yearly'?60:5))}/member/month`:'Individual plan';const el=document.createElement('article');el.className='plan'+(tier==='Pro'?' featured':'');const description=t.detail;el.innerHTML=`${tier==='Pro'?'<span class="ribbon">Popular plan</span>':''}<span class="plan-label">${escapeHTML(tier)}</span><h3>${tier==='Free'?'Always Free':escapeHTML(tier)}</h3><p class="desc">${escapeHTML(description)}</p><div class="price"><span class="amount">${fmt(amount)}</span><span class="period">${tier==='Free'?'forever':payPeriod}</span></div><div class="subprice">${tier==='Free'?'No credit card required':escapeHTML(seatText)} ${savings?`<div class="save">Save ${savings}% vs monthly</div>`:''}</div><button class="action" data-tier="${tier}">${tier==='Free'?'Continue with Free':'Choose '+tier+' →'}</button><span class="feature-title">Included protection</span><ul class="features">${t.features.map(f=>`<li><span class="check">✓</span><span>${escapeHTML(f)}</span></li>`).join('')}</ul>`;cards.append(el);});cards.querySelectorAll('[data-tier]').forEach(b=>b.addEventListener('click',()=>purchase(b.dataset.tier)));}
 function renderMatrix(){const root=document.getElementById('featureRows');root.replaceChildren();matrix.forEach(([label,minIndex,freeVariant,premiumVariant])=>{const row=document.createElement('tr');let html=`<td>${escapeHTML(label)}</td>`;for(let i=0;i<4;i++){let value=i>=minIndex?'<span class="yes">✓</span>':'<span class="no">—</span>';if(label==='Breach Watch'){value=i===0?'1 email':'Up to 5'}html+=`<td>${value}</td>`}row.innerHTML=html;root.append(row)});}
 
