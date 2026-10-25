@@ -4,6 +4,11 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
     kotlin("plugin.serialization") version "2.0.21"
+    // CycloneDX SBOM — adds the `cyclonedxBom` task that scans the release
+    // runtime classpath and writes a CycloneDX-formatted JSON to
+    // app/build/reports/bom.json. See the root build.gradle.kts for the
+    // declared plugin version.
+    id("org.cyclonedx.bom")
 }
 
 android {
