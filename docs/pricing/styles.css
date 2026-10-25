@@ -245,6 +245,25 @@ h1 em {
   letter-spacing: -0.5px;
   line-height: 1;
   transition: color .18s;
+  display: inline-block;  /* needed for transform in flash animation */
+  transform-origin: left center;
+}
+
+/* Brief cyan flash when the price value changes (via toggle flip).
+   Scales up slightly + brightens with a glow pulse, settling back
+   to the baseline in ~800ms. Matches the "neon shield" aesthetic
+   the Dashboard Protection card uses. */
+@keyframes priceFlash {
+  0%   { color: var(--accent); transform: scale(1);    text-shadow: none; }
+  25%  { color: #B4FFF5;       transform: scale(1.08); text-shadow: 0 0 20px rgba(0,209,193,.9), 0 0 40px rgba(0,209,193,.5); }
+  60%  { color: #B4FFF5;       transform: scale(1.04); text-shadow: 0 0 12px rgba(0,209,193,.6); }
+  100% { color: var(--accent); transform: scale(1);    text-shadow: none; }
+}
+.starting-price.flash {
+  animation: priceFlash 800ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .starting-price.flash { animation: none; }
 }
 h2 {
   font-size: clamp(28px, 3vw, 40px);
