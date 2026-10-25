@@ -76,7 +76,7 @@ struct BlockListScreen: View {
             .padding(.bottom, 32)
         }
         .appBackdrop()
-        .navigationTitle("Blocking & Unknown")
+        .navigationTitle("blocked_title")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Color.appScreenBackground, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -139,7 +139,7 @@ struct BlockListScreen: View {
         case .reloading:
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
-                Text("Reloading…")
+                Text("blocked_reloading")
                     .font(.footnote)
                     .foregroundStyle(Color.appSecondaryText)
             }
@@ -158,7 +158,7 @@ struct BlockListScreen: View {
     private var blockedListCard: some View {
         PremiumCard {
             VStack(alignment: .leading, spacing: 14) {
-                CardHeader(icon: "list.bullet", title: "Your block list")
+                CardHeader(icon: "list.bullet", title: NSLocalizedString("blocked_your_list_title", comment: ""))
                 VStack(spacing: 12) {
                     ForEach(Array(vm.entries.enumerated()), id: \.element.id) { idx, record in
                         BlockedRow(record: record, onDelete: { vm.remove(id: record.id) })
@@ -174,8 +174,8 @@ struct BlockListScreen: View {
     private var emptyListCard: some View {
         PremiumCard {
             VStack(alignment: .leading, spacing: 10) {
-                CardHeader(icon: "list.bullet", title: "Your block list")
-                Text("No numbers added yet. Tap + above to block a specific number on this device.")
+                CardHeader(icon: "list.bullet", title: NSLocalizedString("blocked_your_list_title", comment: ""))
+                Text("blocked_no_numbers_added")
                     .font(.subheadline)
                     .foregroundStyle(Color.appSecondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -213,8 +213,8 @@ private struct BlockedRow: View {
                         .foregroundStyle(Color.appSecondaryText)
                 }
                 HStack(spacing: 6) {
-                    if record.blockCalls { TagChip(label: "Calls", icon: "phone.down.fill") }
-                    if record.blockSms { TagChip(label: "SMS", icon: "message.fill") }
+                    if record.blockCalls { TagChip(label: NSLocalizedString("blocked_tag_calls", comment: ""), icon: "phone.down.fill") }
+                    if record.blockSms { TagChip(label: NSLocalizedString("blocked_tag_sms", comment: ""), icon: "message.fill") }
                 }
                 .padding(.top, 2)
             }
@@ -300,7 +300,7 @@ private struct AddBlockedSheet: View {
                 .padding(.vertical, 16)
             }
             .appBackdrop()
-            .navigationTitle("Block a number")
+            .navigationTitle("blocked_add_screen_title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

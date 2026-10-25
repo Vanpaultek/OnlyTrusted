@@ -95,7 +95,7 @@ struct VaultScreen: View {
                             Image(systemName: "magnifyingglass")
                                 .font(.title2)
                                 .foregroundStyle(Color.appTertiaryText)
-                            Text("No matches")
+                            Text("vault_no_matches")
                                 .font(.headline)
                                 .foregroundStyle(Color.appPrimaryText)
                             Text(query.isEmpty
@@ -148,17 +148,17 @@ struct VaultScreen: View {
                             .foregroundStyle(Color.appAccent)
                     }
                     .decorativeAccessibility()
-                    Text("No trusted contacts yet")
+                    Text("vault_no_contacts_yet")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(Color.appPrimaryText)
-                    Text("Tap + to add your first.")
+                    Text("vault_tap_plus")
                         .font(.subheadline)
                         .foregroundStyle(Color.appSecondaryText)
                         .multilineTextAlignment(.center)
                     Button {
                         showAdd = true
                     } label: {
-                        Label("Add Contact", systemImage: "plus")
+                        Label("vault_add_contact", systemImage: "plus")
                             .font(.body.weight(.semibold))
                             .frame(maxWidth: .infinity, minHeight: 44)
                     }
@@ -255,7 +255,7 @@ private struct SearchField: View {
                 .foregroundStyle(Color.appTertiaryText)
                 .decorativeAccessibility()
             TextField("", text: $text, prompt:
-                Text("Search trusted contacts...")
+                Text("vault_search_placeholder")
                     .foregroundColor(Color.appTertiaryText)
             )
             .textFieldStyle(.plain)
@@ -353,7 +353,7 @@ private struct ContactRow: View {
                         .foregroundStyle(Color.appPrimaryText)
                         .lineLimit(1)
                     if contact.isOwner {
-                        Text("Owner")
+                        Text("vault_owner_tag")
                             .font(.caption2.weight(.bold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)

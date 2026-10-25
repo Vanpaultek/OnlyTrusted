@@ -106,11 +106,11 @@ private struct PanicSOSButton: View {
                 onCancel: { showCountdown = false }
             )
         }
-        .alert("Add a trusted contact first", isPresented: $showNoContactAlert) {
-            Button("Open Contacts") { onNavigateToContacts() }
-            Button("Cancel", role: .cancel) {}
+        .alert("dash_sos_add_contact_title", isPresented: $showNoContactAlert) {
+            Button("dash_open_contacts") { onNavigateToContacts() }
+            Button("lock_cancel", role: .cancel) {}
         } message: {
-            Text("The SOS button alerts every trusted contact. Add at least one in the Contacts tab to use this.")
+            Text("dash_sos_add_contact_body")
         }
         .alert("EMERGENCY alert", isPresented: Binding(
             get: { postFireMessage != nil },
@@ -292,14 +292,14 @@ struct DashboardScreen: View {
                 HonestLimitsSheet()
             }
         }
-        .confirmationDialog("Exit duress mode?", isPresented: $confirmDuressExit, titleVisibility: .visible) {
-            Button("Exit", role: .destructive) {
+        .confirmationDialog("dash_exit_duress_title", isPresented: $confirmDuressExit, titleVisibility: .visible) {
+            Button("dash_exit", role: .destructive) {
                 duress.isDuressSession = false
                 gate.panic()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("lock_cancel", role: .cancel) {}
         } message: {
-            Text("You'll be returned to the lock screen. Unlock with your real credential to see the real vault.")
+            Text("dash_exit_duress_body")
         }
     }
 
@@ -310,40 +310,40 @@ struct DashboardScreen: View {
             StatTile(icon: "person.2.fill",
                      tint: Color.appAccent,
                      value: trustedCount,
-                     label: "Trusted\nContacts")
+                     label: NSLocalizedString("dash_trusted_contacts", comment: ""))
             BlockedCombinedTile(blockedToday: blockedToday, blockedWeek: blockedWeek)
             StatTile(icon: "exclamationmark.triangle.fill",
                      tint: scamContactsCount > 0 ? Color.appDanger : Color.appAccent,
                      value: scamContactsCount,
-                     label: "Scam\nContacts")
+                     label: NSLocalizedString("dash_scam_contacts", comment: ""))
         }
     }
 
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Actions")
+            Text("dash_quick_actions")
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.appPrimaryText)
 
             HStack(spacing: 10) {
                 QuickActionCard(
                     icon: "person.badge.plus.fill",
-                    title: "Emergency Contact",
-                    subtitle: "Manual or pick from Contacts",
+                    title: NSLocalizedString("dash_qa_emergency_title", comment: ""),
+                    subtitle: NSLocalizedString("dash_qa_emergency_subtitle", comment: ""),
                     tint: Color.appAccent,
                     action: { onNavigate(.contacts) }
                 )
                 QuickActionCard(
                     icon: "phone.down.fill",
-                    title: "Block Number",
-                    subtitle: "Block unwanted calls & messages",
+                    title: NSLocalizedString("dash_qa_block_title", comment: ""),
+                    subtitle: NSLocalizedString("dash_qa_block_subtitle", comment: ""),
                     tint: Color.appDanger,
                     action: { onNavigate(.blocked) }
                 )
                 QuickActionCard(
                     icon: "doc.text.fill",
-                    title: "View Log",
-                    subtitle: "See recent blocked activity",
+                    title: NSLocalizedString("dash_qa_log_title", comment: ""),
+                    subtitle: NSLocalizedString("dash_qa_log_subtitle", comment: ""),
                     tint: Color.appBrightCyan,
                     action: { onNavigate(.log) }
                 )
@@ -411,7 +411,7 @@ private struct WeeklyDigestBanner: View {
                 )
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Your week in protection")
+                Text("dash_week_title")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.appPrimaryText)
                 Text(summary)
@@ -420,13 +420,13 @@ private struct WeeklyDigestBanner: View {
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
                     Button(action: onSeeReport) {
-                        Text("See full report")
+                        Text("dash_see_full_report")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.appBrightCyan)
                     }
                     .buttonStyle(.plain)
                     Button(action: onDismiss) {
-                        Text("Dismiss")
+                        Text("dash_dismiss")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.appSecondaryText)
                     }
@@ -451,9 +451,10 @@ private struct WeeklyDigestBanner: View {
 
     private var summary: String {
         if callCount == 0 && textCount == 0 {
-            return "No blocked activity in the last 7 days. Everything's quiet."
+            return NSLocalizedString("dash_week_empty", comment: "")
         }
-        return "This week we blocked \(callCount) call\(callCount == 1 ? "" : "s") and \(textCount) text\(textCount == 1 ? "" : "s") for you."
+        let fmt = NSLocalizedString("dash_week_fmt", comment: "")
+        return String(format: fmt, callCount, textCount)
     }
 }
 
@@ -475,22 +476,22 @@ private struct HonestLimitsRefresherBanner: View {
                 )
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("A monthly reminder")
+                Text("dash_monthly_reminder")
                     .font(.system(size: 15, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.appPrimaryText)
-                Text("This app cannot monitor other apps' microphone or camera use.")
+                Text("dash_cannot_monitor_other_apps")
                     .font(.system(size: 13))
                     .foregroundStyle(Color.appSecondaryText)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 12) {
                     Button(action: onLearnMore) {
-                        Text("Learn more")
+                        Text("dash_learn_more")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.appWarning)
                     }
                     .buttonStyle(.plain)
                     Button(action: onDismiss) {
-                        Text("Dismiss")
+                        Text("dash_dismiss")
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundStyle(Color.appSecondaryText)
                     }
@@ -522,9 +523,11 @@ private struct CinematicHeader: View {
 
     private var timeOfDay: String {
         let h = Calendar.current.component(.hour, from: Date())
-        if h < 12 { return "Good morning" }
-        if h < 18 { return "Good afternoon" }
-        return "Good evening"
+        let key: String
+        if h < 12 { key = "dash_good_morning" }
+        else if h < 18 { key = "dash_good_afternoon" }
+        else { key = "dash_good_evening" }
+        return NSLocalizedString(key, comment: "")
     }
 
     var body: some View {
@@ -594,7 +597,7 @@ private struct CinematicHeader: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 HStack(spacing: 8) {
-                    Text(name ?? "Welcome")
+                    Text(name ?? NSLocalizedString("dash_welcome", comment: ""))
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.appAccent)
                     Text("👋")
@@ -632,12 +635,10 @@ private struct ProtectionActiveCard: View {
                 .accessibilityLabel("OnlyTrusted protection shield")
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(isActive ? "Protection is active" : "Setup needed")
+                Text(isActive ? "dash_protection_active" : "dash_setup_needed")
                     .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.appAccent)
-                Text(isActive
-                     ? "Only trusted contacts can reach you."
-                     : "Add trusted contacts to begin.")
+                Text(isActive ? "dash_protection_active_detail" : "dash_setup_needed_detail")
                     .font(.subheadline)
                     .foregroundStyle(Color.appSecondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -686,10 +687,10 @@ private struct BlockedCombinedTile: View {
                     .foregroundStyle(Color.appDanger)
                     .minimumScaleFactor(0.6)
             }
-            Text("Blocked")
+            Text("dash_blocked")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.appPrimaryText)
-            Text("Today · \(blockedWeek) this week")
+            Text(String(format: NSLocalizedString("dash_today_week_fmt", comment: ""), blockedWeek))
                 .font(.system(size: 10))
                 .foregroundStyle(Color.appSecondaryText)
         }
@@ -798,10 +799,10 @@ private struct HonestLimitsCallout: View {
                     .shadow(color: Color.appWarning.opacity(0.4), radius: 10)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Honest Limits")
+                    Text("dash_honest_limits")
                         .font(.system(size: 17, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.appWarning)
-                    Text("This app cannot monitor other apps' microphone or camera use. Tap to see all platform limits.")
+                    Text("dash_tap_see_limits")
                         .font(.system(size: 13))
                         .foregroundStyle(Color.appSecondaryText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -843,11 +844,11 @@ private struct HonestLimitsSheet: View {
             .padding(20)
         }
         .background(Color.appScreenBackground.ignoresSafeArea())
-        .navigationTitle("Honest Limits")
+        .navigationTitle("dash_honest_limits")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done") { dismiss() }
+                Button("dash_done") { dismiss() }
                     .tint(Color.appAccent)
             }
         }

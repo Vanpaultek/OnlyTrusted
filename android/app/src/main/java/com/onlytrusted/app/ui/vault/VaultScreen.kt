@@ -75,6 +75,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.onlytrusted.app.OnlyTrustedApp
 import com.onlytrusted.app.data.repository.MaskedContact
+import androidx.compose.ui.res.stringResource
+import com.onlytrusted.app.R
 import com.onlytrusted.app.ui.theme.BrandAccentDark
 import com.onlytrusted.app.ui.theme.BrandCyanDark
 import com.onlytrusted.app.ui.theme.BrandPrimaryTeal
@@ -238,17 +240,17 @@ fun VaultScreen(
             containerColor = MidnightCard,
             titleContentColor = PrimaryTextDark,
             textContentColor = SecondaryTextDark,
-            title = { Text("Delete ${target.displayName}?") },
-            text = { Text("This permanently removes the contact and all encrypted details.") },
+            title = { Text(stringResource(R.string.vault_delete_title_fmt, target.displayName)) },
+            text = { Text(stringResource(R.string.vault_delete_body)) },
             confirmButton = {
                 TextButton(onClick = {
                     vm.delete(target.id)
                     pendingDelete = null
-                }) { Text("Delete", color = androidx.compose.ui.graphics.Color(0xFFEF4444)) }
+                }) { Text(stringResource(R.string.vault_delete), color = androidx.compose.ui.graphics.Color(0xFFEF4444)) }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) {
-                    Text("Cancel", color = BrandAccentDark)
+                    Text(stringResource(R.string.lock_cancel), color = BrandAccentDark)
                 }
             }
         )
@@ -309,13 +311,13 @@ private fun EmptyState(
                     )
                 }
                 Text(
-                    "No trusted contacts yet",
+                    stringResource(R.string.vault_no_contacts_yet),
                     style = MaterialTheme.typography.titleLarge,
                     color = PrimaryTextDark,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    "Tap + to add your first.",
+                    stringResource(R.string.vault_tap_plus),
                     style = MaterialTheme.typography.bodyMedium,
                     color = SecondaryTextDark
                 )
@@ -331,7 +333,7 @@ private fun EmptyState(
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Add Contact", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.vault_add_contact), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -402,7 +404,7 @@ private fun SearchField(
             ) {
                 if (value.isEmpty()) {
                     Text(
-                        "Search trusted contacts...",
+                        stringResource(R.string.vault_search_placeholder),
                         color = TertiaryTextDark,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -526,7 +528,7 @@ private fun ContactRow(
                         color = BrandAccentDark.copy(alpha = 0.18f)
                     ) {
                         Text(
-                            "Owner",
+                            stringResource(R.string.vault_owner_tag),
                             color = BrandAccentDark,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
@@ -576,7 +578,7 @@ private fun ContactRow(
                 onDismissRequest = { menuOpen = false }
             ) {
                 DropdownMenuItem(
-                    text = { Text("Edit") },
+                    text = { Text(stringResource(R.string.vault_edit)) },
                     leadingIcon = { Icon(Icons.Filled.Edit, contentDescription = null) },
                     onClick = {
                         menuOpen = false
@@ -584,7 +586,7 @@ private fun ContactRow(
                     }
                 )
                 DropdownMenuItem(
-                    text = { Text("Delete") },
+                    text = { Text(stringResource(R.string.vault_delete)) },
                     leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
                     onClick = {
                         menuOpen = false

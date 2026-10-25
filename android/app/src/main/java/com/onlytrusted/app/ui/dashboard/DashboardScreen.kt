@@ -68,6 +68,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import com.onlytrusted.app.localization.stringResourceReviewed
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -266,10 +268,10 @@ fun DashboardScreen(
     if (showNoContactAlert) {
         AlertDialog(
             onDismissRequest = { showNoContactAlert = false },
-            title = { Text("Add a trusted contact first", color = PrimaryTextDark) },
+            title = { Text(stringResource(R.string.dash_sos_add_contact_title), color = PrimaryTextDark) },
             text = {
                 Text(
-                    "The SOS button dials your first trusted contact. Add one in the Contacts tab to use this.",
+                    stringResourceReviewed(R.string.dash_sos_add_contact_body),
                     color = SecondaryTextDark
                 )
             },
@@ -277,10 +279,12 @@ fun DashboardScreen(
                 TextButton(onClick = {
                     showNoContactAlert = false
                     onGoToVault()
-                }) { Text("Open Contacts", color = BrandAccentDark) }
+                }) { Text(stringResource(R.string.dash_open_contacts), color = BrandAccentDark) }
             },
             dismissButton = {
-                TextButton(onClick = { showNoContactAlert = false }) { Text("Cancel") }
+                TextButton(onClick = { showNoContactAlert = false }) {
+                    Text(stringResource(R.string.lock_cancel))
+                }
             },
             containerColor = MidnightCard
         )
@@ -289,11 +293,10 @@ fun DashboardScreen(
     if (confirmDuressExit) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { confirmDuressExit = false },
-            title = { Text("Exit duress mode?", color = PrimaryTextDark, fontWeight = FontWeight.Bold) },
+            title = { Text(stringResourceReviewed(R.string.dash_exit_duress_title), color = PrimaryTextDark, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "You'll be returned to the lock screen. Unlock with your real credential " +
-                        "to see the real vault.",
+                    stringResourceReviewed(R.string.dash_exit_duress_body),
                     color = SecondaryTextDark
                 )
             },
@@ -302,11 +305,11 @@ fun DashboardScreen(
                     confirmDuressExit = false
                     com.onlytrusted.app.ui.duress.DuressState.setDuressSession(false)
                     onPanic()
-                }) { Text("Exit", color = DangerDark) }
+                }) { Text(stringResource(R.string.dash_exit), color = DangerDark) }
             },
             dismissButton = {
                 TextButton(onClick = { confirmDuressExit = false }) {
-                    Text("Cancel", color = SecondaryTextDark)
+                    Text(stringResource(R.string.lock_cancel), color = SecondaryTextDark)
                 }
             },
             containerColor = MidnightCard
@@ -316,7 +319,7 @@ fun DashboardScreen(
     if (showHonestLimitsSheet) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showHonestLimitsSheet = false },
-            title = { Text("Honest Limits", color = PrimaryTextDark, fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.dash_honest_limits), color = PrimaryTextDark, fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     HonestLimitBullet("Monitor other apps' microphone or camera use.")
@@ -327,7 +330,7 @@ fun DashboardScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showHonestLimitsSheet = false }) {
-                    Text("Got it", color = BrandAccentDark)
+                    Text(stringResource(R.string.dash_done), color = BrandAccentDark)
                 }
             },
             containerColor = MidnightCard
@@ -340,13 +343,14 @@ fun DashboardScreen(
 @Composable
 private fun CinematicHeader_Unused(name: String?, onSettings: () -> Unit) {
     val headerHeight = 240.dp
-    val greeting = remember {
+    val greeting: String = run {
         val h = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        when {
-            h < 12 -> "Good morning"
-            h < 18 -> "Good afternoon"
-            else -> "Good evening"
+        val key = when {
+            h < 12 -> R.string.dash_good_morning
+            h < 18 -> R.string.dash_good_afternoon
+            else -> R.string.dash_good_evening
         }
+        stringResource(key)
     }
 
     Box(
@@ -428,7 +432,7 @@ private fun CinematicHeader_Unused(name: String?, onSettings: () -> Unit) {
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    name ?: "Welcome",
+                    name ?: stringResource(R.string.dash_welcome),
                     color = BrandCyanDark,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold
@@ -452,14 +456,14 @@ private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = fa
     // misleading after the user added a contact (the real blocker became the toggle,
     // not the contact).
     val headline = when {
-        isActive -> "Protection is active"
-        awaitingToggle -> "Almost there"
-        else -> "Setup needed"
+        isActive -> stringResource(R.string.dash_protection_active)
+        awaitingToggle -> stringResource(R.string.dash_almost_there)
+        else -> stringResource(R.string.dash_setup_needed)
     }
     val subtitle = when {
-        isActive -> "Only trusted contacts can reach you."
-        awaitingToggle -> "Turn on \"Silence calls not in vault\" to activate."
-        else -> "Add trusted contacts to begin."
+        isActive -> stringResource(R.string.dash_protection_active_detail)
+        awaitingToggle -> stringResource(R.string.dash_awaiting_toggle_detail)
+        else -> stringResource(R.string.dash_setup_needed_detail)
     }
     val emphasised = isActive || awaitingToggle
 
@@ -534,12 +538,12 @@ private fun StatsRow(trusted: Int, blockedToday: Int, blockedWeek: Int, scamCont
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        StatTile(Modifier.weight(1f), Icons.Filled.Groups, BrandAccentDark, trusted, "Trusted\nContacts")
+        StatTile(Modifier.weight(1f), Icons.Filled.Groups, BrandAccentDark, trusted, stringResource(R.string.dash_trusted_contacts))
         BlockedCombinedTile(Modifier.weight(1f), blockedToday = blockedToday, blockedWeek = blockedWeek)
         // Scam Contacts tile — populated by the last Contact Safety Scan.
         StatTile(Modifier.weight(1f), Icons.Filled.Warning,
             if (scamContacts > 0) DangerDark else BrandAccentDark,
-            scamContacts, "Scam\nContacts")
+            scamContacts, stringResource(R.string.dash_scam_contacts))
     }
 }
 
@@ -569,9 +573,9 @@ private fun BlockedCombinedTile(modifier: Modifier, blockedToday: Int, blockedWe
             Spacer(Modifier.weight(1f))
             Text(blockedToday.toString(), color = DangerDark, fontSize = 26.sp, fontWeight = FontWeight.Bold)
         }
-        Text("Blocked", color = PrimaryTextDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text(stringResource(R.string.dash_blocked), color = PrimaryTextDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
         Text(
-            "Today · $blockedWeek this week",
+            stringResource(R.string.dash_today_week_fmt, blockedWeek),
             color = SecondaryTextDark,
             fontSize = 10.sp
         )
@@ -618,7 +622,7 @@ private fun QuickActionsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
-            "Quick Actions",
+            stringResource(R.string.dash_quick_actions),
             color = PrimaryTextDark,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
@@ -628,24 +632,24 @@ private fun QuickActionsSection(
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.PersonAdd,
-                title = "Emergency Contact",
-                subtitle = "Manual or pick from Contacts",
+                title = stringResource(R.string.dash_qa_emergency_title),
+                subtitle = stringResource(R.string.dash_qa_emergency_subtitle),
                 tint = BrandAccentDark,
                 onClick = onAddContact
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.CallEnd,
-                title = "Block Number",
-                subtitle = "Block unwanted calls & messages",
+                title = stringResource(R.string.dash_qa_block_title),
+                subtitle = stringResource(R.string.dash_qa_block_subtitle),
                 tint = DangerDark,
                 onClick = onBlockNumber
             )
             QuickActionCard(
                 modifier = Modifier.weight(1f),
                 icon = Icons.Filled.Description,
-                title = "View Log",
-                subtitle = "See recent blocked activity",
+                title = stringResource(R.string.dash_qa_log_title),
+                subtitle = stringResource(R.string.dash_qa_log_subtitle),
                 tint = BrandCyanDark,
                 onClick = onViewLog
             )
@@ -721,9 +725,9 @@ private fun HonestLimitsCallout(onTap: () -> Unit) {
                 Icon(Icons.Filled.Warning, contentDescription = null, tint = WarningDark, modifier = Modifier.size(22.dp))
             }
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Honest Limits", color = WarningDark, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dash_honest_limits), color = WarningDark, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Text(
-                    "This app cannot monitor other apps' microphone or camera use. Tap to see all platform limits.",
+                    stringResourceReviewed(R.string.dash_tap_see_limits),
                     color = SecondaryTextDark,
                     fontSize = 13.sp
                 )
@@ -780,25 +784,25 @@ private fun WeeklyDigestBanner(
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                "Your week in protection",
+                stringResource(R.string.dash_week_title),
                 color = PrimaryTextDark,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 if (callCount == 0 && textCount == 0)
-                    "No blocked activity in the last 7 days. Everything's quiet."
+                    stringResource(R.string.dash_week_empty)
                 else
-                    "This week we blocked $callCount call${if (callCount == 1) "" else "s"} and $textCount text${if (textCount == 1) "" else "s"} for you.",
+                    stringResource(R.string.dash_week_fmt, callCount, textCount),
                 color = SecondaryTextDark,
                 fontSize = 13.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextButton(onClick = onSeeReport, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text("See full report", color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dash_see_full_report), color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
                 TextButton(onClick = onDismiss, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text("Dismiss", color = SecondaryTextDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dash_dismiss), color = SecondaryTextDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -832,22 +836,22 @@ private fun HonestLimitsRefresherBanner(
         }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
-                "A monthly reminder",
+                stringResource(R.string.dash_monthly_reminder),
                 color = PrimaryTextDark,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                "This app cannot monitor other apps' microphone or camera use.",
+                stringResourceReviewed(R.string.dash_cannot_monitor_other_apps),
                 color = SecondaryTextDark,
                 fontSize = 13.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextButton(onClick = onLearnMore, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text("Learn more", color = WarningDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dash_learn_more), color = WarningDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
                 TextButton(onClick = onDismiss, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text("Dismiss", color = SecondaryTextDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.dash_dismiss), color = SecondaryTextDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -868,7 +872,7 @@ private fun TrustedModeContent(
             Icon(Icons.Filled.Groups, contentDescription = null, tint = BrandAccentDark)
             Spacer(Modifier.width(8.dp))
             Text(
-                "Trusted-only mode",
+                stringResource(R.string.dash_trusted_only_mode),
                 color = PrimaryTextDark,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
@@ -877,8 +881,8 @@ private fun TrustedModeContent(
             TextButton(onClick = onManageVault) { Text("Vault →", color = BrandAccentDark) }
         }
         Text("${state.trustedContactCount} trusted contact(s).", color = SecondaryTextDark, fontSize = 13.sp)
-        SwitchRow("Silence calls not in vault", runtime.trustedOnlyCalls, vm::setTrustedOnlyCalls)
-        SwitchRow("Flag SMS not in vault", runtime.trustedOnlySms, vm::setTrustedOnlySms)
+        SwitchRow(stringResource(R.string.dash_silence_calls_not_vault), runtime.trustedOnlyCalls, vm::setTrustedOnlyCalls)
+        SwitchRow(stringResource(R.string.dash_flag_sms_not_vault), runtime.trustedOnlySms, vm::setTrustedOnlySms)
     }
 }
 

@@ -3,6 +3,8 @@
 package com.onlytrusted.app.ui.blocklist
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.res.stringResource
+import com.onlytrusted.app.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,11 +84,11 @@ fun BlockListScreen() {
         ) {
             BlockingOptionsSection()
 
-            Text("Your block list", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.blocked_your_list_title), style = MaterialTheme.typography.titleLarge)
             OutlinedTextField(
                 value = number,
                 onValueChange = { number = com.onlytrusted.app.privacy.PhoneUtils.sanitiseNumberInput(it) },
-                label = { Text("Number") },
+                label = { Text(stringResource(R.string.blocked_number_label)) },
                 singleLine = true,
                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
                     keyboardType = androidx.compose.ui.text.input.KeyboardType.Phone
@@ -96,19 +98,19 @@ fun BlockListScreen() {
             OutlinedTextField(
                 value = label,
                 onValueChange = { label = it },
-                label = { Text("Label (optional)") },
+                label = { Text(stringResource(R.string.blocked_label_optional)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = blockCalls, onCheckedChange = { blockCalls = it })
-                Text("Block calls")
+                Text(stringResource(R.string.blocked_block_calls))
                 Checkbox(
                     checked = blockSms,
                     onCheckedChange = { blockSms = it },
                     modifier = Modifier.padding(start = 16.dp)
                 )
-                Text("Block SMS")
+                Text(stringResource(R.string.blocked_block_sms))
             }
             Button(
                 onClick = {
@@ -119,11 +121,11 @@ fun BlockListScreen() {
                 enabled = number.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Add to block list")
+                Text(stringResource(R.string.blocked_add_to_list))
             }
 
             if (numbers.isEmpty()) {
-                Text("No blocked numbers yet.")
+                Text(stringResource(R.string.blocked_no_numbers_yet))
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     numbers.forEach { entry ->

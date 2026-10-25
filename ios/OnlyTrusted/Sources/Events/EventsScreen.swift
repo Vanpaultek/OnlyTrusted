@@ -66,7 +66,7 @@ struct EventsScreen: View {
 
     private var headerTitle: some View {
         HStack(spacing: 10) {
-            Text("Activity Log")
+            Text("events_title")
                 .font(.system(size: 28, weight: .bold, design: .rounded))
                 .foregroundStyle(Color.appPrimaryText)
             Spacer()
@@ -118,10 +118,10 @@ struct EventsScreen: View {
                 .decorativeAccessibility()
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Audit chain tampered")
+                    Text("events_audit_tampered")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.appPrimaryText)
-                    Text("The event log hash chain is broken. An event may have been edited.")
+                    Text("events_audit_tampered_detail")
                         .font(.footnote)
                         .foregroundStyle(Color.appSecondaryText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -154,7 +154,7 @@ struct EventsScreen: View {
                     .foregroundStyle(Color.appAccent)
             }
             .decorativeAccessibility()
-            Text("No events to show")
+            Text("events_no_events")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(Color.appPrimaryText)
             Text(filter == .all

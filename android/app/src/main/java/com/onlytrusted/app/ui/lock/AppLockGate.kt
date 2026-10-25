@@ -34,7 +34,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import androidx.compose.ui.res.stringResource
 import com.onlytrusted.app.OnlyTrustedApp
+import com.onlytrusted.app.R
 import com.onlytrusted.app.security.AppLockManager
 import com.onlytrusted.app.security.BiometricPasskey
 import com.onlytrusted.app.ui.duress.DuressSmsSender
@@ -121,7 +123,7 @@ fun AppLockGate(
             contentDescription = null,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        Text("Locked", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.lock_title), style = MaterialTheme.typography.headlineMedium)
         error?.let {
             Text(
                 it,
@@ -148,12 +150,12 @@ fun AppLockGate(
                     )
                 },
                 modifier = Modifier.padding(top = 24.dp)
-            ) { Text(if (attempted) "Try again" else "Unlock") }
+            ) { Text(stringResource(if (attempted) R.string.lock_try_again else R.string.lock_unlock)) }
 
             TextButton(
                 onClick = { pinSheet = true },
                 modifier = Modifier.padding(top = 8.dp)
-            ) { Text("Enter PIN instead") }
+            ) { Text(stringResource(R.string.lock_use_pin)) }
         } else {
             Button(
                 onClick = {
@@ -171,7 +173,7 @@ fun AppLockGate(
     if (pinSheet) {
         AlertDialog(
             onDismissRequest = { pinSheet = false; pin = ""; pinError = null },
-            title = { Text("Enter PIN") },
+            title = { Text(stringResource(R.string.lock_enter_pin)) },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
@@ -218,11 +220,11 @@ fun AppLockGate(
                     } else {
                         pinError = "Incorrect PIN."
                     }
-                }) { Text("Unlock") }
+                }) { Text(stringResource(R.string.lock_unlock)) }
             },
             dismissButton = {
                 TextButton(onClick = { pinSheet = false; pin = ""; pinError = null }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.lock_cancel))
                 }
             }
         )
