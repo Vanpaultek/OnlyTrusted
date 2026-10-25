@@ -30,6 +30,11 @@ struct AppLockGate: View {
             Text("Locked")
                 .font(.appLargeTitle)
 
+            Text("Passkey · phishing-proof · on-device")
+                .font(.caption)
+                .foregroundStyle(Color.appSecondaryText)
+                .padding(.bottom, 4)
+
             if let error {
                 Text(error)
                     .font(.footnote)
@@ -42,7 +47,7 @@ struct AppLockGate: View {
                 Button {
                     attemptAuth()
                 } label: {
-                    Label("Unlock with Face ID or Passcode", systemImage: "faceid")
+                    Label("Unlock with Passkey", systemImage: "faceid")
                         .font(.body.weight(.semibold))
                         .frame(maxWidth: .infinity, minHeight: 32)
                 }
@@ -54,7 +59,7 @@ struct AppLockGate: View {
                 Button {
                     showPinSheet = true
                 } label: {
-                    Text("Enter PIN instead")
+                    Text("Use PIN instead")
                         .font(.footnote.weight(.medium))
                         .foregroundStyle(Color.appSecondaryText)
                 }

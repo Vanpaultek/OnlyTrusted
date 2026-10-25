@@ -115,19 +115,31 @@ Enter the PIN. Enter it again on the confirmation screen. Tap **Continue**.
 
 **Important:** we cannot recover your PIN. There is nowhere to recover
 it from. If you forget it, your only paths back in are:
-- Face ID / Touch ID (if you enabled biometric unlock in Step 4)
+- Your Passkey (Face ID / Touch ID / fingerprint — if you set it up in
+  Step 4)
 - Shamir Split recovery (Elite tier, if you shared recovery pieces with
   trusted friends in advance)
 - Wiping the app and starting over (loses all data)
 
-### Step 4 — Biometric unlock (optional)
+### Step 4 — Set up your Passkey
 
-Toggle **Enable Face ID / Touch ID / Fingerprint**. Once on, you'll be
-able to unlock the app with your biometric instead of typing the PIN
-every time. The PIN is still required as a fallback and for destructive
-actions.
+Tap **Set up Passkey**. Face ID / Touch ID (iOS) or your fingerprint
+sensor (Android) becomes your **primary unlock** — tap the icon, scan,
+you're in. No password to type, no email code to wait for, no account to
+compromise. The credential lives in the Secure Enclave (iOS) or
+StrongBox / Keystore (Android) — biometric never leaves this device.
 
-Tap **Skip for now** if you'd rather use PIN only.
+Phishing-proof by design: there's no server to phish and no code to
+intercept. The PIN set in Step 3 remains as a fallback for the moments
+biometric can't be presented (dirty finger, bright light defeating Face
+ID, injured hand).
+
+Tap **Use PIN only** if you'd rather skip Passkey setup — you can
+enable it later from Settings → Account → Biometric unlock.
+
+See `docs/AUTH_MODEL.md` for the full authentication-model
+architecture, the deliberate rejection of email-code login, and the
+Phase 2 WebAuthn roadmap.
 
 ### Step 5 — Consent
 
@@ -618,9 +630,10 @@ OS Settings screen.
 **Where:** Settings → **App Lock** / **Pocket-dial** / **Screenshot
 protection**.
 
-- **App Lock** — require PIN or biometric every time you reopen the
-  app. Default on. Timeout configurable (immediate / 1 min / 5 min /
-  15 min / 60 min).
+- **App Lock** — require Passkey (biometric) or PIN every time you
+  reopen the app. Default on. Timeout configurable (immediate / 1 min
+  / 5 min / 15 min / 60 min). On the lock screen, Passkey fires
+  automatically; tap **Use PIN instead** if biometric fails.
 - **Pocket-dial** — uses proximity sensor + accelerometer to detect
   when the phone is in your pocket or face-down. If you accidentally
   trigger a tap through fabric, the app refuses to act on it until
@@ -1186,7 +1199,9 @@ Updates ship via normal app updates — not live-fetched. See the
   Breach Watch + Distress Signal personalization)
 - **Change PIN** — rotate your 4-6 digit PIN. Requires current PIN.
   Re-derives all encryption keys.
-- **Biometric unlock** — toggle Face ID / Touch ID / fingerprint
+- **Biometric unlock (Passkey)** — toggle Face ID / Touch ID /
+  fingerprint. See `docs/AUTH_MODEL.md` for the full architecture +
+  Phase 2 WebAuthn roadmap.
 - **Auto-lock timeout** — immediate / 1 min / 5 min / 15 min / 60 min
 
 ### Appearance

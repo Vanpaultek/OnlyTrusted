@@ -77,7 +77,7 @@ struct ProfileSetupScreen: View {
         switch step {
         case .email:     return "Your email"
         case .pin:       return "Set a 4-6 digit PIN"
-        case .biometric: return "Enable Face ID / Touch ID?"
+        case .biometric: return "Set up your Passkey"
         case .done:      return "All set"
         }
     }
@@ -85,8 +85,8 @@ struct ProfileSetupScreen: View {
     private var subtitleText: String {
         switch step {
         case .email:     return "Stored on this device only. OnlyTrusted does not have a server, so your email is never transmitted anywhere."
-        case .pin:       return "Protects your app contents if your phone is lost or stolen. PBKDF2-hashed before storing — we can't read it back."
-        case .biometric: return "Faster unlock. Falls back to PIN if biometric fails. Uses Secure Enclave; your face/fingerprint never leaves this device."
+        case .pin:       return "Backup unlock method. PBKDF2-hashed before storing — we can't read it back. Only used if your Passkey can't be presented."
+        case .biometric: return "Face ID / Touch ID becomes your primary unlock. Phishing-proof, no password to type, no email code to wait for. Uses Secure Enclave — your biometric never leaves this device."
         case .done:      return ""
         }
     }
@@ -180,8 +180,9 @@ struct ProfileSetupScreen: View {
 
     private var biometricStep: some View {
         VStack(spacing: 14) {
+            // Primary action — enable Passkey (biometric) as the default unlock.
             Button(action: { enableBiometric(true) }) {
-                Text("Enable biometric unlock")
+                Text("Set up Passkey")
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(Color.appAccent, in: RoundedRectangle(cornerRadius: 12))
@@ -189,8 +190,11 @@ struct ProfileSetupScreen: View {
             }
             .buttonStyle(.plain)
 
+            // Secondary — users on devices without biometric sensors or those who
+            // prefer PIN-only can skip. PIN was set in the previous step so unlock
+            // still works either way.
             Button(action: { enableBiometric(false) }) {
-                Text("Skip — PIN only")
+                Text("Use PIN only")
                     .font(.body.weight(.semibold))
                     .frame(maxWidth: .infinity, minHeight: 48)
                     .background(Color.appElevatedSurface, in: RoundedRectangle(cornerRadius: 12))
@@ -205,13 +209,13 @@ struct ProfileSetupScreen: View {
             let ctx = LAContext()
             var err: NSError?
             guard ctx.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &err) else {
-                errorMessage = "Biometric isn't available on this device — continuing with PIN only."
+                errorMessage = "Face ID / Touch ID isn't available on this device — continuing with PIN only."
                 store.setBiometricEnabled(false)
                 finish()
                 return
             }
             ctx.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics,
-                               localizedReason: "Enable biometric unlock for OnlyTrusted") { ok, _ in
+                               localizedReason: "Set up your OnlyTrusted Passkey") { ok, _ in
                 DispatchQueue.main.async {
                     store.setBiometricEnabled(ok)
                     finish()

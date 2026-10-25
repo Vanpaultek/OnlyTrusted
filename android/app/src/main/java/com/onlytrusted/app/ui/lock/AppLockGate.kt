@@ -92,8 +92,8 @@ fun AppLockGate(
         attempted = true
         BiometricPrompter.prompt(
             activity = activity,
-            title = "Unlock OnlyTrusted",
-            subtitle = "Use your biometric or device PIN",
+            title = "Unlock with your Passkey",
+            subtitle = "Face / fingerprint — on-device, phishing-proof",
             onSuccess = {
                 // Real unlock: always clear any duress session that was active.
                 DuressState.setDuressSession(false)
@@ -131,8 +131,8 @@ fun AppLockGate(
                     attempted = true
                     BiometricPrompter.prompt(
                         activity = activity,
-                        title = "Unlock OnlyTrusted",
-                        subtitle = "Use your biometric or device PIN",
+                        title = "Unlock with your Passkey",
+                        subtitle = "Face / fingerprint — on-device, phishing-proof",
                         onSuccess = {
                             DuressState.setDuressSession(false)
                             onUnlocked()

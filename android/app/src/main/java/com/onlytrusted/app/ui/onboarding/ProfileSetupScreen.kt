@@ -115,8 +115,8 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
                         if (activity != null && BiometricPrompter.canAuthenticate(activity)) {
                             BiometricPrompter.prompt(
                                 activity,
-                                title = "Enable biometric unlock",
-                                subtitle = "OnlyTrusted uses this to unlock the app faster.",
+                                title = "Set up your Passkey",
+                                subtitle = "Face / fingerprint becomes your primary unlock — on-device.",
                                 onSuccess = {
                                     ProfileStore.setBiometricEnabled(context, true)
                                     finish(context, onComplete)
@@ -128,7 +128,7 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
                             )
                         } else {
                             ProfileStore.setBiometricEnabled(context, false)
-                            errorMessage = "Biometric isn't available on this device — continuing with PIN only."
+                            errorMessage = "Face / fingerprint isn't available on this device — continuing with PIN only."
                             finish(context, onComplete)
                         }
                     },
@@ -158,12 +158,12 @@ private fun Header(step: Step) {
         Step.Pin -> Triple(
             Icons.Filled.Lock,
             "Set a 4-6 digit PIN",
-            "Protects your app contents if your phone is lost or stolen. PBKDF2-hashed before storing — we can't read it back."
+            "Backup unlock for when your Passkey can't be used. PBKDF2-hashed with 100k iterations before storing — we can't read it back."
         )
         Step.Biometric -> Triple(
             Icons.Filled.Face,
-            "Enable fingerprint / face unlock?",
-            "Faster unlock. Falls back to PIN if biometric fails. Uses hardware-backed Keystore; your biometric never leaves this device."
+            "Set up your Passkey",
+            "Face / fingerprint becomes your primary unlock — phishing-proof, nothing to type. Uses hardware-backed Keystore / StrongBox; biometric never leaves this device."
         )
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
@@ -234,15 +234,18 @@ private fun PinStep(
 @Composable
 private fun BiometricStep(onEnable: () -> Unit, onSkip: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Primary — Passkey (biometric) becomes the default unlock. Phishing-proof,
+        // nothing to remember, uses Secure Enclave / StrongBox so credential never
+        // leaves the device. Modern vocabulary matches 2026 user expectations.
         Button(
             onClick = onEnable,
             colors = ButtonDefaults.buttonColors(containerColor = BrandAccentDark),
             modifier = Modifier.fillMaxWidth().height(48.dp)
-        ) { Text("Enable biometric unlock", color = Color.White, fontWeight = FontWeight.SemiBold) }
+        ) { Text("Set up Passkey", color = Color.White, fontWeight = FontWeight.SemiBold) }
         OutlinedButton(
             onClick = onSkip,
             modifier = Modifier.fillMaxWidth().height(48.dp)
-        ) { Text("Skip — PIN only", color = BrandAccentDark, fontWeight = FontWeight.SemiBold) }
+        ) { Text("Use PIN only", color = BrandAccentDark, fontWeight = FontWeight.SemiBold) }
     }
 }
 

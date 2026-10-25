@@ -18,12 +18,12 @@
         {
           "num": 3,
           "name": "4-digit PIN",
-          "detail": "Pick a 4–6 digit PIN. Used as the lock gate + the derivation input for the AES-256-GCM key that encrypts your Vault (PBKDF2-HMAC-SHA256, 100k iters). We cannot recover it."
+          "detail": "Fallback unlock method used when Passkey can't be presented. PBKDF2-HMAC-SHA256 hashed with 100k iterations before storing — we cannot recover it. If you lose both your biometric AND your PIN, use Shamir Split (Elite tier) with trusted shareholders to recover."
         },
         {
           "num": 4,
-          "name": "Biometric unlock",
-          "detail": "Toggle Face ID / Touch ID / fingerprint. PIN still required as fallback + for destructive actions. Optional — Skip if you prefer PIN-only."
+          "name": "Set up your Passkey",
+          "detail": "Face ID / Touch ID / fingerprint becomes your primary unlock. Phishing-proof, nothing to type, no email code to wait for. Uses Secure Enclave (iOS) / StrongBox (Android) — biometric never leaves this device. PIN set in Step 3 remains as a fallback."
         },
         {
           "num": 5,
@@ -34,6 +34,22 @@
     }
   ],
   "features": [
+    {
+      "id": "passkey",
+      "name": "Passkey (Face ID / Touch ID / fingerprint)",
+      "tier": "free",
+      "platform": "both",
+      "icon": "faceid",
+      "where": "Onboarding Step 4 · Settings → Account → Biometric unlock",
+      "what": "Phishing-proof primary unlock using your device's Secure Enclave (iOS) or StrongBox / Keystore (Android). Auto-triggers on app open — Face ID / Touch ID / fingerprint scans, you're in. No password to type, no email code to wait for, no account to compromise.",
+      "how": [
+        "During onboarding Step 4: tap Set up Passkey → Face ID / Touch ID prompt → Allow",
+        "On every subsequent app open: lock screen auto-fires the biometric prompt",
+        "If biometric fails (dirty finger, poor light): tap Use PIN instead",
+        "To disable: Settings → Account → toggle Biometric off (PIN still required to unlock)"
+      ],
+      "honest": "Zero network — all biometric comparison happens on-device via Secure Enclave / StrongBox. Credential never leaves your phone. PIN remains as a mandatory fallback (set during onboarding) so you can never be locked out by a biometric sensor failure. If you lose BOTH your biometric and your PIN, use Shamir Split (Elite) to recover via trusted shareholders. Phase 2 roadmap: full WebAuthn passkey via ASAuthorizationController (iOS) + CredentialManager (Android) — see docs/AUTH_MODEL.md."
+    },
     {
       "id": "vault",
       "name": "Trusted Contacts (Vault)",
@@ -718,14 +734,54 @@
     }
   ],
   "platformDiffs": [
-    {"feature": "SMS inbox scan", "ios": "❌", "android": "✓", "note": "iOS blocks third-party inbox read"},
-    {"feature": "Wangiri auto-block", "ios": "detect-only", "android": "✓", "note": "iOS CallKit doesn't expose caller number"},
-    {"feature": "Shield watermark overlay", "ios": "❌", "android": "✓", "note": "iOS blocks overlays"},
-    {"feature": "Volume-down 4× distress", "ios": "❌", "android": "✓", "note": "iOS doesn't expose volume keys"},
-    {"feature": "Background BLE scan", "ios": "foreground-only", "android": "✓", "note": "iOS needs app foreground"},
-    {"feature": "Hardware Key (FIDO2)", "ios": "NFC only", "android": "USB-C + NFC", "note": "iOS no USB FIDO support"},
-    {"feature": "App Shield", "ios": "via Screen Time", "android": "via Digital Wellbeing", "note": "Both need elevated grants"},
-    {"feature": "Signed Audit Log", "ios": "✓", "android": "✓", "note": "Both support FIDO2 attestation"}
+    {
+      "feature": "SMS inbox scan",
+      "ios": "❌",
+      "android": "✓",
+      "note": "iOS blocks third-party inbox read"
+    },
+    {
+      "feature": "Wangiri auto-block",
+      "ios": "detect-only",
+      "android": "✓",
+      "note": "iOS CallKit doesn't expose caller number"
+    },
+    {
+      "feature": "Shield watermark overlay",
+      "ios": "❌",
+      "android": "✓",
+      "note": "iOS blocks overlays"
+    },
+    {
+      "feature": "Volume-down 4× distress",
+      "ios": "❌",
+      "android": "✓",
+      "note": "iOS doesn't expose volume keys"
+    },
+    {
+      "feature": "Background BLE scan",
+      "ios": "foreground-only",
+      "android": "✓",
+      "note": "iOS needs app foreground"
+    },
+    {
+      "feature": "Hardware Key (FIDO2)",
+      "ios": "NFC only",
+      "android": "USB-C + NFC",
+      "note": "iOS no USB FIDO support"
+    },
+    {
+      "feature": "App Shield",
+      "ios": "via Screen Time",
+      "android": "via Digital Wellbeing",
+      "note": "Both need elevated grants"
+    },
+    {
+      "feature": "Signed Audit Log",
+      "ios": "✓",
+      "android": "✓",
+      "note": "Both support FIDO2 attestation"
+    }
   ],
   "honestLimits": [
     "Cannot monitor other apps' microphone or camera use at a hardware level without root (Android) or MDM (iOS). Privacy Shield observes only what the OS exposes.",
@@ -741,12 +797,33 @@
     "Cannot recover your PIN or Vault if you've forgotten both your PIN and never set up Shamir Split or Encrypted Backup. There is nowhere to recover from — by design."
   ],
   "faq": [
-    {"q": "My SOS button is grayed out — why?", "a": "You need at least one Trusted Contact with a valid phone number in your Vault. Add one via Contacts tab → +."},
-    {"q": "Shake-to-trigger isn't firing", "a": "Verify under Settings → Distress Signal that Shake phone to trigger is toggled on. Shake detection runs only when the app is in the foreground — both platforms block background shake listeners for third-party apps."},
-    {"q": "Volume-down 4× isn't firing (Android)", "a": "This is opt-in and off by default. Enable it under Settings → Distress Signal → Volume-down 4× to trigger. The 4-press pattern must land within 2 seconds AND the OnlyTrusted app must be foreground."},
-    {"q": "I lost my phone — can I log in from a new one?", "a": "No, because there is no account. Your Vault lives in encrypted storage on the lost device. To restore: install OnlyTrusted, go to Settings → Restore from Backup (Elite) + load your .ot2bak file. If you didn't set up Encrypted Backup OR Shamir Split, your data is gone."},
-    {"q": "How do I verify OnlyTrusted isn't phoning home?", "a": "Three ways: (1) Install NetGuard (Android) or Lockdown Privacy (iOS) + watch — OnlyTrusted shows zero outbound connections. (2) Inspect AndroidManifest.xml + Info.plist in the public source. (3) Verify the SLSA Build Provenance attestation on any GitHub release matches."},
-    {"q": "Found a bug / need help / want a feature", "a": "Email admin@vanpaultek.com or open an issue at github.com/Vanpaultek/OnlyTrusted/issues."},
-    {"q": "Security vulnerability", "a": "See SECURITY.md. Private disclosure to security@vanpaultek.com with a 90-day embargo before public disclosure."}
+    {
+      "q": "My SOS button is grayed out — why?",
+      "a": "You need at least one Trusted Contact with a valid phone number in your Vault. Add one via Contacts tab → +."
+    },
+    {
+      "q": "Shake-to-trigger isn't firing",
+      "a": "Verify under Settings → Distress Signal that Shake phone to trigger is toggled on. Shake detection runs only when the app is in the foreground — both platforms block background shake listeners for third-party apps."
+    },
+    {
+      "q": "Volume-down 4× isn't firing (Android)",
+      "a": "This is opt-in and off by default. Enable it under Settings → Distress Signal → Volume-down 4× to trigger. The 4-press pattern must land within 2 seconds AND the OnlyTrusted app must be foreground."
+    },
+    {
+      "q": "I lost my phone — can I log in from a new one?",
+      "a": "No, because there is no account. Your Vault lives in encrypted storage on the lost device, unlocked by your biometric Passkey + PIN. To restore on a new device: install OnlyTrusted → onboarding → set up a new Passkey + PIN → Settings → Restore from Backup (Elite tier) → load your .ot2bak file. If you didn't set up Encrypted Backup OR Shamir Split before losing the phone, your data is gone — by design."
+    },
+    {
+      "q": "How do I verify OnlyTrusted isn't phoning home?",
+      "a": "Three ways: (1) Install NetGuard (Android) or Lockdown Privacy (iOS) + watch — OnlyTrusted shows zero outbound connections. (2) Inspect AndroidManifest.xml + Info.plist in the public source. (3) Verify the SLSA Build Provenance attestation on any GitHub release matches."
+    },
+    {
+      "q": "Found a bug / need help / want a feature",
+      "a": "Email admin@vanpaultek.com or open an issue at github.com/Vanpaultek/OnlyTrusted/issues."
+    },
+    {
+      "q": "Security vulnerability",
+      "a": "See SECURITY.md. Private disclosure to security@vanpaultek.com with a 90-day embargo before public disclosure."
+    }
   ]
 }
