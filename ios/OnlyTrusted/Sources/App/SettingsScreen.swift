@@ -1245,6 +1245,11 @@ struct SettingsScreen: View {
                                    label: "Privacy, terms, and honest claims")
                 }
                 SettingsDivider()
+                NavigationLink { LanguageRegionScreen() } label: {
+                    SettingsNavRow(icon: "globe", iconTint: Color.appAccent,
+                                   label: "Language & Region")
+                }
+                SettingsDivider()
                 NavigationLink { AboutScreen() } label: {
                     SettingsNavRow(icon: "info.circle.fill", iconTint: Color.appAccent,
                                    label: "About OnlyTrusted")

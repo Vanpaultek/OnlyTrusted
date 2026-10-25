@@ -140,6 +140,7 @@ fun SettingsScreen(
     onOpenShieldLog: () -> Unit = {},
     onOpenLegal: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
+    onOpenLanguageRegion: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onOpenReports: () -> Unit = {},
     onOpenBilling: () -> Unit = {},
@@ -1138,6 +1139,13 @@ fun SettingsScreen(
                     tint = BrandAccentDark,
                     title = "Privacy, terms & honest claims",
                     onClick = onOpenLegal
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Language,
+                    tint = BrandAccentDark,
+                    title = androidx.compose.ui.res.stringResource(com.onlytrusted.app.R.string.settings_language_region),
+                    onClick = onOpenLanguageRegion
                 )
                 RowDivider()
                 SettingsNavRow(

@@ -56,6 +56,11 @@
 		41D922C570BA400222F1ED3A /* EventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B624AA0E449B364901659D23 /* EventStore.swift */; };
 		4271E83AB6A2CB7AC93E006D /* PremiumGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D1771386B17B4F8FE139740 /* PremiumGate.swift */; };
 		4435D5D84DB4174CEDF41B69 /* Data in Resources */ = {isa = PBXBuildFile; fileRef = AA4DF852CE4AA7F87A97AF33 /* Data */; };
+		409DDB23E421D08D6C8F1C44 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 12FD94D123892FE0F77C402A /* Localizable.xcstrings */; };
+		6D050E966DFE45950D2B87FC /* countries.json in Resources */ = {isa = PBXBuildFile; fileRef = 949DF686E3C6686BF1470FC3 /* countries.json */; };
+		EC2279C4173F8CBAFE9809BF /* LocaleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672DC3C43C591A17F0A45CEE /* LocaleStore.swift */; };
+		90B98796B56DE636A96FABBA /* ReviewBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEBF2CED9D9FFE51B89A7A62 /* ReviewBadge.swift */; };
+		6A9B0C82FC434CD00DF1B524 /* LanguageRegionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F85850E331836FFED89E7593 /* LanguageRegionScreen.swift */; };
 		49A98D61332204920438EECE /* EncryptedBackupScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = A19451BB26BC249BF36BD090 /* EncryptedBackupScreen.swift */; };
 		4C091E1465E0117CF62999EA /* AppBackdrop.swift in Sources */ = {isa = PBXBuildFile; fileRef = B67E35947FEDCCD998311AE4 /* AppBackdrop.swift */; };
 		4E9C7B11AEE38F7153FE6C93 /* TrustedWitnessState.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC02C9430D06F9D773B85ECA /* TrustedWitnessState.swift */; };
@@ -316,6 +321,11 @@
 		A751149F1B0D6CFD467F357D /* SplashScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashScreen.swift; sourceTree = "<group>"; };
 		A86ACF06C58669C735244AE6 /* HardwareKeyState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareKeyState.swift; sourceTree = "<group>"; };
 		AA4DF852CE4AA7F87A97AF33 /* Data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Data; path = OnlyTrusted/Data; sourceTree = SOURCE_ROOT; };
+		12FD94D123892FE0F77C402A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = OnlyTrusted/Resources/Localization/Localizable.xcstrings; sourceTree = SOURCE_ROOT; };
+		949DF686E3C6686BF1470FC3 /* countries.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = countries.json; path = OnlyTrusted/Resources/Localization/countries.json; sourceTree = SOURCE_ROOT; };
+		672DC3C43C591A17F0A45CEE /* LocaleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocaleStore.swift; sourceTree = "<group>"; };
+		EEBF2CED9D9FFE51B89A7A62 /* ReviewBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewBadge.swift; sourceTree = "<group>"; };
+		F85850E331836FFED89E7593 /* LanguageRegionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageRegionScreen.swift; sourceTree = "<group>"; };
 		B1E76DA3F7913747A56B51D1 /* HardwareKeySetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareKeySetupScreen.swift; sourceTree = "<group>"; };
 		B22B6CAC92610E21B4F8AE8A /* PrivacyShieldDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShieldDashboard.swift; sourceTree = "<group>"; };
 		B39CEFE3438DEA9D4B888894 /* ContactScanState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactScanState.swift; sourceTree = "<group>"; };
@@ -458,6 +468,7 @@
 				564C8681F6FEEFCF4CA6B6B7 /* HardwareKey */,
 				9F038669EB712919BB85442C /* IdentityProtection */,
 				BE88C114F01F7FB7F4965C92 /* Legal */,
+				42DB083DD3570B27EA9326D4 /* Localization */,
 				59FC3E7C7CBEEB57ED07CBFB /* Lock */,
 				8B2BAE45A4D64FD531E8626F /* Onboarding */,
 				91E80C8F66BB86EE2B54BF05 /* P2P */,
@@ -808,6 +819,8 @@
 			isa = PBXGroup;
 			children = (
 				AA4DF852CE4AA7F87A97AF33 /* Data */,
+				12FD94D123892FE0F77C402A /* Localizable.xcstrings */,
+				949DF686E3C6686BF1470FC3 /* countries.json */,
 				DCA5EB861CF734178216726C /* CallDirectoryExtension */,
 				4A13BEEE0F7BB811858626FA /* MessageFilterExtension */,
 				416D78F758AFD6E1E655C6EC /* OnlyTrusted */,
@@ -826,6 +839,16 @@
 				B9BB7D55CE347AA4C580FB36 /* DuressVault.swift */,
 			);
 			path = Duress;
+			sourceTree = "<group>";
+		};
+		42DB083DD3570B27EA9326D4 /* Localization */ = {
+			isa = PBXGroup;
+			children = (
+				672DC3C43C591A17F0A45CEE /* LocaleStore.swift */,
+				EEBF2CED9D9FFE51B89A7A62 /* ReviewBadge.swift */,
+				F85850E331836FFED89E7593 /* LanguageRegionScreen.swift */,
+			);
+			path = Localization;
 			sourceTree = "<group>";
 		};
 		BE88C114F01F7FB7F4965C92 /* Legal */ = {
@@ -1051,6 +1074,13 @@
 			knownRegions = (
 				Base,
 				en,
+				es,
+				fr,
+				pt,
+				hi,
+				ar,
+				de,
+				id,
 			);
 			mainGroup = B71B8A8F3A6FB790A5ACCB2D;
 			minimizedProjectReferenceProxies = 1;
@@ -1074,6 +1104,8 @@
 			files = (
 				BB0E07BD1982FB98B607DE36 /* Assets.xcassets in Resources */,
 				4435D5D84DB4174CEDF41B69 /* Data in Resources */,
+				409DDB23E421D08D6C8F1C44 /* Localizable.xcstrings in Resources */,
+				6D050E966DFE45950D2B87FC /* countries.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1158,6 +1190,9 @@
 				B8FE477ED7465279810CF711 /* FaceLockState.swift in Sources */,
 				2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */,
 				2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */,
+				EC2279C4173F8CBAFE9809BF /* LocaleStore.swift in Sources */,
+				90B98796B56DE636A96FABBA /* ReviewBadge.swift in Sources */,
+				6A9B0C82FC434CD00DF1B524 /* LanguageRegionScreen.swift in Sources */,
 				97BE974DB4719B74799CAD39 /* GeofenceManager.swift in Sources */,
 				9F7A1840EF5FC66F71635709 /* GeofenceSMSComposer.swift in Sources */,
 				D8FC97BBA8D7954807F26FC1 /* GeofenceSetupScreen.swift in Sources */,

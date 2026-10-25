@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OnlyTrusted — pt (machine-translated, pending native review).
+  Strings prefixed with [REVIEW] are safety-critical (SOS / duress / legal / pricing /
+  system alerts) and MUST be reviewed by a native speaker before public release.
+  The ReviewBadge composable strips [REVIEW] + renders an amber warning in the UI.
+  See docs/NEEDS_REVIEW.md for the sign-off checklist.
+-->
+<resources>
+    <string name="app_name">OnlyTrusted</string>
+    <string name="monitor_title">Proteção ativa</string>
+    <string name="monitor_text_idle">Monitorando microfone e câmera. Nada suspeito agora.</string>
+    <string name="pocket_text_running">Proteção contra discagem acidental ativa.</string>
+    <string name="alert_mic_title">[REVIEW] Microfone em uso</string>
+    <string name="alert_mic_body_generic">[REVIEW] Algo no seu telefone está usando o microfone.</string>
+    <string name="alert_mic_body_with_pkg">[REVIEW] %1$s está usando o microfone.</string>
+    <string name="alert_camera_title">[REVIEW] Câmera em uso</string>
+    <string name="alert_camera_body">[REVIEW] A câmera %1$s acabou de abrir.</string>
+    <string name="alert_call_blocked_title">[REVIEW] Chamada bloqueada</string>
+    <string name="alert_call_blocked_body">[REVIEW] Uma chamada recebida de %1$s foi bloqueada.</string>
+    <string name="alert_sms_flagged_title">[REVIEW] SMS de spam detectado</string>
+    <string name="alert_sms_flagged_body">[REVIEW] Uma mensagem de %1$s corresponde à sua lista de bloqueio.</string>
+    <string name="alert_untrusted_call_title">[REVIEW] Chamada não confiável silenciada</string>
+    <string name="alert_untrusted_call_body">[REVIEW] %1$s não está no seu cofre familiar. A chamada foi silenciada.</string>
+    <string name="alert_untrusted_sms_title">[REVIEW] SMS não confiável</string>
+    <string name="alert_untrusted_sms_body">[REVIEW] %1$s não está no seu cofre familiar.</string>
+    <string name="alert_robocall_title">[REVIEW] Provável chamada automática silenciada</string>
+    <string name="alert_robocall_warn_title">[REVIEW] Chamador suspeito</string>
+    <string name="shield_text_running">Marca d\'água de proteção ativa. As capturas agora terão seu código de sessão.</string>
+    <string name="alert_lockscreen_title">[REVIEW] Alerta do OnlyTrusted</string>
+    <string name="alert_lockscreen_body">[REVIEW] Desbloqueie o telefone para ver os detalhes.</string>
+    <string name="lock_title">Bloqueado</string>
+    <string name="lock_try_again">Tentar de novo</string>
+    <string name="lock_unlock">Desbloquear</string>
+    <string name="lock_use_pin">Usar PIN em vez disso</string>
+    <string name="lock_enter_pin">Digite o PIN</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_cancel">Cancelar</string>
+    <string name="passkey_unlock_title">Desbloqueie com seu Passkey</string>
+    <string name="passkey_unlock_subtitle">Rosto / impressão digital — no dispositivo, à prova de phishing</string>
+    <string name="passkey_setup_title">Configure seu Passkey</string>
+    <string name="passkey_setup_subtitle">Confirme com rosto ou impressão digital — vinculado ao hardware, no dispositivo.</string>
+    <string name="onb_welcome_title">OnlyTrusted</string>
+    <string name="onb_welcome_tagline">Um telefone mais seguro e tranquilo\ncomeça aqui.</string>
+    <string name="onb_get_started">Começar</string>
+    <string name="onb_consent_title">Confirme, por favor</string>
+    <string name="onb_consent_subtitle">Para usar o OnlyTrusted, você deve revisar e confirmar o seguinte.</string>
+    <string name="onb_adult">Sou adulto</string>
+    <string name="onb_adult_detail">Tenho 18 anos ou mais.</string>
+    <string name="onb_own_device">Sou dono deste dispositivo ou estou autorizado a usá-lo</string>
+    <string name="onb_own_device_detail">Tenho o direito de usar e configurar este dispositivo.</string>
+    <string name="onb_limits">Li e entendi os limites honestos</string>
+    <string name="onb_limits_detail">Entendo o que o OnlyTrusted pode fazer, o que não pode fazer, e as limitações no Android.</string>
+    <string name="onb_confirm">Confirmo e continuo</string>
+    <string name="onb_privacy">Política de Privacidade</string>
+    <string name="onb_terms">Termos de Uso</string>
+    <string name="onb_honest">Declarações Honestas</string>
+    <string name="onb_email_title">Seu e-mail</string>
+    <string name="onb_email_detail">Armazenado apenas neste dispositivo. OnlyTrusted não tem servidor, então seu e-mail nunca é transmitido.</string>
+    <string name="onb_email_placeholder">voce@exemplo.com</string>
+    <string name="onb_continue">Continuar</string>
+    <string name="onb_pin_title">Defina um PIN de 4 a 6 dígitos</string>
+    <string name="onb_pin_detail">Desbloqueio de reserva quando seu Passkey não puder ser usado. Armazenado via PBKDF2 (100k iterações) — não podemos lê-lo.</string>
+    <string name="onb_pin_placeholder">PIN de 4 a 6 dígitos</string>
+    <string name="onb_pin_confirm">Confirmar PIN</string>
+    <string name="onb_pin_set">Definir PIN</string>
+    <string name="onb_passkey_title">Configure seu Passkey</string>
+    <string name="onb_passkey_detail">O rosto / impressão digital se torna seu desbloqueio principal — à prova de phishing, nada para digitar. Usa Keystore / StrongBox do hardware; sua biometria nunca sai deste dispositivo.</string>
+    <string name="onb_passkey_set">Configurar Passkey</string>
+    <string name="onb_pin_only">Usar apenas PIN</string>
+    <string name="nav_dashboard">Painel</string>
+    <string name="nav_contacts">Contatos</string>
+    <string name="nav_blocked">Bloqueados</string>
+    <string name="nav_log">Registro</string>
+    <string name="nav_settings">Configurações</string>
+    <string name="settings_language_region">Idioma e região</string>
+    <string name="settings_language_region_subtitle">Escolha sua região, país e idioma preferido.</string>
+    <string name="language_region_header">Região</string>
+    <string name="language_country_header">País</string>
+    <string name="language_language_header">Idioma do app</string>
+    <string name="language_english_always">O inglês está sempre disponível.</string>
+    <string name="language_pending_review">⚠ Tradução aguardando revisão</string>
+    <string name="language_selected_locale">Idioma selecionado: %1$s</string>
+    <string name="language_restart_note">Algumas telas são atualizadas instantaneamente; outras na próxima abertura do app.</string>
+    <string name="sos_title">[REVIEW] Sinal de socorro</string>
+    <string name="sos_send">[REVIEW] Enviar sinal de socorro</string>
+    <string name="sos_countdown">[REVIEW] Enviando em %1$d…</string>
+    <string name="sos_cancel">[REVIEW] Cancelar</string>
+    <string name="sos_sent">[REVIEW] SOS enviado para %1$d contato(s).</string>
+    <string name="sos_body_prefix">[REVIEW] SOCORRO — preciso de ajuda urgente.</string>
+    <string name="sos_body_location">[REVIEW] Minha localização atual: %1$s</string>
+    <string name="duress_decoy_opened">[REVIEW] Cofre falso aberto. SOS silencioso enviado.</string>
+    <string name="legal_auto_renew">[REVIEW] Renova automaticamente pelo preço exibido. Cancele a qualquer momento em Assinaturas do Google Play.</string>
+    <string name="legal_no_server">[REVIEW] OnlyTrusted não tem servidor. Tudo fica neste dispositivo.</string>
+</resources>

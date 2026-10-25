@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OnlyTrusted — hi (machine-translated, pending native review).
+  Strings prefixed with [REVIEW] are safety-critical (SOS / duress / legal / pricing /
+  system alerts) and MUST be reviewed by a native speaker before public release.
+  The ReviewBadge composable strips [REVIEW] + renders an amber warning in the UI.
+  See docs/NEEDS_REVIEW.md for the sign-off checklist.
+-->
+<resources>
+    <string name="app_name">OnlyTrusted</string>
+    <string name="monitor_title">सुरक्षा सक्रिय है</string>
+    <string name="monitor_text_idle">माइक और कैमरा देख रहे हैं। अभी कुछ भी संदिग्ध नहीं।</string>
+    <string name="pocket_text_running">जेब-डायल सुरक्षा चालू है।</string>
+    <string name="alert_mic_title">[REVIEW] माइक्रोफ़ोन उपयोग में है</string>
+    <string name="alert_mic_body_generic">[REVIEW] आपके फ़ोन पर कोई चीज़ माइक्रोफ़ोन उपयोग कर रही है।</string>
+    <string name="alert_mic_body_with_pkg">[REVIEW] %1$s माइक्रोफ़ोन उपयोग कर रहा है।</string>
+    <string name="alert_camera_title">[REVIEW] कैमरा उपयोग में है</string>
+    <string name="alert_camera_body">[REVIEW] कैमरा %1$s अभी खोला गया।</string>
+    <string name="alert_call_blocked_title">[REVIEW] कॉल ब्लॉक की गई</string>
+    <string name="alert_call_blocked_body">[REVIEW] %1$s से एक आने वाली कॉल ब्लॉक की गई।</string>
+    <string name="alert_sms_flagged_title">[REVIEW] स्पैम SMS पकड़ा गया</string>
+    <string name="alert_sms_flagged_body">[REVIEW] %1$s से एक संदेश आपकी ब्लॉक सूची से मेल खाता है।</string>
+    <string name="alert_untrusted_call_title">[REVIEW] अविश्वसनीय कॉल म्यूट की गई</string>
+    <string name="alert_untrusted_call_body">[REVIEW] %1$s आपके परिवार वॉल्ट में नहीं है। कॉल म्यूट कर दी गई।</string>
+    <string name="alert_untrusted_sms_title">[REVIEW] अविश्वसनीय SMS</string>
+    <string name="alert_untrusted_sms_body">[REVIEW] %1$s आपके परिवार वॉल्ट में नहीं है।</string>
+    <string name="alert_robocall_title">[REVIEW] संभावित रोबोकॉल म्यूट की गई</string>
+    <string name="alert_robocall_warn_title">[REVIEW] संदिग्ध कॉलर</string>
+    <string name="shield_text_running">शील्ड वॉटरमार्क चालू। अब ली गई तस्वीरों पर आपका सत्र कोड होगा।</string>
+    <string name="alert_lockscreen_title">[REVIEW] OnlyTrusted सूचना</string>
+    <string name="alert_lockscreen_body">[REVIEW] विवरण देखने के लिए फ़ोन अनलॉक करें।</string>
+    <string name="lock_title">लॉक्ड</string>
+    <string name="lock_try_again">फिर से कोशिश करें</string>
+    <string name="lock_unlock">अनलॉक करें</string>
+    <string name="lock_use_pin">इसके बजाय PIN दर्ज करें</string>
+    <string name="lock_enter_pin">PIN दर्ज करें</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_cancel">रद्द करें</string>
+    <string name="passkey_unlock_title">अपनी Passkey से अनलॉक करें</string>
+    <string name="passkey_unlock_subtitle">चेहरा / फ़िंगरप्रिंट — डिवाइस पर, फ़िशिंग-प्रूफ़</string>
+    <string name="passkey_setup_title">अपनी Passkey सेट अप करें</string>
+    <string name="passkey_setup_subtitle">चेहरे या फ़िंगरप्रिंट से पुष्टि करें — हार्डवेयर-बंधा, डिवाइस पर।</string>
+    <string name="onb_welcome_title">OnlyTrusted</string>
+    <string name="onb_welcome_tagline">एक सुरक्षित, शांत फ़ोन\nयहाँ से शुरू होता है।</string>
+    <string name="onb_get_started">शुरू करें</string>
+    <string name="onb_consent_title">कृपया पुष्टि करें</string>
+    <string name="onb_consent_subtitle">OnlyTrusted का उपयोग करने के लिए आपको निम्नलिखित की समीक्षा और पुष्टि करनी होगी।</string>
+    <string name="onb_adult">मैं वयस्क हूँ</string>
+    <string name="onb_adult_detail">मैं 18 वर्ष या उससे अधिक का हूँ।</string>
+    <string name="onb_own_device">मैं इस डिवाइस का मालिक हूँ या इसे उपयोग करने के लिए अधिकृत हूँ</string>
+    <string name="onb_own_device_detail">मुझे इस डिवाइस का उपयोग और कॉन्फ़िगर करने का अधिकार है।</string>
+    <string name="onb_limits">मैंने ईमानदार सीमाएँ पढ़ और समझ ली हैं</string>
+    <string name="onb_limits_detail">मैं समझता हूँ कि OnlyTrusted क्या कर सकता है, क्या नहीं कर सकता, और Android पर सीमाएँ क्या हैं।</string>
+    <string name="onb_confirm">मैं पुष्टि करता हूँ और जारी रखता हूँ</string>
+    <string name="onb_privacy">गोपनीयता नीति</string>
+    <string name="onb_terms">उपयोग की शर्तें</string>
+    <string name="onb_honest">ईमानदार दावे</string>
+    <string name="onb_email_title">आपका ईमेल</string>
+    <string name="onb_email_detail">केवल इस डिवाइस पर संग्रहीत। OnlyTrusted के पास सर्वर नहीं है, इसलिए आपका ईमेल कहीं नहीं भेजा जाता।</string>
+    <string name="onb_email_placeholder">aap@udaaharan.com</string>
+    <string name="onb_continue">जारी रखें</string>
+    <string name="onb_pin_title">4 से 6 अंकों का PIN सेट करें</string>
+    <string name="onb_pin_detail">बैकअप अनलॉक जब आपकी Passkey उपयोग नहीं हो सकती। PBKDF2 (100k पुनरावृत्तियाँ) से हैश — हम इसे वापस नहीं पढ़ सकते।</string>
+    <string name="onb_pin_placeholder">4 से 6 अंकों का PIN</string>
+    <string name="onb_pin_confirm">PIN की पुष्टि करें</string>
+    <string name="onb_pin_set">PIN सेट करें</string>
+    <string name="onb_passkey_title">अपनी Passkey सेट अप करें</string>
+    <string name="onb_passkey_detail">चेहरा / फ़िंगरप्रिंट आपका मुख्य अनलॉक बन जाता है — फ़िशिंग-प्रूफ़, कुछ टाइप करने की ज़रूरत नहीं। हार्डवेयर Keystore / StrongBox का उपयोग करता है; आपकी बायोमेट्रिक्स इस डिवाइस से कभी बाहर नहीं जाती।</string>
+    <string name="onb_passkey_set">Passkey सेट अप करें</string>
+    <string name="onb_pin_only">केवल PIN उपयोग करें</string>
+    <string name="nav_dashboard">डैशबोर्ड</string>
+    <string name="nav_contacts">संपर्क</string>
+    <string name="nav_blocked">ब्लॉक्ड</string>
+    <string name="nav_log">लॉग</string>
+    <string name="nav_settings">सेटिंग्स</string>
+    <string name="settings_language_region">भाषा और क्षेत्र</string>
+    <string name="settings_language_region_subtitle">अपना क्षेत्र, देश और पसंदीदा भाषा चुनें।</string>
+    <string name="language_region_header">क्षेत्र</string>
+    <string name="language_country_header">देश</string>
+    <string name="language_language_header">ऐप भाषा</string>
+    <string name="language_english_always">अंग्रेज़ी हमेशा उपलब्ध है।</string>
+    <string name="language_pending_review">⚠ अनुवाद समीक्षा के लिए लंबित</string>
+    <string name="language_selected_locale">चयनित भाषा: %1$s</string>
+    <string name="language_restart_note">कुछ स्क्रीन तुरंत अपडेट होती हैं; अन्य ऐप खोलने पर रीफ़्रेश होती हैं।</string>
+    <string name="sos_title">[REVIEW] आपातकालीन संकेत</string>
+    <string name="sos_send">[REVIEW] आपातकालीन संकेत भेजें</string>
+    <string name="sos_countdown">[REVIEW] %1$d में भेज रहे हैं…</string>
+    <string name="sos_cancel">[REVIEW] रद्द करें</string>
+    <string name="sos_sent">[REVIEW] SOS %1$d संपर्क को भेजा गया।</string>
+    <string name="sos_body_prefix">[REVIEW] मदद चाहिए — मुझे तुरंत सहायता की आवश्यकता है।</string>
+    <string name="sos_body_location">[REVIEW] मेरा वर्तमान स्थान: %1$s</string>
+    <string name="duress_decoy_opened">[REVIEW] डिकॉय वॉल्ट खुला। मूक SOS भेजा गया।</string>
+    <string name="legal_auto_renew">[REVIEW] दिखाए गए मूल्य पर स्वतः नवीनीकरण। Google Play सदस्यताओं में कभी भी रद्द करें।</string>
+    <string name="legal_no_server">[REVIEW] OnlyTrusted के पास सर्वर नहीं है। सब कुछ इस डिवाइस पर रहता है।</string>
+</resources>

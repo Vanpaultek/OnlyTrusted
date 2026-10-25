@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OnlyTrusted — id (machine-translated, pending native review).
+  Strings prefixed with [REVIEW] are safety-critical (SOS / duress / legal / pricing /
+  system alerts) and MUST be reviewed by a native speaker before public release.
+  The ReviewBadge composable strips [REVIEW] + renders an amber warning in the UI.
+  See docs/NEEDS_REVIEW.md for the sign-off checklist.
+-->
+<resources>
+    <string name="app_name">OnlyTrusted</string>
+    <string name="monitor_title">Perlindungan aktif</string>
+    <string name="monitor_text_idle">Memantau mikrofon dan kamera. Tidak ada yang mencurigakan sekarang.</string>
+    <string name="pocket_text_running">Perlindungan panggilan tak sengaja aktif.</string>
+    <string name="alert_mic_title">[REVIEW] Mikrofon sedang digunakan</string>
+    <string name="alert_mic_body_generic">[REVIEW] Sesuatu di ponsel Anda menggunakan mikrofon.</string>
+    <string name="alert_mic_body_with_pkg">[REVIEW] %1$s sedang menggunakan mikrofon.</string>
+    <string name="alert_camera_title">[REVIEW] Kamera sedang digunakan</string>
+    <string name="alert_camera_body">[REVIEW] Kamera %1$s baru saja dibuka.</string>
+    <string name="alert_call_blocked_title">[REVIEW] Panggilan diblokir</string>
+    <string name="alert_call_blocked_body">[REVIEW] Panggilan masuk dari %1$s telah diblokir.</string>
+    <string name="alert_sms_flagged_title">[REVIEW] SMS spam terdeteksi</string>
+    <string name="alert_sms_flagged_body">[REVIEW] Pesan dari %1$s cocok dengan daftar blokir Anda.</string>
+    <string name="alert_untrusted_call_title">[REVIEW] Panggilan tidak tepercaya dibisukan</string>
+    <string name="alert_untrusted_call_body">[REVIEW] %1$s tidak ada di brankas keluarga Anda. Panggilan telah dibisukan.</string>
+    <string name="alert_untrusted_sms_title">[REVIEW] SMS tidak tepercaya</string>
+    <string name="alert_untrusted_sms_body">[REVIEW] %1$s tidak ada di brankas keluarga Anda.</string>
+    <string name="alert_robocall_title">[REVIEW] Kemungkinan robocall dibisukan</string>
+    <string name="alert_robocall_warn_title">[REVIEW] Penelepon mencurigakan</string>
+    <string name="shield_text_running">Watermark perlindungan aktif. Tangkapan yang diambil sekarang akan membawa kode sesi Anda.</string>
+    <string name="alert_lockscreen_title">[REVIEW] Peringatan OnlyTrusted</string>
+    <string name="alert_lockscreen_body">[REVIEW] Buka kunci ponsel untuk melihat detail.</string>
+    <string name="lock_title">Terkunci</string>
+    <string name="lock_try_again">Coba lagi</string>
+    <string name="lock_unlock">Buka kunci</string>
+    <string name="lock_use_pin">Gunakan PIN sebagai gantinya</string>
+    <string name="lock_enter_pin">Masukkan PIN</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_cancel">Batal</string>
+    <string name="passkey_unlock_title">Buka dengan Passkey Anda</string>
+    <string name="passkey_unlock_subtitle">Wajah / sidik jari — di perangkat, anti-phishing</string>
+    <string name="passkey_setup_title">Siapkan Passkey Anda</string>
+    <string name="passkey_setup_subtitle">Konfirmasi dengan wajah atau sidik jari — terikat perangkat keras, di perangkat.</string>
+    <string name="onb_welcome_title">OnlyTrusted</string>
+    <string name="onb_welcome_tagline">Ponsel yang lebih aman dan tenang\ndimulai di sini.</string>
+    <string name="onb_get_started">Mulai</string>
+    <string name="onb_consent_title">Mohon konfirmasi</string>
+    <string name="onb_consent_subtitle">Untuk menggunakan OnlyTrusted, Anda harus meninjau dan mengkonfirmasi hal berikut.</string>
+    <string name="onb_adult">Saya dewasa</string>
+    <string name="onb_adult_detail">Saya berusia 18 tahun atau lebih.</string>
+    <string name="onb_own_device">Saya memiliki perangkat ini atau berwenang menggunakannya</string>
+    <string name="onb_own_device_detail">Saya berhak menggunakan dan mengkonfigurasi perangkat ini.</string>
+    <string name="onb_limits">Saya telah membaca dan memahami batasan jujur</string>
+    <string name="onb_limits_detail">Saya memahami apa yang bisa dan tidak bisa dilakukan OnlyTrusted, dan batasan di Android.</string>
+    <string name="onb_confirm">Saya konfirmasi dan lanjutkan</string>
+    <string name="onb_privacy">Kebijakan Privasi</string>
+    <string name="onb_terms">Ketentuan Penggunaan</string>
+    <string name="onb_honest">Klaim Jujur</string>
+    <string name="onb_email_title">Email Anda</string>
+    <string name="onb_email_detail">Disimpan hanya di perangkat ini. OnlyTrusted tidak punya server, jadi email Anda tidak pernah dikirim ke mana pun.</string>
+    <string name="onb_email_placeholder">anda@contoh.com</string>
+    <string name="onb_continue">Lanjut</string>
+    <string name="onb_pin_title">Tetapkan PIN 4-6 digit</string>
+    <string name="onb_pin_detail">Pembuka cadangan saat Passkey Anda tidak bisa digunakan. Di-hash dengan PBKDF2 (100k iterasi) — kami tidak bisa membacanya.</string>
+    <string name="onb_pin_placeholder">PIN 4-6 digit</string>
+    <string name="onb_pin_confirm">Konfirmasi PIN</string>
+    <string name="onb_pin_set">Tetapkan PIN</string>
+    <string name="onb_passkey_title">Siapkan Passkey Anda</string>
+    <string name="onb_passkey_detail">Wajah / sidik jari jadi pembuka utama Anda — anti-phishing, tidak perlu mengetik. Pakai Keystore / StrongBox perangkat keras; biometrik Anda tidak pernah keluar dari perangkat.</string>
+    <string name="onb_passkey_set">Siapkan Passkey</string>
+    <string name="onb_pin_only">Pakai PIN saja</string>
+    <string name="nav_dashboard">Dasbor</string>
+    <string name="nav_contacts">Kontak</string>
+    <string name="nav_blocked">Diblokir</string>
+    <string name="nav_log">Catatan</string>
+    <string name="nav_settings">Pengaturan</string>
+    <string name="settings_language_region">Bahasa &amp; Wilayah</string>
+    <string name="settings_language_region_subtitle">Pilih wilayah, negara, dan bahasa pilihan Anda.</string>
+    <string name="language_region_header">Wilayah</string>
+    <string name="language_country_header">Negara</string>
+    <string name="language_language_header">Bahasa aplikasi</string>
+    <string name="language_english_always">Bahasa Inggris selalu tersedia.</string>
+    <string name="language_pending_review">⚠ Terjemahan menunggu peninjauan</string>
+    <string name="language_selected_locale">Bahasa dipilih: %1$s</string>
+    <string name="language_restart_note">Beberapa layar diperbarui langsung; lainnya di pembukaan aplikasi berikutnya.</string>
+    <string name="sos_title">[REVIEW] Sinyal darurat</string>
+    <string name="sos_send">[REVIEW] Kirim sinyal darurat</string>
+    <string name="sos_countdown">[REVIEW] Mengirim dalam %1$d…</string>
+    <string name="sos_cancel">[REVIEW] Batal</string>
+    <string name="sos_sent">[REVIEW] SOS dikirim ke %1$d kontak.</string>
+    <string name="sos_body_prefix">[REVIEW] TOLONG — saya butuh bantuan segera.</string>
+    <string name="sos_body_location">[REVIEW] Lokasi saya saat ini: %1$s</string>
+    <string name="duress_decoy_opened">[REVIEW] Brankas umpan terbuka. SOS senyap dikirim.</string>
+    <string name="legal_auto_renew">[REVIEW] Diperpanjang otomatis dengan harga yang ditampilkan. Batalkan kapan saja di Langganan Google Play.</string>
+    <string name="legal_no_server">[REVIEW] OnlyTrusted tidak punya server. Semua tetap di perangkat ini.</string>
+</resources>

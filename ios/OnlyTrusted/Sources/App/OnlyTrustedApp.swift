@@ -39,12 +39,21 @@ struct OnlyTrustedApp: App {
         }
     }
 
+    @StateObject private var localeStore = LocaleStore.shared
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(gate)
                 .environmentObject(simswap)
                 .environmentObject(geofenceAlerts)
+                .environmentObject(localeStore)
+                // App-wide locale injection. Changing LocaleStore.language flips the
+                // environment immediately, which rebuilds every SwiftUI `Text(LocalizedStringKey)`
+                // with the new .xcstrings resolution. Some UIKit-hosted screens (StoreKit sheets,
+                // iMessage composer) still follow device locale rather than this override.
+                .environment(\.locale, localeStore.currentLocale)
+                .environment(\.layoutDirection, localeStore.isRTL ? .rightToLeft : .leftToRight)
                 .onAppear {
                     // Geo-fence Auto-Lock (Elite): the `GeofenceManager` runs outside the
                     // SwiftUI graph (CoreLocation delegate callbacks come in from a

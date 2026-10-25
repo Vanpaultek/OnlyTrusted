@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  OnlyTrusted — ar (machine-translated, pending native review).
+  Strings prefixed with [REVIEW] are safety-critical (SOS / duress / legal / pricing /
+  system alerts) and MUST be reviewed by a native speaker before public release.
+  The ReviewBadge composable strips [REVIEW] + renders an amber warning in the UI.
+  See docs/NEEDS_REVIEW.md for the sign-off checklist.
+-->
+<resources>
+    <string name="app_name">OnlyTrusted</string>
+    <string name="monitor_title">الحماية نشطة</string>
+    <string name="monitor_text_idle">نراقب الميكروفون والكاميرا. لا شيء مريب الآن.</string>
+    <string name="pocket_text_running">حماية الاتصال العرضي قيد التشغيل.</string>
+    <string name="alert_mic_title">[REVIEW] الميكروفون قيد الاستخدام</string>
+    <string name="alert_mic_body_generic">[REVIEW] شيء ما في هاتفك يستخدم الميكروفون.</string>
+    <string name="alert_mic_body_with_pkg">[REVIEW] %1$s يستخدم الميكروفون.</string>
+    <string name="alert_camera_title">[REVIEW] الكاميرا قيد الاستخدام</string>
+    <string name="alert_camera_body">[REVIEW] تم فتح الكاميرا %1$s للتو.</string>
+    <string name="alert_call_blocked_title">[REVIEW] تم حظر مكالمة</string>
+    <string name="alert_call_blocked_body">[REVIEW] تم حظر مكالمة واردة من %1$s.</string>
+    <string name="alert_sms_flagged_title">[REVIEW] رسالة مزعجة تم رصدها</string>
+    <string name="alert_sms_flagged_body">[REVIEW] رسالة من %1$s تطابق قائمة الحظر لديك.</string>
+    <string name="alert_untrusted_call_title">[REVIEW] مكالمة غير موثوقة تم كتمها</string>
+    <string name="alert_untrusted_call_body">[REVIEW] %1$s ليس في خزنة العائلة. تم كتم المكالمة.</string>
+    <string name="alert_untrusted_sms_title">[REVIEW] رسالة SMS غير موثوقة</string>
+    <string name="alert_untrusted_sms_body">[REVIEW] %1$s ليس في خزنة العائلة.</string>
+    <string name="alert_robocall_title">[REVIEW] مكالمة آلية محتملة تم كتمها</string>
+    <string name="alert_robocall_warn_title">[REVIEW] متصل مشبوه</string>
+    <string name="shield_text_running">علامة الحماية المائية مفعلة. اللقطات الآن ستحمل رمز جلستك.</string>
+    <string name="alert_lockscreen_title">[REVIEW] تنبيه OnlyTrusted</string>
+    <string name="alert_lockscreen_body">[REVIEW] افتح قفل الهاتف لرؤية التفاصيل.</string>
+    <string name="lock_title">مقفل</string>
+    <string name="lock_try_again">حاول مرة أخرى</string>
+    <string name="lock_unlock">فتح القفل</string>
+    <string name="lock_use_pin">استخدم رمز PIN بدلاً من ذلك</string>
+    <string name="lock_enter_pin">أدخل رمز PIN</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_cancel">إلغاء</string>
+    <string name="passkey_unlock_title">افتح باستخدام Passkey</string>
+    <string name="passkey_unlock_subtitle">الوجه / البصمة — على الجهاز، مقاوم للتصيد</string>
+    <string name="passkey_setup_title">إعداد Passkey الخاص بك</string>
+    <string name="passkey_setup_subtitle">أكد بالوجه أو البصمة — مرتبط بالعتاد، على الجهاز.</string>
+    <string name="onb_welcome_title">OnlyTrusted</string>
+    <string name="onb_welcome_tagline">هاتف أكثر أمانًا وهدوءًا\nيبدأ من هنا.</string>
+    <string name="onb_get_started">ابدأ</string>
+    <string name="onb_consent_title">يرجى التأكيد</string>
+    <string name="onb_consent_subtitle">لاستخدام OnlyTrusted، يجب عليك مراجعة وتأكيد ما يلي.</string>
+    <string name="onb_adult">أنا بالغ</string>
+    <string name="onb_adult_detail">عمري 18 سنة أو أكثر.</string>
+    <string name="onb_own_device">أنا مالك هذا الجهاز أو مصرح لي باستخدامه</string>
+    <string name="onb_own_device_detail">لدي الحق في استخدام وتهيئة هذا الجهاز.</string>
+    <string name="onb_limits">لقد قرأت وفهمت الحدود الصادقة</string>
+    <string name="onb_limits_detail">أفهم ما يمكن لـ OnlyTrusted القيام به، وما لا يمكنه القيام به، وقيوده على Android.</string>
+    <string name="onb_confirm">أؤكد وأتابع</string>
+    <string name="onb_privacy">سياسة الخصوصية</string>
+    <string name="onb_terms">شروط الاستخدام</string>
+    <string name="onb_honest">ادعاءات صادقة</string>
+    <string name="onb_email_title">بريدك الإلكتروني</string>
+    <string name="onb_email_detail">يُخزَّن على هذا الجهاز فقط. لا يوجد خادم لـ OnlyTrusted، لذا لا يُرسل بريدك إلى أي مكان.</string>
+    <string name="onb_email_placeholder">anta@mithal.com</string>
+    <string name="onb_continue">متابعة</string>
+    <string name="onb_pin_title">عيّن رمز PIN من 4 إلى 6 أرقام</string>
+    <string name="onb_pin_detail">فتح احتياطي عندما لا يمكن تقديم Passkey. مُهشَّم بـ PBKDF2 (100 ألف تكرار) — لا يمكننا قراءته.</string>
+    <string name="onb_pin_placeholder">PIN من 4 إلى 6 أرقام</string>
+    <string name="onb_pin_confirm">تأكيد الرمز PIN</string>
+    <string name="onb_pin_set">تعيين الرمز PIN</string>
+    <string name="onb_passkey_title">إعداد Passkey الخاص بك</string>
+    <string name="onb_passkey_detail">يصبح الوجه / البصمة فتحك الأساسي — مقاوم للتصيد، لا شيء للكتابة. يستخدم Keystore / StrongBox العتاد؛ بياناتك الحيوية لا تغادر الجهاز.</string>
+    <string name="onb_passkey_set">إعداد Passkey</string>
+    <string name="onb_pin_only">استخدم PIN فقط</string>
+    <string name="nav_dashboard">لوحة التحكم</string>
+    <string name="nav_contacts">جهات الاتصال</string>
+    <string name="nav_blocked">محظور</string>
+    <string name="nav_log">السجل</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="settings_language_region">اللغة والمنطقة</string>
+    <string name="settings_language_region_subtitle">اختر منطقتك وبلدك ولغتك المفضلة.</string>
+    <string name="language_region_header">المنطقة</string>
+    <string name="language_country_header">البلد</string>
+    <string name="language_language_header">لغة التطبيق</string>
+    <string name="language_english_always">اللغة الإنجليزية متاحة دائمًا.</string>
+    <string name="language_pending_review">⚠ الترجمة قيد المراجعة</string>
+    <string name="language_selected_locale">اللغة المختارة: %1$s</string>
+    <string name="language_restart_note">بعض الشاشات تتحدث فورًا؛ وأخرى عند فتح التطبيق مرة أخرى.</string>
+    <string name="sos_title">[REVIEW] إشارة الاستغاثة</string>
+    <string name="sos_send">[REVIEW] إرسال إشارة الاستغاثة</string>
+    <string name="sos_countdown">[REVIEW] جاري الإرسال خلال %1$d…</string>
+    <string name="sos_cancel">[REVIEW] إلغاء</string>
+    <string name="sos_sent">[REVIEW] تم إرسال SOS إلى %1$d جهة اتصال.</string>
+    <string name="sos_body_prefix">[REVIEW] النجدة — أحتاج إلى مساعدة عاجلة.</string>
+    <string name="sos_body_location">[REVIEW] موقعي الحالي: %1$s</string>
+    <string name="duress_decoy_opened">[REVIEW] فتح الخزنة الخادعة. تم إرسال SOS صامت.</string>
+    <string name="legal_auto_renew">[REVIEW] يتجدد تلقائيًا بالسعر المعروض. يمكنك الإلغاء في أي وقت من اشتراكات Google Play.</string>
+    <string name="legal_no_server">[REVIEW] لا يوجد خادم لـ OnlyTrusted. كل شيء يبقى على هذا الجهاز.</string>
+</resources>

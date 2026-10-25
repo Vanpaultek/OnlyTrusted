@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Base (English) strings for OnlyTrusted. Siblings live at values-{es,fr,pt,hi,ar,de,id}/strings.xml.
+
+  SAFETY NOTE
+  Strings prefixed with [REVIEW] are machine translations awaiting human review.
+  The ReviewBadge composable strips the prefix before display and renders a small
+  amber "⚠ translation pending review" caption below the translated text so users
+  know it's not finalized. SOS, duress, legal, and pricing strings carry this prefix
+  in every locale except en-US. See docs/NEEDS_REVIEW.md for the sign-off checklist.
+-->
 <resources>
     <string name="app_name">OnlyTrusted</string>
 
+    <!-- Notifications / alerts -->
     <string name="monitor_title">Shield is active</string>
     <string name="monitor_text_idle">Watching mic and camera. Nothing suspicious right now.</string>
     <string name="pocket_text_running">Pocket-dial protection running.</string>
@@ -32,4 +43,89 @@
 
     <string name="alert_lockscreen_title">OnlyTrusted alert</string>
     <string name="alert_lockscreen_body">Unlock the phone to see details.</string>
+
+    <!-- Lock gate -->
+    <string name="lock_title">Locked</string>
+    <string name="lock_try_again">Try again</string>
+    <string name="lock_unlock">Unlock</string>
+    <string name="lock_use_pin">Enter PIN instead</string>
+    <string name="lock_enter_pin">Enter PIN</string>
+    <string name="lock_pin_hint">PIN</string>
+    <string name="lock_cancel">Cancel</string>
+
+    <!-- Passkey -->
+    <string name="passkey_unlock_title">Unlock with your Passkey</string>
+    <string name="passkey_unlock_subtitle">Face / fingerprint — on-device, phishing-proof</string>
+    <string name="passkey_setup_title">Set up your Passkey</string>
+    <string name="passkey_setup_subtitle">Confirm with Face / fingerprint — hardware-bound, on-device.</string>
+
+    <!-- Onboarding -->
+    <string name="onb_welcome_title">OnlyTrusted</string>
+    <string name="onb_welcome_tagline">A safer, quieter phone\nstarts here.</string>
+    <string name="onb_get_started">Get Started</string>
+
+    <string name="onb_consent_title">Please confirm</string>
+    <string name="onb_consent_subtitle">To use OnlyTrusted, you must review and confirm the following.</string>
+    <string name="onb_adult">I am an adult</string>
+    <string name="onb_adult_detail">I am 18 years or older.</string>
+    <string name="onb_own_device">I own this device or am authorized to use it</string>
+    <string name="onb_own_device_detail">I have the right to use and configure this device.</string>
+    <string name="onb_limits">I have read and understood the honest limits</string>
+    <string name="onb_limits_detail">I understand what OnlyTrusted can do, what it cannot do, and any limitations on Android.</string>
+    <string name="onb_confirm">I confirm and continue</string>
+    <string name="onb_privacy">Privacy Policy</string>
+    <string name="onb_terms">Terms of Use</string>
+    <string name="onb_honest">Honest Claims</string>
+
+    <string name="onb_email_title">Your email</string>
+    <string name="onb_email_detail">Stored on this device only. OnlyTrusted does not have a server, so your email is never transmitted anywhere.</string>
+    <string name="onb_email_placeholder">you@example.com</string>
+    <string name="onb_continue">Continue</string>
+
+    <string name="onb_pin_title">Set a 4-6 digit PIN</string>
+    <string name="onb_pin_detail">Backup unlock for when your Passkey can\'t be presented. PBKDF2-hashed with 100k iterations before storing — we can\'t read it back.</string>
+    <string name="onb_pin_placeholder">4-6 digit PIN</string>
+    <string name="onb_pin_confirm">Confirm PIN</string>
+    <string name="onb_pin_set">Set PIN</string>
+
+    <string name="onb_passkey_title">Set up your Passkey</string>
+    <string name="onb_passkey_detail">Face / fingerprint becomes your primary unlock — phishing-proof, nothing to type. Uses hardware-backed Keystore / StrongBox; biometric never leaves this device.</string>
+    <string name="onb_passkey_set">Set up Passkey</string>
+    <string name="onb_pin_only">Use PIN only</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_contacts">Contacts</string>
+    <string name="nav_blocked">Blocked</string>
+    <string name="nav_log">Log</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Settings -->
+    <string name="settings_language_region">Language &amp; Region</string>
+    <string name="settings_language_region_subtitle">Choose your region, country and preferred language.</string>
+
+    <!-- Language picker -->
+    <string name="language_region_header">Region</string>
+    <string name="language_country_header">Country</string>
+    <string name="language_language_header">App language</string>
+    <string name="language_english_always">English is always available.</string>
+    <string name="language_pending_review">⚠ Translation pending review</string>
+    <string name="language_selected_locale">Selected locale: %1$s</string>
+    <string name="language_restart_note">Some screens update immediately; others refresh on next app open.</string>
+
+    <!-- SOS / Distress Signal — SAFETY CRITICAL -->
+    <string name="sos_title">Distress Signal</string>
+    <string name="sos_send">Send Distress Signal</string>
+    <string name="sos_countdown">Sending in %1$d…</string>
+    <string name="sos_cancel">Cancel</string>
+    <string name="sos_sent">SOS fired to %1$d contact(s).</string>
+    <string name="sos_body_prefix">HELP — I need urgent assistance.</string>
+    <string name="sos_body_location">My current location: %1$s</string>
+
+    <!-- Duress — SAFETY CRITICAL -->
+    <string name="duress_decoy_opened">Decoy vault opened. Silent SOS sent.</string>
+
+    <!-- Legal / pricing — SAFETY CRITICAL -->
+    <string name="legal_auto_renew">Auto-renews at the price shown. Cancel anytime in Google Play Subscriptions.</string>
+    <string name="legal_no_server">OnlyTrusted has no server. Everything stays on this device.</string>
 </resources>

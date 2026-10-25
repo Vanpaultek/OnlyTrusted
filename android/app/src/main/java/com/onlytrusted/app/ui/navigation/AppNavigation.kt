@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -126,6 +127,7 @@ sealed class Destination(val route: String, val label: String, val icon: ImageVe
     // FREE — Distress Signal: SOS button + shake + volume-down → multi-recipient SMS +
     // dialer + WhatsApp group fan-out. Settings for triggers + WhatsApp group URL.
     data object DistressSignal : Destination("distress_signal", "Distress Signal", Icons.Filled.Security)
+    data object LanguageRegion : Destination("language_region", "Language & Region", Icons.Filled.Language)
 }
 
 private val bottomBarDestinations = listOf(
@@ -274,7 +276,8 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onOpenAdvancedBlocking = { navController.navigate(Destination.AdvancedBlocking.route) },
                     onOpenContactScan = { navController.navigate(Destination.ContactScan.route) },
                     onOpenSmsScan = { navController.navigate(Destination.SmsScan.route) },
-                    onOpenDistressSignal = { navController.navigate(Destination.DistressSignal.route) }
+                    onOpenDistressSignal = { navController.navigate(Destination.DistressSignal.route) },
+                    onOpenLanguageRegion = { navController.navigate(Destination.LanguageRegion.route) }
                 )
             }
             composable(Destination.PrivacyShield.route) {
@@ -343,6 +346,11 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
             }
             composable(Destination.DistressSignal.route) {
                 com.onlytrusted.app.ui.distress.DistressSettingsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Destination.LanguageRegion.route) {
+                com.onlytrusted.app.ui.settings.LanguageRegionScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

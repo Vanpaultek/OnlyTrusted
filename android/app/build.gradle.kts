@@ -25,9 +25,11 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
 
-        // Ship only English strings; drops the few translated AndroidX / M3 resources we would
-        // otherwise bundle (saves ~400 KB on install for a privacy app that is English-only).
-        resourceConfigurations += listOf("en")
+        // Explicit allow-list of locales shipped with the APK. Must match
+        // res/xml/locales_config.xml and the values-<lang>/strings.xml dirs.
+        // Any locale not in this list is stripped from the final build regardless
+        // of whether a sibling resource exists.
+        resourceConfigurations += listOf("en", "es", "fr", "pt", "hi", "ar", "de", "id")
     }
 
     // Release signing config. Only wired up when the four environment
