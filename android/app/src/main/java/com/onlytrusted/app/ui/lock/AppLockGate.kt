@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import com.onlytrusted.app.OnlyTrustedApp
 import com.onlytrusted.app.security.AppLockManager
+import com.onlytrusted.app.security.BiometricPasskey
 import com.onlytrusted.app.ui.duress.DuressSmsSender
 import com.onlytrusted.app.ui.duress.DuressState
 import com.onlytrusted.app.ui.duress.DuressVaultStore
@@ -99,6 +100,11 @@ fun AppLockGate(
                 DuressState.setDuressSession(false)
                 // Dead-Man Wipe (Elite): reset the inactivity countdown.
                 com.onlytrusted.app.deadmanwipe.DeadmanWipeState.markUnlockNow(context)
+                // Phase 2 passkey: enroll StrongBox-backed passkey + prime session.
+                // Fires a second BiometricPrompt (CryptoObject-based) because the Android
+                // Keystore requires a Cipher-bound auth to use biometric-gated keys.
+                // Any failure is non-fatal — the app continues to work via the legacy path.
+                primePasskeySession(activity)
                 onUnlocked()
             },
             onFailure = { error = it }
@@ -135,6 +141,7 @@ fun AppLockGate(
                         subtitle = "Face / fingerprint — on-device, phishing-proof",
                         onSuccess = {
                             DuressState.setDuressSession(false)
+                            primePasskeySession(activity)
                             onUnlocked()
                         },
                         onFailure = { error = it }
@@ -251,3 +258,28 @@ private fun triggerDuressUnlock(
 @Composable
 private fun rememberCoroutineScopeCompat(): CoroutineScope =
     androidx.compose.runtime.rememberCoroutineScope()
+
+/**
+ * Enrolls the StrongBox-backed passkey (first time) OR unwraps the session nonce
+ * (every subsequent unlock). Both paths fire a CryptoObject-based BiometricPrompt
+ * which the Keystore requires for biometric-gated keys. Called after the standard
+ * lock-screen prompt succeeds — this is additive, non-blocking plumbing for Phase 2.
+ *
+ * We post the inner prompt to the next main-thread tick so the enclosing
+ * BiometricPrompt (lock-gate) has time to tear its fragment down. Showing two
+ * BiometricPrompt instances back-to-back inside the same callback stack leaves the
+ * second one in an inconsistent state where the success callback never fires.
+ *
+ * "Needs enroll" covers both the brand-new install case AND the interrupted-enrollment
+ * case (Keystore key present, wrapped blob missing — e.g., user cancelled the enroll
+ * biometric prompt last time).
+ */
+private fun primePasskeySession(activity: FragmentActivity) {
+    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        if (BiometricPasskey.needsEnroll(activity)) {
+            BiometricPasskey.enrollIfNeeded(activity)
+        } else {
+            BiometricPasskey.unlockSession(activity)
+        }
+    }, 400)
+}

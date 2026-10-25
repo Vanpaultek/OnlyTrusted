@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 VanPaulTek Inc
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import SwiftUI
-import LocalAuthentication
+@preconcurrency import LocalAuthentication
 import MessageUI
 
 struct AppLockGate: View {
@@ -200,6 +200,9 @@ struct AppLockGate: View {
 
     private func attemptAuth() {
         let ctx = LAContext()
+        // Reuse the same context for Secure Enclave key operations so the user isn't
+        // prompted twice (once for the lock-screen gate, once for passkey unwrap).
+        ctx.touchIDAuthenticationAllowableReuseDuration = 10
         ctx.evaluatePolicy(.deviceOwnerAuthentication,
                            localizedReason: "Unlock OnlyTrusted") { ok, err in
             Task { @MainActor in
@@ -208,6 +211,10 @@ struct AppLockGate: View {
                     duress.isDuressSession = false
                     // Dead-Man Wipe (Elite): reset the countdown on every real unlock.
                     DeadmanWipeState.shared.markUnlockNow()
+                    // Phase 2 passkey: enroll the Secure Enclave wrap on first run
+                    // after upgrade, then prime the vault key for the session.
+                    FieldCrypto.enrollPasskeyIfNeeded()
+                    FieldCrypto.primeCache(from: ctx)
                     onUnlocked()
                 } else if let err {
                     error = err.localizedDescription

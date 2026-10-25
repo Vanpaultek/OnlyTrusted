@@ -38,6 +38,7 @@
 		2A354125918CB0473F1B02D1 /* BorderModeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8881F1B53DE849BEEA079AC3 /* BorderModeState.swift */; };
 		2A8308A8CEF8DEF2DAEC42DE /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 883FF356FE2F6565E7E15758 /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */; };
+		2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51064799313EB1D6D00E144A /* BiometricPasskey.swift */; };
 		2B729C872B9FAF9CA2B9FFE8 /* SmartLinkGuardExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FE0DB6AA778E2CCDC147DAD3 /* SmartLinkGuardExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2C1C57334861C68F1D4697F5 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E287E737C235F26B6F586928 /* SharedContainer.swift */; };
 		2C99252753A8A6EEE47E23D7 /* PrivacyShieldDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22B6CAC92610E21B4F8AE8A /* PrivacyShieldDashboard.swift */; };
@@ -343,6 +344,7 @@
 		DC02C9430D06F9D773B85ECA /* TrustedWitnessState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustedWitnessState.swift; sourceTree = "<group>"; };
 		DD57602976D8C9A69AEB4959 /* BlockListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListStore.swift; sourceTree = "<group>"; };
 		DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCrypto.swift; sourceTree = "<group>"; };
+		51064799313EB1D6D00E144A /* BiometricPasskey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricPasskey.swift; sourceTree = "<group>"; };
 		E116181529A59548B1AA0523 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		E1F192E38BF3AC823EDDE762 /* FaceLockState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceLockState.swift; sourceTree = "<group>"; };
 		E287E737C235F26B6F586928 /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
@@ -615,6 +617,7 @@
 		6090D23C3520BFEAD7394652 /* Vault */ = {
 			isa = PBXGroup;
 			children = (
+				51064799313EB1D6D00E144A /* BiometricPasskey.swift */,
 				541C6D8691948E04267DF9C8 /* ContactPickerSheet.swift */,
 				DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */,
 				A651F201558860B72E2B18EA /* PhoneUtils.swift */,
@@ -1154,6 +1157,7 @@
 				FF0615F6A18BFD1FEFCAB079 /* FaceLockSetupScreen.swift in Sources */,
 				B8FE477ED7465279810CF711 /* FaceLockState.swift in Sources */,
 				2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */,
+				2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */,
 				97BE974DB4719B74799CAD39 /* GeofenceManager.swift in Sources */,
 				9F7A1840EF5FC66F71635709 /* GeofenceSMSComposer.swift in Sources */,
 				D8FC97BBA8D7954807F26FC1 /* GeofenceSetupScreen.swift in Sources */,

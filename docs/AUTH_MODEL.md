@@ -83,36 +83,75 @@ optional cross-device sync via iCloud Keychain / Google Password Manager.
 
 ---
 
-## Phase 2 — true WebAuthn passkey (follow-up commit)
+## Phase 2 — Secure Enclave / StrongBox direct crypto (shipped)
 
-**iOS 17+:**
-- `ASAuthorizationController` + `ASAuthorizationPlatformPublicKeyCredentialProvider`
-- Register a device-bound credential with `createCredentialRegistrationRequest`
-- Authenticate via `createCredentialAssertionRequest`
-- RP ID = `onlytrusted.app` (hardcoded; local-RP use requires no
-  `.well-known/apple-app-site-association` file)
-- Credential ID + public key stored in the app's Keychain alongside the
-  current PIN hash
-- Signature verification happens locally (we're our own relying party)
-- Visible to the user in iOS Settings → Passwords → Passkeys
+The original Phase 2 plan called for WebAuthn (`ASAuthorizationController`
+on iOS, `androidx.credentials.CredentialManager` on Android), but that
+approach would have required:
+- An Apple Developer account ($99/yr) + `webcredentials` associated
+  domains entitlement
+- Serving `apple-app-site-association` + `assetlinks.json` from a domain
+  we own (`vanpaultek.com`)
+- iCloud Keychain / Google Password Manager visibility, which is cosmetic
+  for an app with no server-side RP
 
-**Android 14+:**
-- `androidx.credentials.CredentialManager` + `CreatePublicKeyCredentialRequest`
-- Same local-RP pattern (RP ID = `onlytrusted.app`)
-- Credential visible in Google Password Manager
-- Android 10–13 (API 29–33) fall back to current `BiometricPrompt` + PIN
-  path (runtime API-level check)
+We rejected that and shipped the honest alternative: a hardware-bound
+keypair with biometric ACL that the OS kernel refuses to release without
+a fresh BIOMETRIC_STRONG assertion. No infrastructure dependency, no new
+accounts, no third-party crypto validation path.
 
-**Optional user-opt-in: cross-device sync**
-- iCloud Keychain carries the passkey to the user's other Apple devices
-  automatically — no OnlyTrusted server involvement
-- Google Password Manager does the same across the user's Android devices
-- User sees "Also unlock this on my iPad / other Android" without any
-  action on our part
+**iOS (`BiometricPasskey.swift`)**
+- `SecKeyCreateRandomKey` with `kSecAttrTokenID = kSecAttrTokenIDSecureEnclave`
+- EC256 keypair, biometry-current-set + private-key-usage ACL
+- Wraps the FieldCrypto AES-256-GCM key via ephemeral ECDH + HKDF-SHA256 +
+  AES-GCM (`[65-byte ephemeral pubkey || sealed box]`)
+- Unwrap uses `SecKeyCopyKeyExchangeResult` which fires the Face ID /
+  Touch ID prompt via the user-supplied `LAContext` (we reuse the one
+  from `AppLockGate.attemptAuth` so no second prompt appears)
 
-**Estimated scope for Phase 2**: ~400 LOC iOS + ~450 LOC Android + ~100 LOC
-UI integration + ~150 LOC docs = one dense commit per platform plus a
-coordinating commit.
+**Android (`BiometricPasskey.kt`)**
+- AES-256-GCM Keystore key, `setIsStrongBoxBacked(true)` with runtime
+  fallback to TEE-backed Keystore on devices without StrongBox (Pixel 2
+  / emulator / most pre-2018 flagships)
+- `setUserAuthenticationRequired(true)` + `setUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG)` —
+  no cached auth window, every Cipher init requires a fresh biometric
+- Wrapped session nonce via `BiometricPrompt.CryptoObject(Cipher)`,
+  stored in `EncryptedSharedPreferences` (`passkey_session_wrapped_v2`)
+- `AppLockGate.primePasskeySession` posts the enroll/unlock prompt with
+  a 400ms delay so the lock-gate `BiometricPrompt` fragment has time to
+  tear down (back-to-back prompts leave the second in a state where its
+  success callback never fires)
+
+### What ships in this commit vs. what's deferred
+
+**Shipped**: enroll + unwrap plumbing, kernel-level biometric assertion
+at every unlock, hardware binding via Secure Enclave / StrongBox,
+session nonce held in memory until app background.
+
+**Deferred (Phase 3)**: migrating the actual vault encryption key to
+the biometric-gated wrapped path. Currently the vault still uses
+`field-key.v1` (iOS Keychain, no biometric ACL) / `onlytrusted-field-key`
+(Android Keystore, no biometric ACL) directly. The Phase 2 passkey
+proves biometric at the kernel level but doesn't yet gate the vault key.
+
+Why defer: wrapping the vault key is a 3-release migration (dual-write
+→ confirm → delete legacy) because a single-release migration risks
+users losing data if the biometric gate becomes permanently
+unavailable (sensor failure, device repair). Phase 3 lands once we have
+telemetry showing the dual path survives real-world usage.
+
+### Fallback behavior
+
+- **No biometric enrolled on device**: enroll + unlock paths are no-ops;
+  the app uses the legacy Keychain / Keystore path. No UX change.
+- **Biometric sensor failure mid-session**: user falls back to PIN; next
+  successful biometric re-primes the session.
+- **User disables biometric from Settings → Account → Biometric unlock**:
+  `BiometricPasskey.unenroll()` deletes both the Keystore key and the
+  wrapped blob. App continues on legacy path.
+- **StrongBox unavailable** (emulators, pre-2018 flagships): generation
+  falls back to TEE-backed Keystore automatically. Still hardware-backed,
+  just in the main secure environment instead of the dedicated chip.
 
 ---
 
