@@ -120,10 +120,15 @@ compares extension `strings` output + plist against previous release.
 **Automated (both platforms + CI):**
 
 ```bash
-# Android unit tests
+# Android unit tests (33 tests)
 cd android && ./gradlew :app:testDebugUnitTest
 
-# iOS test vectors (manual, until XCTest target lands — see TESTS.md)
+# iOS XCTest (34 tests)
+cd ios && xcodebuild test \
+  -project OnlyTrusted.xcodeproj \
+  -scheme OnlyTrusted \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:OnlyTrustedTests
 ```
 
 CI should fail the release workflow if any automated gate fails.
@@ -132,12 +137,16 @@ Release notes.
 
 **Follow-up work:**
 
-1. Set up iOS XCTest target so the SmartLinkGuard rule changes get the
-   same regression coverage Android has today.
+1. ~~Set up iOS XCTest target~~ **Done** 2026-10-25 — 34 tests pass via
+   `xcodebuild test`, mirrored to Android's 33 JUnit tests.
 2. Automate the "diff permissions since last release" gate as a GitHub
    Action that runs on every tag push.
 3. Automate the Honest Limits copy audit by extracting the strings into
    `docs/HONEST_LIMITS.md` and diffing on every release.
+4. Wire both `./gradlew :app:testDebugUnitTest` and the iOS `xcodebuild
+   test` command into `.github/workflows/release.yml` so Gates 5, 6, 7
+   fail the release workflow automatically when the regression tests
+   regress.
 
 ---
 

@@ -1,26 +1,55 @@
 # Regression tests — SmartLinkGuard, PIN rate limiter, Dead-Man Wipe
 
-Android has JUnit coverage under `android/app/src/test/`. iOS does not yet
-have an XCTest target wired up — the Swift test vectors below mirror the
-Android tests exactly, so any future XCTest target can start from this
-list.
+Both platforms ship live regression coverage as of 2026-10-25:
+
+- **Android**: JUnit tests under `android/app/src/test/`. 33 cases, 0 failures.
+- **iOS**: XCTest target `OnlyTrustedTests` under `ios/OnlyTrustedTests/`.
+  34 cases, 0 failures. The extra case is `testExtractRawHostStripsSchemeAndPath`
+  which only exists on iOS because iOS's URLComponents behavior around
+  raw hosts was the specific gap the raw-input scan closed.
 
 Both platforms share the same source-of-truth rules; the test cases prove
-the shared behavior and should return equivalent results on both.
+the shared behavior and should return equivalent results on both. The
+vectors are identical by design — if Android passes but iOS fails (or
+vice versa), one of them has drifted.
 
-## Running Android tests
+## Running the tests
+
+### Android (33 cases)
 
 ```bash
 cd android
 ./gradlew :app:testDebugUnitTest
 ```
 
-Expected: 33 tests pass, 0 failures.
+### iOS (34 cases)
 
-## iOS test vectors (manual, pending XCTest target)
+```bash
+cd ios
+xcodebuild test \
+  -project OnlyTrusted.xcodeproj \
+  -scheme OnlyTrusted \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -only-testing:OnlyTrustedTests
+```
 
-Open `ios/OnlyTrusted/Sources/SmartLinkGuard/SmartLinkGuardRules.swift`
-in Xcode, add an XCTest target, port each row as `XCTAssert*(...)`.
+Both expected: 0 failures.
+
+### Important: ThreatIntel isolation on iOS
+
+The main app wires `SmartLinkGuardRules.phishingHostLookup` to
+`ThreatIntelDatabase.isPhishingHost` at startup. The test bundle runs
+in-process with the host app so that wiring leaks into test state and
+can flip verdicts (e.g. `google.com` picked up a false-positive hit in
+the bundled feed during initial development). `SmartLinkGuardRulesTests.setUp()`
+nulls `phishingHostLookup` for every test so cases exercise the built-in
+rule set in isolation, not the state of the shipped feed.
+
+## iOS test vectors (reference)
+
+These are the vectors ported from Android. Both platforms' tests should
+return identical results — any divergence is a bug in one of the two
+implementations.
 
 ### SmartLinkGuard
 
@@ -82,18 +111,26 @@ in Xcode, add an XCTest target, port each row as `XCTAssert*(...)`.
 
 ---
 
-## Setting up iOS XCTest (follow-up)
+## iOS XCTest target details
 
-1. In Xcode: File → New → Target → iOS → Unit Testing Bundle. Name it
-   `OnlyTrustedTests`.
-2. Add `OnlyTrusted` as a target dependency.
-3. Create `OnlyTrustedTests/SmartLinkGuardRulesTests.swift` and port the
-   above vectors as `XCTAssertEqual` / `XCTAssertTrue`.
-4. Scheme → Edit Scheme → Test → add `OnlyTrustedTests` to the test
-   action.
-5. Run via `xcodebuild test -scheme OnlyTrusted -destination 'platform=iOS Simulator,name=iPhone 15'`.
-6. Wire into `.github/workflows/release.yml` so iOS tests run on every
-   tag push, same as Android.
+Shipped as of 2026-10-25. The pbxproj was hand-edited rather than
+regenerated via xcodegen — the project ships 15+ existing targets and a
+migration to xcodegen would be its own PR.
+
+- Target: `OnlyTrustedTests` (bundle unit-test, test-host =
+  `OnlyTrusted.app`)
+- Config list: `OnlyTrustedTests` Debug + Release
+- Depends on: main `OnlyTrusted` target
+- Tests under `ios/OnlyTrustedTests/`:
+    - `SmartLinkGuardRulesTests.swift` — 21 cases
+    - `PINRateLimiterTests.swift` — 7 cases
+    - `DeadmanWipeClockSkewTests.swift` — 6 cases
+- Imports main-app code via `@testable import OnlyTrusted` (standard
+  pattern, enables access to `internal` symbols).
+
+Follow-up: wire the `xcodebuild test` command into
+`.github/workflows/release.yml` so iOS regression tests run on every
+tag push, matching Android.
 
 ---
 

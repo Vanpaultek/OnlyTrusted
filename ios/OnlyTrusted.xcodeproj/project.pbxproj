@@ -40,6 +40,9 @@
 		2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */; };
 		2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51064799313EB1D6D00E144A /* BiometricPasskey.swift */; };
 		0FB1418D55E3A63E2B090875 /* PINRateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD100145052F4665391E884 /* PINRateLimiter.swift */; };
+		1FD4E46BB69E14C7B9104B4C /* SmartLinkGuardRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8304878BE9A6E85F027FE7E7 /* SmartLinkGuardRulesTests.swift */; };
+		1672A52C8158E3C1D0B49460 /* PINRateLimiterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4B79B50429F82FC1E536C5 /* PINRateLimiterTests.swift */; };
+		1DB78F9A54F884F0C5933131 /* DeadmanWipeClockSkewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03CD569CEA6A4194F795B414 /* DeadmanWipeClockSkewTests.swift */; };
 		2B729C872B9FAF9CA2B9FFE8 /* SmartLinkGuardExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FE0DB6AA778E2CCDC147DAD3 /* SmartLinkGuardExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2C1C57334861C68F1D4697F5 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E287E737C235F26B6F586928 /* SharedContainer.swift */; };
 		2C99252753A8A6EEE47E23D7 /* PrivacyShieldDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22B6CAC92610E21B4F8AE8A /* PrivacyShieldDashboard.swift */; };
@@ -199,6 +202,13 @@
 			remoteGlobalIDString = 37EECAEEBF66D1A45F624FC9;
 			remoteInfo = MessageFilterExtension;
 		};
+		2FB92FE3C1C2566ED7C2D273 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8BDEDABCF6F527BC0163A577 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA12AF62105C4B649E55F664;
+			remoteInfo = OnlyTrusted;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -357,6 +367,10 @@
 		DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCrypto.swift; sourceTree = "<group>"; };
 		51064799313EB1D6D00E144A /* BiometricPasskey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricPasskey.swift; sourceTree = "<group>"; };
 		5DD100145052F4665391E884 /* PINRateLimiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINRateLimiter.swift; sourceTree = "<group>"; };
+		8304878BE9A6E85F027FE7E7 /* SmartLinkGuardRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartLinkGuardRulesTests.swift; sourceTree = "<group>"; };
+		5B4B79B50429F82FC1E536C5 /* PINRateLimiterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINRateLimiterTests.swift; sourceTree = "<group>"; };
+		03CD569CEA6A4194F795B414 /* DeadmanWipeClockSkewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeadmanWipeClockSkewTests.swift; sourceTree = "<group>"; };
+		A333745D89FAC0E73C353444 /* OnlyTrustedTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = OnlyTrustedTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E116181529A59548B1AA0523 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		E1F192E38BF3AC823EDDE762 /* FaceLockState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceLockState.swift; sourceTree = "<group>"; };
 		E287E737C235F26B6F586928 /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
@@ -764,8 +778,19 @@
 				883FF356FE2F6565E7E15758 /* MessageFilterExtension.appex */,
 				4851D38B8F1106FC519D68DD /* OnlyTrusted.app */,
 				FE0DB6AA778E2CCDC147DAD3 /* SmartLinkGuardExtension.appex */,
+				A333745D89FAC0E73C353444 /* OnlyTrustedTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		86BEEFA5D7F29421D9FF0E42 /* OnlyTrustedTests */ = {
+			isa = PBXGroup;
+			children = (
+				8304878BE9A6E85F027FE7E7 /* SmartLinkGuardRulesTests.swift */,
+				5B4B79B50429F82FC1E536C5 /* PINRateLimiterTests.swift */,
+				03CD569CEA6A4194F795B414 /* DeadmanWipeClockSkewTests.swift */,
+			);
+			path = OnlyTrustedTests;
 			sourceTree = "<group>";
 		};
 		95991EAFDBE2FFD70A7DB9B2 /* BreachWatch */ = {
@@ -827,6 +852,7 @@
 				DCA5EB861CF734178216726C /* CallDirectoryExtension */,
 				4A13BEEE0F7BB811858626FA /* MessageFilterExtension */,
 				416D78F758AFD6E1E655C6EC /* OnlyTrusted */,
+				86BEEFA5D7F29421D9FF0E42 /* OnlyTrustedTests */,
 				2ABDE726EAEFAEF5BF8EED06 /* SmartLinkGuardExtension */,
 				2BA1930925381D100F44B3BB /* Sources */,
 				9270F46963D2CD90617BBF13 /* Products */,
@@ -1022,6 +1048,24 @@
 			productReference = EC53C69B45FE2CE695C4963A /* CallDirectoryExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		1B42958133519A9471FE6045 /* OnlyTrustedTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6C84C4369DA1A0E68045A363 /* Build configuration list for PBXNativeTarget "OnlyTrustedTests" */;
+			buildPhases = (
+				40FDE515831031BA24B86C68 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BA8E26007F20EDCCF636003C /* PBXTargetDependency */,
+			);
+			name = OnlyTrustedTests;
+			packageProductDependencies = (
+			);
+			productName = OnlyTrustedTests;
+			productReference = A333745D89FAC0E73C353444 /* OnlyTrustedTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		BA12AF62105C4B649E55F664 /* OnlyTrusted */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8D3A6053DE30849A577EB485 /* Build configuration list for PBXNativeTarget "OnlyTrusted" */;
@@ -1069,6 +1113,11 @@
 						DevelopmentTeam = H86SA2C3S5;
 						ProvisioningStyle = Automatic;
 					};
+					1B42958133519A9471FE6045 = {
+						DevelopmentTeam = H86SA2C3S5;
+						ProvisioningStyle = Automatic;
+						TestTargetID = BA12AF62105C4B649E55F664;
+					};
 				};
 			};
 			buildConfigurationList = A0121FDF1C9588AFFBD49831 /* Build configuration list for PBXProject "OnlyTrusted" */;
@@ -1096,6 +1145,7 @@
 				AF064AB733BC7B34A00CE5BD /* CallDirectoryExtension */,
 				37EECAEEBF66D1A45F624FC9 /* MessageFilterExtension */,
 				563F7FC40ED4D155410F99AB /* SmartLinkGuardExtension */,
+				1B42958133519A9471FE6045 /* OnlyTrustedTests */,
 			);
 		};
 /* End PBXProject section */
@@ -1291,6 +1341,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		40FDE515831031BA24B86C68 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1FD4E46BB69E14C7B9104B4C /* SmartLinkGuardRulesTests.swift in Sources */,
+				1672A52C8158E3C1D0B49460 /* PINRateLimiterTests.swift in Sources */,
+				1DB78F9A54F884F0C5933131 /* DeadmanWipeClockSkewTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		965290603C1C4D36D2521DF2 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1321,6 +1381,11 @@
 			isa = PBXTargetDependency;
 			target = AF064AB733BC7B34A00CE5BD /* CallDirectoryExtension */;
 			targetProxy = 4CF465BA92454E65483F95E8 /* PBXContainerItemProxy */;
+		};
+		BA8E26007F20EDCCF636003C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA12AF62105C4B649E55F664 /* OnlyTrusted */;
+			targetProxy = 2FB92FE3C1C2566ED7C2D273 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1620,6 +1685,46 @@
 			};
 			name = Release;
 		};
+		B48BA825EE1CB94FF695B637 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H86SA2C3S5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.onlytrusted.app.OnlyTrustedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OnlyTrusted.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OnlyTrusted";
+			};
+			name = Debug;
+		};
+		F1720A9D729B18521F8AEA55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = H86SA2C3S5;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.onlytrusted.app.OnlyTrustedTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/OnlyTrusted.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OnlyTrusted";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1664,6 +1769,15 @@
 			buildConfigurations = (
 				671C1688471B48E001164CB1 /* Debug */,
 				DC9BCC54E63A993905E69131 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6C84C4369DA1A0E68045A363 /* Build configuration list for PBXNativeTarget "OnlyTrustedTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B48BA825EE1CB94FF695B637 /* Debug */,
+				F1720A9D729B18521F8AEA55 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
