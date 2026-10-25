@@ -17,13 +17,26 @@ import java.util.Locale
  * All reads/writes go through [SubscriptionState.get] so the Billing and Upgrade screens
  * share the same source of truth.
  */
-/** Tier ladder — mirrors iOS `SubscriptionTier`. Elite is the top tier and unlocks everything. */
-enum class SubscriptionTier(val displayName: String, val rank: Int) {
-    FREE("Free", 0),
-    PREMIUM("Premium", 1),
-    FAMILY("Family", 2),
-    HIGH_PREMIUM("Pro (High Premium)", 3),
-    ELITE("Elite", 4);
+/**
+ * Tier ladder — mirrors iOS `SubscriptionTier`. Each paid tier now has an Individual
+ * (1 seat) + Family (5 seats) variant priced separately; feature-gating is still
+ * rank-based so a Family variant unlocks the SAME features as its Individual sibling
+ * (ranks shared across the two variants of the same tier). Elite is the top tier.
+ *
+ * Rank layout (shared ranks within a tier are intentional):
+ *   0  FREE
+ *   1  PREMIUM, FAMILY (= Premium Family)
+ *   2  HIGH_PREMIUM (Pro), HIGH_PREMIUM_FAMILY (Pro Family)
+ *   3  ELITE, ELITE_FAMILY
+ */
+enum class SubscriptionTier(val displayName: String, val rank: Int, val seats: Int) {
+    FREE("Free", 0, 1),
+    PREMIUM("Premium", 1, 1),
+    FAMILY("Premium Family", 1, 5),
+    HIGH_PREMIUM("Pro", 2, 1),
+    HIGH_PREMIUM_FAMILY("Pro Family", 2, 5),
+    ELITE("Elite", 3, 1),
+    ELITE_FAMILY("Elite Family", 3, 5);
 
     companion object {
         fun fromKey(key: String?): SubscriptionTier =
@@ -59,15 +72,15 @@ object SubscriptionState {
     fun tier(ctx: Context): SubscriptionTier =
         SubscriptionTier.fromKey(prefs(ctx).getString(KEY_TIER, null))
 
-    /** True if the user is on Premium / Family / HighPremium. */
+    /** True on any paid tier (Premium Individual/Family, Pro Individual/Family, Elite Individual/Family). */
     fun hasPremium(ctx: Context): Boolean =
         isActive(ctx) && tier(ctx).rank >= SubscriptionTier.PREMIUM.rank
 
-    /** True only if the user is on HighPremium (Pro). Gates the batch-1 security features. */
+    /** True on Pro Individual, Pro Family, Elite Individual, Elite Family. */
     fun hasHighPremium(ctx: Context): Boolean =
         isActive(ctx) && tier(ctx).rank >= SubscriptionTier.HIGH_PREMIUM.rank
 
-    /** True only if the user is on Elite. Gates hardware-key + dead-man wipe + encrypted backup. */
+    /** True on Elite Individual + Elite Family. */
     fun hasElite(ctx: Context): Boolean =
         isActive(ctx) && tier(ctx).rank >= SubscriptionTier.ELITE.rank
 

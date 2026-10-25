@@ -62,38 +62,61 @@ import java.util.Date
 private val settingsBlue = Color(0xFF2266F0)
 
 private enum class BillingCadence { Monthly, Yearly }
-private enum class Plan { Free, Premium, Family, HighPremium, Elite }
+
+/**
+ * Pricing-screen plan rows. Each paid tier has an Individual (1 seat) + Family (5
+ * seats) variant priced independently; feature-gating happens via [SubscriptionTier]
+ * (Family variants share the same tier rank as their Individual sibling, so unlocking
+ * is identical). Shipping SKUs on Play Console + App Store map 1-to-1:
+ *   Plan.PremiumIndividual → premium_yearly  / premium_monthly
+ *   Plan.PremiumFamily     → family_yearly   / family_monthly
+ *   Plan.ProIndividual     → pro_yearly      / pro_monthly
+ *   Plan.ProFamily         → pro_family_yearly   / pro_family_monthly
+ *   Plan.EliteIndividual   → elite_yearly    / elite_monthly
+ *   Plan.EliteFamily       → elite_family_yearly / elite_family_monthly
+ */
+private enum class Plan {
+    Free,
+    PremiumIndividual, PremiumFamily,
+    ProIndividual, ProFamily,
+    EliteIndividual, EliteFamily
+}
 
 private data class PlanFeature(val text: String, val included: Boolean)
 
 private fun Plan.displayName(): String = when (this) {
     Plan.Free -> "Free"
-    Plan.Premium -> "Premium"
-    Plan.Family -> "Family"
-    Plan.HighPremium -> "Pro"
-    Plan.Elite -> "Elite"
+    Plan.PremiumIndividual -> "Premium"
+    Plan.PremiumFamily -> "Premium Family"
+    Plan.ProIndividual -> "Pro"
+    Plan.ProFamily -> "Pro Family"
+    Plan.EliteIndividual -> "Elite"
+    Plan.EliteFamily -> "Elite Family"
 }
 
 private fun Plan.tier(): SubscriptionTier = when (this) {
     Plan.Free -> SubscriptionTier.FREE
-    Plan.Premium -> SubscriptionTier.PREMIUM
-    Plan.Family -> SubscriptionTier.FAMILY
-    Plan.HighPremium -> SubscriptionTier.HIGH_PREMIUM
-    Plan.Elite -> SubscriptionTier.ELITE
+    Plan.PremiumIndividual -> SubscriptionTier.PREMIUM
+    Plan.PremiumFamily -> SubscriptionTier.FAMILY
+    Plan.ProIndividual -> SubscriptionTier.HIGH_PREMIUM
+    Plan.ProFamily -> SubscriptionTier.HIGH_PREMIUM_FAMILY
+    Plan.EliteIndividual -> SubscriptionTier.ELITE
+    Plan.EliteFamily -> SubscriptionTier.ELITE_FAMILY
 }
 
 private fun Plan.priceLabel(cadence: BillingCadence): String = when (this) {
     Plan.Free -> "$0"
-    Plan.Premium -> if (cadence == BillingCadence.Monthly) "$0.99" else "$4.99"
-    Plan.Family -> if (cadence == BillingCadence.Monthly) "$1.99" else "$9.99"
-    Plan.HighPremium -> if (cadence == BillingCadence.Monthly) "$2.99" else "$19.99"
-    Plan.Elite -> if (cadence == BillingCadence.Monthly) "$3.99" else "$29.99"
+    Plan.PremiumIndividual -> if (cadence == BillingCadence.Monthly) "$0.99" else "$4.99"
+    Plan.PremiumFamily -> if (cadence == BillingCadence.Monthly) "$1.99" else "$9.99"
+    Plan.ProIndividual -> if (cadence == BillingCadence.Monthly) "$2.99" else "$19.99"
+    Plan.ProFamily -> if (cadence == BillingCadence.Monthly) "$4.99" else "$29.99"
+    Plan.EliteIndividual -> if (cadence == BillingCadence.Monthly) "$3.99" else "$29.99"
+    Plan.EliteFamily -> if (cadence == BillingCadence.Monthly) "$7.99" else "$49.99"
 }
 
 private fun Plan.cadenceSuffix(cadence: BillingCadence): String = when (this) {
     Plan.Free -> ""
-    Plan.Premium, Plan.Family, Plan.HighPremium, Plan.Elite ->
-        if (cadence == BillingCadence.Monthly) "per month" else "per year"
+    else -> if (cadence == BillingCadence.Monthly) "per month" else "per year"
 }
 
 private fun Plan.features(): List<PlanFeature> = when (this) {
@@ -102,9 +125,10 @@ private fun Plan.features(): List<PlanFeature> = when (this) {
         PlanFeature("Call Handling + Text Handling + Notifications", true),
         PlanFeature("Data Removal Scan (visibility-only)", true),
         PlanFeature("App Lock, Pocket-dial, Screenshot protection", true),
-        PlanFeature("Panic lock + Data export (JSON/CSV)", true)
+        PlanFeature("Panic lock + Data export (JSON/CSV)", true),
+        PlanFeature("SOS distress signal (shake / volume-down 4× / in-app)", true)
     )
-    Plan.Premium -> listOf(
+    Plan.PremiumIndividual -> listOf(
         PlanFeature("Privacy Shield + mic/camera use alerts", true),
         PlanFeature("Breach Watch (up to 5 emails)", true),
         PlanFeature("Private Aliases (unlimited) + CSV backup", true),
@@ -113,22 +137,29 @@ private fun Plan.features(): List<PlanFeature> = when (this) {
         PlanFeature("Weekly PDF digest", true),
         PlanFeature("Quiet hours + area-code allowlist", true)
     )
-    Plan.Family -> listOf(
-        PlanFeature("All Premium features", true),
-        PlanFeature("Shared via your App Store / Play family group", true),
+    Plan.PremiumFamily -> listOf(
+        PlanFeature("Every Premium feature, for your whole family", true),
+        PlanFeature("Up to 5 family members on one subscription", true),
+        PlanFeature("Shared via Google Play Family Library / Apple Family Sharing", true),
         PlanFeature("Per-device alias books (separately exportable)", true),
-        PlanFeature("Up to 5 members on one subscription", true)
+        PlanFeature("One payment method covers everyone", true)
     )
-    Plan.HighPremium -> listOf(
-        PlanFeature("All Premium features", true),
+    Plan.ProIndividual -> listOf(
+        PlanFeature("Everything in Premium", true),
         PlanFeature("Duress Mode + decoy vault", true),
-        PlanFeature("SIM-Swap Alarm + Wangiri auto-block", true),
+        PlanFeature("SIM-Swap Alarm + Wangiri one-ring protection", true),
         PlanFeature("App Permission Watchdog", true),
         PlanFeature("Tracker Finder (AirTag, Tile, SmartTag)", true),
         PlanFeature("Smart Link Guard (SMS + QR + share sheet)", true),
         PlanFeature("Safety Check-In", true)
     )
-    Plan.Elite -> listOf(
+    Plan.ProFamily -> listOf(
+        PlanFeature("Every Pro feature, for your whole family", true),
+        PlanFeature("Up to 5 family members on one subscription", true),
+        PlanFeature("Per-device Tracker Finder + Duress vaults", true),
+        PlanFeature("Shared via Google Play Family Library / Apple Family Sharing", true)
+    )
+    Plan.EliteIndividual -> listOf(
         PlanFeature("Everything in Pro", true),
         PlanFeature("App Shield (block any app behind biometric)", true),
         PlanFeature("Border Mode preset + Panic Lockdown", true),
@@ -138,6 +169,13 @@ private fun Plan.features(): List<PlanFeature> = when (this) {
         PlanFeature("Face-Change Lock + Voice Biometric", true),
         PlanFeature("Steganographic Vault + Rogue Network + Threat Intel", true)
     )
+    Plan.EliteFamily -> listOf(
+        PlanFeature("Every Elite feature, for your whole family", true),
+        PlanFeature("Up to 5 family members on one subscription", true),
+        PlanFeature("Each member's hardware keys + biometric templates stay on-device", true),
+        PlanFeature("Per-member Dead-Man Wipe + Geo-fence rules", true),
+        PlanFeature("Shared via Google Play Family Library / Apple Family Sharing", true)
+    )
 }
 
 @Composable
@@ -145,7 +183,7 @@ fun UpgradeToPremiumScreen(onBack: () -> Unit = {}) {
     val context = LocalContext.current
 
     var cadence by remember { mutableStateOf(BillingCadence.Yearly) }
-    var selectedPlan by remember { mutableStateOf(Plan.Premium) }
+    var selectedPlan by remember { mutableStateOf(Plan.PremiumIndividual) }
     var showPurchaseConfirmation by remember { mutableStateOf(false) }
     var restoreNotice by remember { mutableStateOf<String?>(null) }
 
@@ -193,10 +231,7 @@ fun UpgradeToPremiumScreen(onBack: () -> Unit = {}) {
             )
             val ctaLabel = when (selectedPlan) {
                 Plan.Free -> "Keep Free Plan"
-                Plan.Premium -> "Subscribe to Premium"
-                Plan.Family -> "Subscribe to Family"
-                Plan.HighPremium -> "Subscribe to Pro"
-                Plan.Elite -> "Subscribe to Elite"
+                else -> "Subscribe to ${selectedPlan.displayName()}"
             }
             CtaButton(label = ctaLabel, onClick = { showPurchaseConfirmation = true })
             RestoreButton(
@@ -442,13 +477,18 @@ private fun PlansGrid(
     // format which users liked. Keeps the layout consistent across every tier so
     // comparing is easier.
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        PlanCard(Plan.Free, cadence, selectedPlan == Plan.Free, onSelect, Modifier.fillMaxWidth())
-        PlanCard(Plan.Premium, cadence, selectedPlan == Plan.Premium, onSelect, Modifier.fillMaxWidth())
-        PlanCard(Plan.Family, cadence, selectedPlan == Plan.Family, onSelect, Modifier.fillMaxWidth())
-        PlanCard(Plan.HighPremium, cadence, selectedPlan == Plan.HighPremium, onSelect, Modifier.fillMaxWidth())
-        PlanCard(Plan.Elite, cadence, selectedPlan == Plan.Elite, onSelect, Modifier.fillMaxWidth())
+        PLAN_ORDER.forEach { p ->
+            PlanCard(p, cadence, selectedPlan == p, onSelect, Modifier.fillMaxWidth())
+        }
     }
 }
+
+private val PLAN_ORDER: List<Plan> = listOf(
+    Plan.Free,
+    Plan.PremiumIndividual, Plan.PremiumFamily,
+    Plan.ProIndividual, Plan.ProFamily,
+    Plan.EliteIndividual, Plan.EliteFamily
+)
 
 @Composable
 private fun PlanCard(
@@ -492,7 +532,7 @@ private fun PlanCard(
                 plan.displayName(),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (plan == Plan.Premium) BrandCyanDark else PrimaryTextDark
+                color = if (plan == Plan.PremiumIndividual) BrandCyanDark else PrimaryTextDark
             )
             Text(
                 plan.priceLabel(cadence),
@@ -510,21 +550,21 @@ private fun PlanCard(
                 )
             }
             when (plan) {
-                Plan.Premium -> MostPopularPill()
+                Plan.PremiumIndividual -> MostPopularPill()
                 Plan.Free -> Text(
                     "Basic protection",
                     fontSize = 12.sp,
                     color = SecondaryTextDark,
                     textAlign = TextAlign.Center
                 )
-                Plan.Family -> Text(
-                    "Up to 5 devices",
+                Plan.PremiumFamily, Plan.ProFamily, Plan.EliteFamily -> Text(
+                    "Up to 5 family members",
                     fontSize = 12.sp,
                     color = SecondaryTextDark,
                     textAlign = TextAlign.Center
                 )
-                Plan.HighPremium -> AllProtectionPill()
-                Plan.Elite -> ElitePill()
+                Plan.ProIndividual -> AllProtectionPill()
+                Plan.EliteIndividual -> ElitePill()
             }
 
             Spacer(Modifier.size(2.dp))
@@ -558,7 +598,7 @@ private fun PlanChip(plan: Plan) {
                 modifier = Modifier.size(22.dp)
             )
         }
-        Plan.Premium -> Box(
+        Plan.PremiumIndividual, Plan.PremiumFamily -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(size)
@@ -571,26 +611,13 @@ private fun PlanChip(plan: Plan) {
                 .border(1.5.dp, BrandCyanDark, CircleShape)
         ) {
             Icon(
-                Icons.Filled.EmojiEvents,
+                if (plan == Plan.PremiumFamily) Icons.Filled.Group else Icons.Filled.EmojiEvents,
                 contentDescription = null,
                 tint = BrandCyanDark,
                 modifier = Modifier.size(22.dp)
             )
         }
-        Plan.Family -> Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(size)
-                .background(settingsBlue.copy(alpha = 0.18f), CircleShape)
-        ) {
-            Icon(
-                Icons.Filled.Group,
-                contentDescription = null,
-                tint = settingsBlue,
-                modifier = Modifier.size(22.dp)
-            )
-        }
-        Plan.HighPremium -> Box(
+        Plan.ProIndividual, Plan.ProFamily -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(size)
@@ -598,13 +625,13 @@ private fun PlanChip(plan: Plan) {
                 .shadow(10.dp, CircleShape, ambientColor = aboutOrange, spotColor = aboutOrange)
         ) {
             Icon(
-                Icons.Filled.Shield,
+                if (plan == Plan.ProFamily) Icons.Filled.Group else Icons.Filled.Shield,
                 contentDescription = null,
                 tint = aboutOrange,
                 modifier = Modifier.size(22.dp)
             )
         }
-        Plan.Elite -> Box(
+        Plan.EliteIndividual, Plan.EliteFamily -> Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(size)
@@ -612,7 +639,7 @@ private fun PlanChip(plan: Plan) {
                 .shadow(10.dp, CircleShape, ambientColor = BrandCyanDark, spotColor = BrandCyanDark)
         ) {
             Icon(
-                Icons.Filled.VpnKey,
+                if (plan == Plan.EliteFamily) Icons.Filled.Group else Icons.Filled.VpnKey,
                 contentDescription = null,
                 tint = BrandCyanDark,
                 modifier = Modifier.size(22.dp)

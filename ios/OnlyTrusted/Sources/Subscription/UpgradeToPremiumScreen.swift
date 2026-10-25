@@ -10,12 +10,27 @@ struct UpgradeToPremiumScreen: View {
     @StateObject private var sub = SubscriptionState.shared
 
     @State private var billingCadence: BillingCadence = .yearly
-    @State private var selectedPlan: Plan = .premium
+    @State private var selectedPlan: Plan = .premiumIndividual
     @State private var showPurchaseConfirmation = false
     @State private var showRestoreNotice: String?
 
     enum BillingCadence: Hashable { case monthly, yearly }
-    enum Plan: Hashable { case free, premium, family, highPremium, elite }
+    /// Pricing-screen plan rows. Each paid tier has an Individual (1 seat) + Family
+    /// (5 seats) variant priced independently; feature-gating happens via
+    /// `SubscriptionTier` (Family variants share the same tier rank as their
+    /// Individual sibling, so unlocking is identical). Shipping StoreKit product IDs:
+    ///   .premiumIndividual  → com.onlytrusted.app.premium.yearly / .monthly
+    ///   .premiumFamily      → com.onlytrusted.app.family.yearly / .monthly
+    ///   .proIndividual      → com.onlytrusted.app.pro.yearly / .monthly
+    ///   .proFamily          → com.onlytrusted.app.pro_family.yearly / .monthly
+    ///   .eliteIndividual    → com.onlytrusted.app.elite.yearly / .monthly
+    ///   .eliteFamily        → com.onlytrusted.app.elite_family.yearly / .monthly
+    enum Plan: Hashable {
+        case free
+        case premiumIndividual, premiumFamily
+        case proIndividual, proFamily
+        case eliteIndividual, eliteFamily
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -153,13 +168,18 @@ struct UpgradeToPremiumScreen: View {
         // card format which users liked. Keeps the layout consistent across every
         // tier so comparing is easier.
         VStack(spacing: 10) {
-            planCard(.free)
-            planCard(.premium)
-            planCard(.family)
-            planCard(.highPremium)
-            planCard(.elite)
+            ForEach(Self.allPlans, id: \.self) { plan in
+                planCard(plan)
+            }
         }
     }
+
+    private static let allPlans: [Plan] = [
+        .free,
+        .premiumIndividual, .premiumFamily,
+        .proIndividual, .proFamily,
+        .eliteIndividual, .eliteFamily
+    ]
 
     private func planCard(_ plan: Plan) -> some View {
         let isSelected = plan == selectedPlan
@@ -170,7 +190,7 @@ struct UpgradeToPremiumScreen: View {
                 plan.chip
                 Text(plan.name)
                     .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(plan == .premium ? Color.appBrightCyan : Color.appPrimaryText)
+                    .foregroundStyle(plan == .premiumIndividual ? Color.appBrightCyan : Color.appPrimaryText)
                 Text(plan.priceLabel(for: billingCadence))
                     .font(.system(size: 24, weight: .bold, design: .rounded))
                     .foregroundStyle(Color.appPrimaryText)
@@ -182,25 +202,25 @@ struct UpgradeToPremiumScreen: View {
                     Text("Basic protection")
                         .font(.system(size: 12))
                         .foregroundStyle(Color.appSecondaryText)
-                case .premium:
+                case .premiumIndividual:
                     Text("Most Popular")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Color.appBrightCyan)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Capsule().stroke(Color.appBrightCyan, lineWidth: 1))
-                case .family:
-                    Text("Up to 5 devices")
+                case .premiumFamily, .proFamily, .eliteFamily:
+                    Text("Up to 5 family members")
                         .font(.system(size: 12))
                         .foregroundStyle(Color.appSecondaryText)
-                case .highPremium:
+                case .proIndividual:
                     Text("All Protection")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Color.aboutOrange)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         .background(Capsule().stroke(Color.aboutOrange, lineWidth: 1))
-                case .elite:
+                case .eliteIndividual:
                     Text("Elite — Max Security")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(Color.appBrightCyan)
@@ -280,13 +300,8 @@ struct UpgradeToPremiumScreen: View {
     }
 
     private var ctaLabel: String {
-        switch selectedPlan {
-        case .free: return "Keep Free Plan"
-        case .premium: return "Subscribe to Premium"
-        case .family: return "Subscribe to Family"
-        case .highPremium: return "Subscribe to Pro"
-        case .elite: return "Subscribe to Elite"
-        }
+        if selectedPlan == .free { return "Keep Free Plan" }
+        return "Subscribe to \(selectedPlan.name)"
     }
 
     // MARK: - Purchase stub
@@ -332,41 +347,49 @@ extension UpgradeToPremiumScreen.Plan {
     var name: String {
         switch self {
         case .free: return "Free"
-        case .premium: return "Premium"
-        case .family: return "Family"
-        case .highPremium: return "Pro"
-        case .elite: return "Elite"
+        case .premiumIndividual: return "Premium"
+        case .premiumFamily: return "Premium Family"
+        case .proIndividual: return "Pro"
+        case .proFamily: return "Pro Family"
+        case .eliteIndividual: return "Elite"
+        case .eliteFamily: return "Elite Family"
         }
     }
 
     var tier: SubscriptionTier {
         switch self {
         case .free: return .free
-        case .premium: return .premium
-        case .family: return .family
-        case .highPremium: return .highPremium
-        case .elite: return .elite
+        case .premiumIndividual: return .premium
+        case .premiumFamily: return .family
+        case .proIndividual: return .highPremium
+        case .proFamily: return .highPremiumFamily
+        case .eliteIndividual: return .elite
+        case .eliteFamily: return .eliteFamily
         }
     }
 
     func priceLabel(for cadence: UpgradeToPremiumScreen.BillingCadence) -> String {
         switch self {
         case .free: return "$0"
-        case .premium:
+        case .premiumIndividual:
             return cadence == .monthly ? "$0.99" : "$4.99"
-        case .family:
+        case .premiumFamily:
             return cadence == .monthly ? "$1.99" : "$9.99"
-        case .highPremium:
+        case .proIndividual:
             return cadence == .monthly ? "$2.99" : "$19.99"
-        case .elite:
+        case .proFamily:
+            return cadence == .monthly ? "$4.99" : "$29.99"
+        case .eliteIndividual:
             return cadence == .monthly ? "$3.99" : "$29.99"
+        case .eliteFamily:
+            return cadence == .monthly ? "$7.99" : "$49.99"
         }
     }
 
     func cadenceSuffix(for cadence: UpgradeToPremiumScreen.BillingCadence) -> String {
         switch self {
         case .free: return ""
-        case .premium, .family, .highPremium, .elite:
+        default:
             return cadence == .monthly ? "per month" : "per year"
         }
     }
@@ -380,7 +403,7 @@ extension UpgradeToPremiumScreen.Plan {
                 .foregroundStyle(Color.appSecondaryText)
                 .frame(width: 46, height: 46)
                 .background(Circle().fill(Color.appElevatedSurface))
-        case .premium:
+        case .premiumIndividual:
             Image(systemName: "crown.fill")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Color.appBrightCyan)
@@ -390,13 +413,13 @@ extension UpgradeToPremiumScreen.Plan {
                         .stroke(Color.appBrightCyan, lineWidth: 1.5)
                         .shadow(color: Color.appBrightCyan.opacity(0.6), radius: 10)
                 )
-        case .family:
+        case .premiumFamily:
             Image(systemName: "person.3.fill")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(Color.settingsBlue)
+                .foregroundStyle(Color.appBrightCyan)
                 .frame(width: 46, height: 46)
-                .background(Circle().fill(Color.settingsBlue.opacity(0.18)))
-        case .highPremium:
+                .background(Circle().fill(Color.appBrightCyan.opacity(0.18)))
+        case .proIndividual:
             Image(systemName: "shield.checkerboard")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Color.aboutOrange)
@@ -406,7 +429,13 @@ extension UpgradeToPremiumScreen.Plan {
                         .stroke(Color.aboutOrange, lineWidth: 1.5)
                         .shadow(color: Color.aboutOrange.opacity(0.6), radius: 10)
                 )
-        case .elite:
+        case .proFamily:
+            Image(systemName: "person.3.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color.aboutOrange)
+                .frame(width: 46, height: 46)
+                .background(Circle().fill(Color.aboutOrange.opacity(0.18)))
+        case .eliteIndividual:
             Image(systemName: "key.horizontal.fill")
                 .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(
@@ -423,6 +452,15 @@ extension UpgradeToPremiumScreen.Plan {
                         )
                         .shadow(color: Color.appBrightCyan.opacity(0.6), radius: 10)
                 )
+        case .eliteFamily:
+            Image(systemName: "person.3.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(
+                    LinearGradient(colors: [Color.appBrightCyan, Color.aboutOrange],
+                                   startPoint: .leading, endPoint: .trailing)
+                )
+                .frame(width: 46, height: 46)
+                .background(Circle().fill(Color.appBrightCyan.opacity(0.14)))
         }
     }
 
@@ -435,9 +473,10 @@ extension UpgradeToPremiumScreen.Plan {
             .init(text: "Call Handling + Text Handling + Notifications", included: true),
             .init(text: "Data Removal Scan (visibility-only)", included: true),
             .init(text: "App Lock, Pocket-dial, Screenshot protection", included: true),
-            .init(text: "Panic lock + Data export (JSON/CSV)", included: true)
+            .init(text: "Panic lock + Data export (JSON/CSV)", included: true),
+            .init(text: "SOS distress signal (shake / in-app)", included: true)
         ]
-        case .premium: return [
+        case .premiumIndividual: return [
             .init(text: "Privacy Shield + mic/camera use alerts", included: true),
             .init(text: "Breach Watch (up to 5 emails)", included: true),
             .init(text: "Private Aliases (unlimited) + CSV backup", included: true),
@@ -446,22 +485,29 @@ extension UpgradeToPremiumScreen.Plan {
             .init(text: "Weekly PDF digest", included: true),
             .init(text: "Quiet hours + area-code allowlist", included: true)
         ]
-        case .family: return [
-            .init(text: "All Premium features", included: true),
-            .init(text: "Shared via your App Store / Play family group", included: true),
+        case .premiumFamily: return [
+            .init(text: "Every Premium feature, for your whole family", included: true),
+            .init(text: "Up to 5 family members on one subscription", included: true),
+            .init(text: "Shared via Apple Family Sharing / Google Play Family Library", included: true),
             .init(text: "Per-device alias books (separately exportable)", included: true),
-            .init(text: "Up to 5 members on one subscription", included: true)
+            .init(text: "One payment method covers everyone", included: true)
         ]
-        case .highPremium: return [
-            .init(text: "All Premium features", included: true),
+        case .proIndividual: return [
+            .init(text: "Everything in Premium", included: true),
             .init(text: "Duress Mode + decoy vault", included: true),
-            .init(text: "SIM-Swap Alarm + Wangiri auto-block", included: true),
+            .init(text: "SIM-Swap Alarm + Wangiri one-ring detection", included: true),
             .init(text: "App Permission Watchdog", included: true),
             .init(text: "Tracker Finder (AirTag, Tile, SmartTag)", included: true),
             .init(text: "Smart Link Guard (SMS + QR + share sheet)", included: true),
             .init(text: "Safety Check-In", included: true)
         ]
-        case .elite: return [
+        case .proFamily: return [
+            .init(text: "Every Pro feature, for your whole family", included: true),
+            .init(text: "Up to 5 family members on one subscription", included: true),
+            .init(text: "Per-device Tracker Finder + Duress vaults", included: true),
+            .init(text: "Shared via Apple Family Sharing / Google Play Family Library", included: true)
+        ]
+        case .eliteIndividual: return [
             .init(text: "Everything in Pro", included: true),
             .init(text: "App Shield (block any app behind biometric)", included: true),
             .init(text: "Border Mode preset + Panic Lockdown", included: true),
@@ -470,6 +516,13 @@ extension UpgradeToPremiumScreen.Plan {
             .init(text: "Dead-Man Wipe + Geo-fence Auto-Lock", included: true),
             .init(text: "Face-Change Lock + Voice Biometric", included: true),
             .init(text: "Steganographic Vault + Rogue Network + Threat Intel", included: true)
+        ]
+        case .eliteFamily: return [
+            .init(text: "Every Elite feature, for your whole family", included: true),
+            .init(text: "Up to 5 family members on one subscription", included: true),
+            .init(text: "Each member's hardware keys + biometric templates stay on-device", included: true),
+            .init(text: "Per-member Dead-Man Wipe + Geo-fence rules", included: true),
+            .init(text: "Shared via Apple Family Sharing / Google Play Family Library", included: true)
         ]
         }
     }

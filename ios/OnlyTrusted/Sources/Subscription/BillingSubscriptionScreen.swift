@@ -321,29 +321,45 @@ private struct BillingHistorySheet: View {
 
 // MARK: - Subscription state (local for now; swap for StoreKit entitlements)
 
-/// Tier ladder. Features gate against this instead of a boolean so new tiers slot in cleanly.
+/// Tier ladder. Features gate against this via `rank` so new tiers slot in cleanly.
+/// Each paid tier has an Individual (1 seat) + Family (5 seats) variant priced
+/// independently; they share the same rank so Family unlocks the SAME features as the
+/// matching Individual sibling.
 enum SubscriptionTier: String, CaseIterable, Codable {
-    case free, premium, family, highPremium, elite
+    case free
+    case premium                // Premium Individual (1 seat)
+    case family                 // Premium Family (5 seats; alias kept for Codable compat)
+    case highPremium            // Pro Individual
+    case highPremiumFamily      // Pro Family
+    case elite                  // Elite Individual
+    case eliteFamily            // Elite Family
 
     var displayName: String {
         switch self {
-        case .free:         return "Free"
-        case .premium:      return "Premium"
-        case .family:       return "Family"
-        case .highPremium:  return "Pro (High Premium)"
-        case .elite:        return "Elite"
+        case .free:               return "Free"
+        case .premium:            return "Premium"
+        case .family:             return "Premium Family"
+        case .highPremium:        return "Pro"
+        case .highPremiumFamily:  return "Pro Family"
+        case .elite:              return "Elite"
+        case .eliteFamily:        return "Elite Family"
         }
     }
 
-    /// Numeric rank for `>=` checks. Elite is the top tier and unlocks everything (Pro + its own
-    /// extras: hardware security key, dead-man wipe, encrypted vault backup).
+    var seats: Int {
+        switch self {
+        case .family, .highPremiumFamily, .eliteFamily: return 5
+        default: return 1
+        }
+    }
+
+    /// Numeric rank for `>=` checks. Variants of the same tier share the same rank.
     var rank: Int {
         switch self {
-        case .free:        return 0
-        case .premium:     return 1
-        case .family:      return 2
-        case .highPremium: return 3
-        case .elite:       return 4
+        case .free:                                  return 0
+        case .premium, .family:                      return 1
+        case .highPremium, .highPremiumFamily:       return 2
+        case .elite, .eliteFamily:                   return 3
         }
     }
 }
