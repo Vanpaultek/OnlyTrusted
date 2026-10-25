@@ -170,6 +170,22 @@
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- Persistent install CTA — detects platform and swaps to the matching
+       store deep link + copy via app.js on load. Always visible so a user
+       scrolled anywhere in the page can one-tap install. -->
+  <a id="getCta"
+     class="get-cta"
+     href="https://play.google.com/store/apps/details?id=com.onlytrusted.app"
+     target="_blank"
+     rel="noopener"
+     aria-label="Get the OnlyTrusted app">
+    <svg class="store-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"></path>
+    </svg>
+    <span class="cta-text">Get OnlyTrusted</span>
+  </a>
+
   <script src="app.js" defer></script>
 </body>
 </html>

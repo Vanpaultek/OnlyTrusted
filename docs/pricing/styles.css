@@ -668,6 +668,72 @@ footer small {
   color: var(--text-quiet);
 }
 
+/* --- Persistent "Get OnlyTrusted" install CTA ---
+   Always-visible floating button that deep-links to the Play Store on
+   Android, App Store on iOS, Play Store (default) on desktop. See
+   setupCta() in app.js for platform detection + href/copy swap. */
+.get-cta {
+  position: fixed;
+  z-index: 25;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 24px;
+  padding: 14px 22px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 50px;
+  font: 800 15px 'Manrope', sans-serif;
+  letter-spacing: -0.2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 10px 32px rgba(0,209,193,.45), 0 0 0 1px rgba(0,209,193,.6);
+  transition: transform .2s, box-shadow .2s;
+  animation: ctaPulse 2.6s ease-in-out infinite;
+}
+.get-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(0,209,193,.6), 0 0 0 2px rgba(0,209,193,.8);
+}
+.get-cta .store-icon {
+  flex-shrink: 0;
+  color: var(--bg);
+}
+
+/* Subtle pulsing glow — persistent install prompt without being
+   obnoxiously animated. Matches the Dashboard Protection card's
+   two-layer cyan shadow treatment. */
+@keyframes ctaPulse {
+  0%, 100% {
+    box-shadow: 0 10px 32px rgba(0,209,193,.45), 0 0 0 1px rgba(0,209,193,.6);
+  }
+  50% {
+    box-shadow: 0 12px 44px rgba(0,209,193,.65), 0 0 0 2px rgba(0,209,193,.8),
+                0 0 60px rgba(0,209,193,.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .get-cta { animation: none; }
+}
+
+/* Mobile — full-width bottom bar for maximum tap-target.
+   Respects iOS safe-area-inset-bottom so it clears the home indicator. */
+@media (max-width: 620px) {
+  .get-cta {
+    left: 15px;
+    right: 15px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    justify-content: center;
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+  /* Push the footer up slightly so the CTA doesn't overlap the
+     copyright line / app-store links. */
+  footer { padding-bottom: 100px; }
+}
+
 /* --- Toast --- */
 .toast {
   position: fixed;

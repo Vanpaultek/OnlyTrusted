@@ -78,5 +78,29 @@ function renderTierStack(){
   });
 }
 
+/* Persistent install CTA — platform-aware href + copy swap. On iOS
+   points to the App Store listing; on Android to the Play Store listing;
+   on desktop stays on Play Store (Android-first launch). Apple App Store
+   ID is a placeholder — resolves to a search page until the real ID is
+   assigned post-submission. */
+function setupCta() {
+  const cta = document.getElementById('getCta');
+  if (!cta) return;
+  const platform = detectedPlatform();
+  const PLAY_URL  = 'https://play.google.com/store/apps/details?id=com.onlytrusted.app';
+  const APPLE_URL = 'https://apps.apple.com/us/app/onlytrusted'; // placeholder until Apple assigns an ID
+  const label = cta.querySelector('.cta-text');
+  if (platform === 'ios') {
+    cta.href = APPLE_URL;
+    if (label) label.textContent = 'Get on App Store';
+  } else if (platform === 'android') {
+    cta.href = PLAY_URL;
+    if (label) label.textContent = 'Get on Google Play';
+  } else {
+    cta.href = PLAY_URL;
+    if (label) label.textContent = 'Get OnlyTrusted';
+  }
+}
+
 function setup(){['individual','family'].forEach(x=>document.getElementById(x).addEventListener('click',()=>{state.audience=x;render()}));['yearly','monthly'].forEach(x=>document.getElementById(x).addEventListener('click',()=>{state.cycle=x;render()}));if(detectedPlatform()==='ios'){const url='https://apps.apple.com/account/subscriptions';for(const id of ['manage','footerManage'])document.getElementById(id).href=url;}
-document.getElementById('year').textContent=new Date().getFullYear();render();renderMatrix();renderTierStack();}setup();
+document.getElementById('year').textContent=new Date().getFullYear();render();renderMatrix();renderTierStack();setupCta();}setup();
