@@ -193,6 +193,28 @@ h1 em {
   margin-bottom: 26px;
   flex-wrap: wrap;
 }
+
+/* Sticky toggle bar — when the user scrolls past the heading, the
+   Individual/Family + Yearly/Monthly segmented controls pin to the top
+   so you can flip variants and watch prices update without scrolling
+   back up. Backdrop blur keeps the lakescape visible underneath. */
+.sticky-controls {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 14px 32px;
+  margin: 0 -32px 20px;
+  background: rgba(11, 31, 45, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sticky-controls .seg { background: rgba(30, 42, 58, 0.9); }
 h2 {
   font-size: clamp(28px, 3vw, 40px);
   margin: 12px 0;
@@ -382,32 +404,76 @@ h2 {
 }
 
 .table-wrap {
+  position: relative;
   overflow-x: auto;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(30,42,58,.85);
   backdrop-filter: blur(14px);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
 }
+.table-wrap::-webkit-scrollbar { height: 8px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+/* Right-edge fade — visual hint that the table scrolls horizontally
+   on narrow viewports (where Elite column is cut off). */
+.table-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, rgba(11,31,45,.9));
+  pointer-events: none;
+  border-radius: 0 18px 18px 0;
+}
+
 table {
   border-collapse: collapse;
   width: 100%;
-  min-width: 590px;
+  min-width: 640px;
+  table-layout: fixed;
 }
 th, td {
-  padding: 15px 17px;
+  padding: 14px 12px;
   text-align: center;
   border-bottom: 1px solid var(--line);
   font-size: 13px;
 }
-th:first-child, td:first-child { text-align: left; width: 42%; }
+th:first-child, td:first-child { text-align: left; width: 44%; padding-left: 18px; word-wrap: break-word; }
+th:not(:first-child), td:not(:first-child) { width: calc(56% / 4); min-width: 88px; word-wrap: break-word; }
+
+/* Sticky first column — feature names stay in view while the user
+   scrolls horizontally through tier columns. */
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background: rgba(30,42,58,.95);
+  z-index: 1;
+}
+th:first-child { background: rgba(0,209,193,.1); }
+
 th {
   color: var(--text);
   background: rgba(0,209,193,.08);
+  font-weight: 700;
 }
 td { color: var(--text-muted); }
 tr:last-child td { border: 0; }
 .yes { color: var(--accent); font-weight: 800; }
 .no  { color: var(--text-quiet); }
+
+/* Compare table — table-wide text selection cleanup. Previously
+   selecting a row showed broken-looking underlines from inherited
+   anchor styles. */
+.table-wrap table ::selection {
+  background: rgba(0,209,193,.3);
+  color: var(--text);
+}
 
 /* --- Honest-claim trust panel --- */
 .trust-panel {

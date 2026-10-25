@@ -44,15 +44,18 @@
           <span class="kicker">THE RIGHT LEVEL OF PROTECTION</span>
           <h2>Simple plans. Clear benefits.</h2>
         </div>
-        <div class="controls">
-          <div class="seg" role="group" aria-label="Membership">
-            <button id="individual" class="active" aria-pressed="true">Individual</button>
-            <button id="family" aria-pressed="false">Family · 5 seats</button>
-          </div>
-          <div class="seg" role="group" aria-label="Billing period">
-            <button id="yearly" class="active" aria-pressed="true">Yearly <small>save more</small></button>
-            <button id="monthly" aria-pressed="false">Monthly</button>
-          </div>
+      </div>
+      <!-- Sticky toggle bar: pins to top when scrolled so prices can be
+           compared across Individual/Family × Yearly/Monthly without
+           scrolling back up to the heading. -->
+      <div class="sticky-controls" role="group" aria-label="Plan options">
+        <div class="seg" role="group" aria-label="Membership">
+          <button id="individual" class="active" aria-pressed="true">Individual</button>
+          <button id="family" aria-pressed="false">Family · 5 seats</button>
+        </div>
+        <div class="seg" role="group" aria-label="Billing period">
+          <button id="yearly" class="active" aria-pressed="true">Yearly <small>save more</small></button>
+          <button id="monthly" aria-pressed="false">Monthly</button>
         </div>
       </div>
       <div id="cards" class="cards" aria-live="polite"></div>
