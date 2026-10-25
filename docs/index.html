@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0B1F2D">
+  <meta name="description" content="OnlyTrusted — zero-cloud privacy & security for iOS and Android. Pricing + user guide.">
+  <title>OnlyTrusted</title>
+  <link rel="icon" type="image/png" href="pricing/assets/brand_logo.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+    :root {
+      --bg:          #0B1F2D;
+      --bg-elevated: #1E2A3A;
+      --card:        #2E3B4E;
+      --text:        #F4FAFC;
+      --text-muted:  #B6C9D2;
+      --accent:      #00D1C1;
+      --line:        rgba(182,201,210,.14);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%),
+        url('pricing/assets/app_backdrop.webp') center/cover no-repeat;
+      z-index: -2;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: var(--accent);
+      filter: blur(140px);
+      opacity: .12;
+      pointer-events: none;
+      z-index: -1;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 24px 100px;
+    }
+    header.brand-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 60px;
+    }
+    header.brand-row img {
+      width: 56px; height: 56px; border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,209,193,.3);
+    }
+    header.brand-row .name {
+      font: 800 24px 'Manrope', sans-serif;
+      letter-spacing: -0.8px;
+    }
+    header.brand-row .accent { color: var(--accent); }
+    .eyebrow {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--accent);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 16px var(--accent);
+    }
+    h1 {
+      font: 800 clamp(42px, 6vw, 80px) 'Manrope', sans-serif;
+      letter-spacing: -1.8px;
+      line-height: 1.08;
+      margin: 20px 0 24px;
+    }
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+    }
+    .lede {
+      font-size: 17px;
+      line-height: 1.75;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 0 48px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 60px;
+    }
+    .card {
+      background: rgba(30, 42, 58, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 28px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 209, 193, 0.55);
+      box-shadow: 0 10px 40px rgba(0, 209, 193, 0.18);
+    }
+    .card .emoji {
+      font-size: 32px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .card h2 {
+      font: 800 22px 'Manrope', sans-serif;
+      margin: 0;
+      letter-spacing: -0.6px;
+      color: var(--text);
+    }
+    .card p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .card .cta {
+      margin-top: auto;
+      padding-top: 14px;
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      padding: 24px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .meta-row a {
+      color: var(--text-muted);
+      text-decoration: none;
+      border-bottom: 1px dashed var(--line);
+    }
+    .meta-row a:hover { color: var(--accent); border-color: var(--accent); }
+    .honest {
+      padding: 18px 20px;
+      background: rgba(0, 209, 193, 0.08);
+      border: 1px solid rgba(0, 209, 193, 0.25);
+      border-radius: 14px;
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+    .honest strong { color: var(--text); }
+    @media (max-width: 620px) {
+      .wrap { padding: 36px 18px 80px; }
+      header.brand-row { margin-bottom: 36px; }
+      .cards { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="brand-row">
+      <img src="pricing/assets/brand_logo.png" alt="OnlyTrusted logo">
+      <span class="name">Only<span class="accent">Trusted</span></span>
+    </header>
+
+    <span class="eyebrow">ZERO-CLOUD PRIVACY · ON-DEVICE SECURITY</span>
+    <h1>Protection for your<br><em>digital everyday.</em></h1>
+    <p class="lede">
+      OnlyTrusted is a cross-platform privacy &amp; personal-security app for iOS and
+      Android. Every feature runs on your phone — no server, no cloud, no account.
+      Pick a surface below to explore pricing or learn how every feature works.
+    </p>
+
+    <div class="honest">
+      <strong>The honest promise:</strong> OnlyTrusted sends zero network traffic for
+      its core functions. No sign-up. No cloud sync. Your trusted contacts, event log,
+      and encrypted backups live on your device, encrypted at rest. Verify any claim
+      yourself in the <a href="https://github.com/Vanpaultek/OnlyTrusted" style="color:var(--accent);text-decoration:underline">public source</a>.
+    </div>
+
+    <div class="cards">
+      <a href="pricing/" class="card">
+        <span class="emoji">💳</span>
+        <h2>Pricing</h2>
+        <p>Free + four paid tiers (Premium, Pro, Elite × Individual + Family).
+        Compare features, see live price updates when you flip Individual↔Family or
+        Monthly↔Yearly, and get the install link.</p>
+        <span class="cta">View pricing →</span>
+      </a>
+
+      <a href="guide/" class="card">
+        <span class="emoji">📖</span>
+        <h2>User guide</h2>
+        <p>Every one of the 44+ shipping features — where to find it, how to use it,
+        and what's on-device vs through your own carrier. Filter by tier, search by
+        name, share deep-links to specific features.</p>
+        <span class="cta">Read the guide →</span>
+      </a>
+
+      <a href="https://github.com/Vanpaultek/OnlyTrusted" class="card">
+        <span class="emoji">⚙️</span>
+        <h2>Source code</h2>
+        <p>Full Android + iOS source, CI pipeline, SBOMs, SLSA Build Provenance
+        attestations on every tagged release. Audit the "no server" promise yourself.</p>
+        <span class="cta">Open on GitHub →</span>
+      </a>
+    </div>
+
+    <div class="meta-row">
+      <span>© <script>document.write(new Date().getFullYear())</script> VanPaulTek Inc.</span>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted/releases">Releases</a>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted/blob/main/SECURITY.md">Security policy</a>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted/blob/main/USER_GUIDE.md">USER_GUIDE.md</a>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted/blob/main/MONETIZATION.md">MONETIZATION.md</a>
+      <a href="mailto:admin@vanpaultek.com">admin@vanpaultek.com</a>
+    </div>
+  </div>
+</body>
+</html>
