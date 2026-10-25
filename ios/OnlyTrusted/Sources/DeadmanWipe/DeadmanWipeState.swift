@@ -37,11 +37,24 @@ final class DeadmanWipeState: ObservableObject {
 
     @Published private(set) var lastUnlock: Date
 
+    /// Monotonic uptime at the moment of last unlock. Clock-skew defense: the
+    /// wall-clock `lastUnlock` can be rewound by setting the device date back,
+    /// but `ProcessInfo.systemUptime` cannot (it monotonically increases from
+    /// device boot). `shouldWipeNow` picks `max(wallClockElapsed, monotonicElapsed)`
+    /// so a user rewinding the clock doesn't buy themselves extra time.
+    private(set) var lastUnlockMonotonic: TimeInterval
+    /// Estimated boot time (wall clock) at last unlock. Used to detect reboots:
+    /// if the current boot differs by more than 60s, monotonic reference is
+    /// stale and we fall back to wall clock only.
+    private(set) var lastUnlockBootTime: Double
+
     private let d = UserDefaults.standard
     private enum Keys {
         static let enabled = "deadmanwipe.v1.enabled"
         static let interval = "deadmanwipe.v1.intervalDays"
         static let lastUnlock = "deadmanwipe.v1.lastUnlock"
+        static let lastUnlockMonotonic = "deadmanwipe.v1.lastUnlockMonotonic"
+        static let lastUnlockBootTime = "deadmanwipe.v1.lastUnlockBootTime"
     }
 
     private init() {
@@ -50,6 +63,8 @@ final class DeadmanWipeState: ObservableObject {
         self.intervalDays = Self.allowedIntervals.contains(stored) ? stored : 30
         let ts = d.object(forKey: Keys.lastUnlock) as? Double
         self.lastUnlock = ts.flatMap { Date(timeIntervalSince1970: $0) } ?? Date()
+        self.lastUnlockMonotonic = d.double(forKey: Keys.lastUnlockMonotonic)
+        self.lastUnlockBootTime = d.double(forKey: Keys.lastUnlockBootTime)
     }
 
     // MARK: - Timer
@@ -58,8 +73,14 @@ final class DeadmanWipeState: ObservableObject {
     /// setup screen's "Reset timer" button.
     func markUnlockNow() {
         let now = Date()
+        let monotonic = ProcessInfo.processInfo.systemUptime
+        let bootTime = now.timeIntervalSince1970 - monotonic
         lastUnlock = now
+        lastUnlockMonotonic = monotonic
+        lastUnlockBootTime = bootTime
         d.set(now.timeIntervalSince1970, forKey: Keys.lastUnlock)
+        d.set(monotonic, forKey: Keys.lastUnlockMonotonic)
+        d.set(bootTime, forKey: Keys.lastUnlockBootTime)
         if isEnabled {
             Self.scheduleWarningNotification(interval: intervalDays, lastUnlock: now)
         }
@@ -71,9 +92,28 @@ final class DeadmanWipeState: ObservableObject {
     }
 
     /// True if the dead-man condition is already satisfied — the launch flow should wipe.
-    func shouldWipeNow(now: Date = Date()) -> Bool {
+    ///
+    /// Clock-skew defense: compares elapsed wall-clock time to monotonic uptime
+    /// elapsed; takes the LARGER. A user setting the system clock backward
+    /// shrinks wall-clock elapsed but can't rewind monotonic uptime, so the
+    /// timer still fires. On a cold boot (monotonic reset), the stored boot
+    /// time no longer matches the current one and we fall back to wall clock
+    /// only — a reboot is a legitimate signal we accept.
+    func shouldWipeNow(
+        now: Date = Date(),
+        nowMonotonic: TimeInterval = ProcessInfo.processInfo.systemUptime
+    ) -> Bool {
         guard isEnabled else { return false }
-        return now >= wipeDeadline
+        let intervalSecs = TimeInterval(intervalDays) * 86400
+
+        let wallElapsed = now.timeIntervalSince1970 - lastUnlock.timeIntervalSince1970
+        let currentBoot = now.timeIntervalSince1970 - nowMonotonic
+        let sameBoot = abs(currentBoot - lastUnlockBootTime) < 60
+        let monoElapsed = sameBoot ? (nowMonotonic - lastUnlockMonotonic) : 0
+
+        // Take the larger — clock-skew-resistant.
+        let effectiveElapsed = max(wallElapsed, monoElapsed)
+        return effectiveElapsed >= intervalSecs
     }
 
     // MARK: - Enable / disable

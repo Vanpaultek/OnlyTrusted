@@ -19,6 +19,14 @@ import Foundation
 ///   7. Typo-squat — Levenshtein ≤ 2 vs. an allowlist entry → "possible typosquat".
 ///   8. Suspicious path keywords — /login, /verify, /secure, /account, /wallet,
 ///      /paypal, /signin on a non-allowlisted or shortened host.
+///   9. Embedded user:password in URL authority → almost always phishing.
+///  10. Non-Punycode Unicode homograph — Cyrillic / Greek lookalike chars
+///      sneaking into a host (`danger` on their own; `caution` if the host is
+///      otherwise fine so legit `münchen.de` isn't blocked).
+///  11. Brand-as-subdomain — a well-known brand name appearing as a sub-label
+///      under an unrelated eTLD+1 (`paypal.com.scam.ru`).
+///  12. Weighted escalation — two or more independent `caution` reasons
+///      aggregate to `danger`. One flag alone stays at its original level.
 public enum URLVerdict: Int, Comparable, Sendable {
     case safe = 0
     case caution = 1
@@ -58,12 +66,38 @@ public enum SmartLinkGuardRules {
         }
 
         let normalised = trimmed.contains("://") ? trimmed : "http://" + trimmed
-        guard let components = URLComponents(string: normalised) else {
-            return URLSafetyResult(url: rawUrl, verdict: .danger, reasons: ["Can't parse as a URL."])
-        }
 
         var reasons: [String] = []
         var worst: URLVerdict = .safe
+        // Weighted scoring: count caution-level reasons so N≥2 escalates to danger.
+        var cautionCount = 0
+
+        // 10a — Non-Punycode Unicode homograph on the raw input. Run BEFORE
+        // URLComponents parse because Foundation silently normalizes or rejects
+        // some non-ASCII hostnames and we'd miss the attack signal entirely.
+        // Scope to the raw host portion so paths like /café/menu don't false-trigger.
+        let rawHost = extractRawHost(trimmed)
+        let rawHostHasHomoglyph = containsHomoglyph(rawHost)
+        if rawHostHasHomoglyph {
+            reasons.append("Host contains Unicode lookalike characters — possible homograph attack.")
+            worst = bump(worst, .caution)
+            cautionCount += 1
+        }
+
+        guard let components = URLComponents(string: normalised) else {
+            return URLSafetyResult(
+                url: rawUrl,
+                verdict: worst == .safe ? .danger : worst,
+                reasons: reasons + ["Can't parse as a URL."]
+            )
+        }
+
+        // 9 — embedded user:password (RFC-3986 userinfo). Legitimate modern sites
+        // never do this; browsers warn aggressively. Treat as always-danger.
+        if (components.user?.isEmpty == false) || (components.password?.isEmpty == false) {
+            reasons.append("Contains embedded username/password — classic credential-harvest shape.")
+            worst = bump(worst, .danger)
+        }
 
         // 1 — scheme
         let scheme = components.scheme?.lowercased()
@@ -71,14 +105,17 @@ public enum SmartLinkGuardRules {
         case .none:
             reasons.append("Missing scheme — anyone could redirect you anywhere.")
             worst = bump(worst, .caution)
+            cautionCount += 1
         case "https":
             break
         case "http":
             reasons.append("Insecure http:// — any Wi-Fi can tamper with the page.")
             worst = bump(worst, .caution)
+            cautionCount += 1
         case "ftp", "telnet", "file":
             reasons.append("Legacy \(scheme!):// scheme — avoid.")
             worst = bump(worst, .caution)
+            cautionCount += 1
         default:
             break
         }
@@ -114,6 +151,7 @@ public enum SmartLinkGuardRules {
         if shortenerHit {
             reasons.append("Shortened link — the real destination is hidden.")
             worst = bump(worst, .caution)
+            cautionCount += 1
         }
 
         // 3 — suspicious TLD
@@ -122,7 +160,27 @@ public enum SmartLinkGuardRules {
             if !tld.isEmpty, suspiciousTLDs.contains(tld) {
                 reasons.append(".\(tld) is a suspicious top-level domain often used by scammers.")
                 worst = bump(worst, .caution)
+                cautionCount += 1
             }
+        }
+
+        // 10b — Non-Punycode Unicode homograph on the parsed host. Only fires
+        // when the raw-input check above didn't already flag it (avoids double-
+        // counting the same attack).
+        if !rawHostHasHomoglyph, containsHomoglyph(host) {
+            reasons.append("Host contains Unicode lookalike characters — possible homograph attack.")
+            worst = bump(worst, .caution)
+            cautionCount += 1
+        }
+
+        // 11 — Brand-as-subdomain. If any well-known brand (first label of an
+        // allowlisted eTLD+1) appears as a sub-label on an unrelated eTLD+1, the
+        // user is almost certainly looking at a phishing shape like
+        // `paypal.com.scam.ru`. Skip when the host itself is on the allowlist (we
+        // don't want `support.paypal.com` to self-flag).
+        if !allowlistHit, let impersonated = brandMisusedAsSubdomain(host: host, etldPlusOne: etldPlusOne) {
+            reasons.append("Well-known brand \"\(impersonated)\" used as a subdomain of an unrelated domain — phishing shape.")
+            worst = bump(worst, .danger)
         }
 
         // 7 — typosquat
@@ -146,7 +204,17 @@ public enum SmartLinkGuardRules {
                (!allowlistHit || shortenerHit) {
                 reasons.append("Path contains \"\(keyword)\" on an unverified host — classic phishing shape.")
                 worst = bump(worst, .caution)
+                cautionCount += 1
             }
+        }
+
+        // 12 — Weighted escalation. Two or more independent caution-level flags
+        // on the same URL (e.g. http + shortener + suspicious TLD) aggregate into
+        // danger. One flag alone stays at its original level so legitimate
+        // internationalized or http sites aren't blanket-blocked.
+        if worst == .caution, cautionCount >= 2 {
+            reasons.append("Multiple caution flags on the same link — escalated to Danger.")
+            worst = .danger
         }
 
         if reasons.isEmpty {
@@ -175,6 +243,61 @@ public enum SmartLinkGuardRules {
 
     private static func bump(_ current: URLVerdict, _ next: URLVerdict) -> URLVerdict {
         next.rawValue > current.rawValue ? next : current
+    }
+
+    /// Detects the common Cyrillic / Greek lookalikes attackers substitute for
+    /// Latin ASCII to clone a brand name. Not an exhaustive Unicode confusables
+    /// table — just the characters that are visually identical to common ASCII
+    /// at every rendered font size, which is where the real phishing risk lives.
+    private static let homoglyphCodepoints: Set<Character> = [
+        // Cyrillic lookalikes for Latin a c e o p x y
+        "а", "с", "е", "о", "р", "х", "у",
+        // Greek lookalikes for Latin alpha / omicron / rho / etc.
+        "α", "ο", "ρ", "ν", "κ", "τ",
+        // Full-width ASCII (CJK rendering)
+        "ａ", "ｂ", "ｃ", "ｇ", "ｏ", "ｐ"
+    ]
+
+    static func containsHomoglyph(_ host: String) -> Bool {
+        host.contains(where: { homoglyphCodepoints.contains($0) })
+    }
+
+    /// Extract the host portion of a URL-ish string by hand, bypassing
+    /// `URLComponents` (which can silently normalize non-ASCII hostnames away
+    /// before our rules see them). Returns everything between the scheme
+    /// separator and the next path / query / fragment / port delimiter.
+    static func extractRawHost(_ rawInput: String) -> String {
+        var s = rawInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let r = s.range(of: "://") {
+            s = String(s[r.upperBound...])
+        }
+        if let r = s.range(of: "@") {
+            s = String(s[r.upperBound...])
+        }
+        let cutIdxs = ["/", "?", "#", ":"].compactMap { delim in
+            s.range(of: delim)?.lowerBound
+        }
+        if let earliest = cutIdxs.min() {
+            s = String(s[..<earliest])
+        }
+        return s
+    }
+
+    /// Returns the brand name (first label of an allowlisted eTLD+1) that
+    /// appears as a sub-label of [host] when the host's own eTLD+1 is NOT on
+    /// the allowlist. Catches `paypal.com.scam.ru` → "paypal".
+    static func brandMisusedAsSubdomain(host: String, etldPlusOne: String) -> String? {
+        guard !allowlist.contains(etldPlusOne) else { return nil }
+        let labels = host.split(separator: ".").map(String.init)
+        guard labels.count > 2 else { return nil }
+        let brandLabels: Set<String> = Set(allowlist.compactMap { domain in
+            domain.split(separator: ".").first.map(String.init)
+        })
+        // Walk sub-labels (strip the last two which are the eTLD+1 of the host).
+        for label in labels.dropLast(2) {
+            if brandLabels.contains(label) { return label }
+        }
+        return nil
     }
 
     private static func isIPLiteral(_ host: String) -> Bool {

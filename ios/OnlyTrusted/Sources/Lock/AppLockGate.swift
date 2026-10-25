@@ -164,14 +164,30 @@ struct AppLockGate: View {
 
     private func submitPin() {
         pinError = nil
+        // Rate limit: refuse to even check the PIN if we're inside a lockout
+        // window. Phase-2 audit flagged unlimited PIN attempts as HIGH severity.
+        let lockout = PINRateLimiter.remainingLockout()
+        if lockout > 0 {
+            let mins = Int(ceil(lockout / 60.0))
+            pinError = "Too many wrong PINs. Try again in \(mins) min."
+            return
+        }
         if duress.matches(pin: pin) {
+            // Successful unlock (via duress path) resets the counter.
+            PINRateLimiter.recordSuccess()
             // Duress unlock: swap to decoy, prepare SOS, dismiss PIN sheet, present composer.
             pin = ""
             showPinSheet = false
             duress.isDuressSession = true
             prepareSOS()
         } else {
-            pinError = "Incorrect PIN."
+            let penalty = PINRateLimiter.recordFailure()
+            if penalty > 0 {
+                let mins = Int(ceil(penalty / 60.0))
+                pinError = "Too many wrong PINs. Locked for \(mins) min."
+            } else {
+                pinError = "Incorrect PIN."
+            }
         }
     }
 

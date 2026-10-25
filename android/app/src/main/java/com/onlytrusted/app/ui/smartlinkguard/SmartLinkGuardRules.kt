@@ -62,11 +62,34 @@ object SmartLinkGuardRules {
         // Pre-normalise: if the user pasted "example.com/foo" without a scheme, we still
         // run the host-based rules but note the missing scheme.
         val normalised = if (trimmed.contains("://")) trimmed else "http://$trimmed"
-        val uri = runCatching { URI(normalised) }.getOrNull()
-            ?: return URLSafetyResult(rawUrl, URLVerdict.Danger, listOf("Can't parse as a URL."))
 
         val reasons = mutableListOf<String>()
         var worst: URLVerdict = URLVerdict.Safe
+        // Weighted scoring: count caution-level reasons so N≥2 escalates to Danger.
+        var cautionCount = 0
+
+        // 10a — Non-Punycode Unicode homograph on the raw input. Run BEFORE URI
+        // parse because java.net.URI silently rejects non-ASCII hostnames (we'd
+        // bail into "Can't parse" and miss the attack entirely). Scope the check
+        // to the host portion so paths like /café/menu don't false-trigger.
+        val rawHost = extractRawHost(trimmed)
+        val rawHostHasHomoglyph = containsHomoglyph(rawHost)
+        if (rawHostHasHomoglyph) {
+            reasons += "Host contains Unicode lookalike characters — possible homograph attack."
+            worst = bump(worst, URLVerdict.Caution)
+            cautionCount += 1
+        }
+
+        val uri = runCatching { URI(normalised) }.getOrNull()
+            ?: return URLSafetyResult(rawUrl, if (worst == URLVerdict.Safe) URLVerdict.Danger else worst,
+                reasons + "Can't parse as a URL.")
+
+        // 9 — embedded user:password (RFC-3986 userinfo). Legitimate modern sites
+        // never do this; browsers warn aggressively. Treat as always-Danger.
+        if (!uri.userInfo.isNullOrEmpty()) {
+            reasons += "Contains embedded username/password — classic credential-harvest shape."
+            worst = bump(worst, URLVerdict.Danger)
+        }
 
         // 1 — scheme
         val scheme = uri.scheme?.lowercase(Locale.US)
@@ -74,15 +97,18 @@ object SmartLinkGuardRules {
             null -> {
                 reasons += "Missing scheme — anyone could redirect you anywhere."
                 worst = bump(worst, URLVerdict.Caution)
+                cautionCount += 1
             }
             "https" -> { /* fine */ }
             "http" -> {
                 reasons += "Insecure http:// — any Wi-Fi can tamper with the page."
                 worst = bump(worst, URLVerdict.Caution)
+                cautionCount += 1
             }
             "ftp", "telnet", "file" -> {
                 reasons += "Legacy $scheme:// scheme — avoid."
                 worst = bump(worst, URLVerdict.Caution)
+                cautionCount += 1
             }
             else -> {
                 // tel:, mailto:, sms: etc. — not web links; keep as Safe but note.
@@ -123,6 +149,7 @@ object SmartLinkGuardRules {
         if (shortenerHit) {
             reasons += "Shortened link — the real destination is hidden."
             worst = bump(worst, URLVerdict.Caution)
+            cautionCount += 1
         }
 
         // 3 — suspicious TLD
@@ -130,6 +157,28 @@ object SmartLinkGuardRules {
         if (tld.isNotEmpty() && tld in SUSPICIOUS_TLDS) {
             reasons += ".$tld is a suspicious top-level domain often used by scammers."
             worst = bump(worst, URLVerdict.Caution)
+            cautionCount += 1
+        }
+
+        // 10b — Non-Punycode Unicode homograph on the parsed host. Only fires
+        // when the raw check above didn't already flag it (so we don't
+        // double-count a single attack).
+        if (!rawHostHasHomoglyph && containsHomoglyph(host)) {
+            reasons += "Host contains Unicode lookalike characters — possible homograph attack."
+            worst = bump(worst, URLVerdict.Caution)
+            cautionCount += 1
+        }
+
+        // 11 — Brand-as-subdomain spoofing. If a well-known brand name appears
+        // as a sub-label of an unrelated eTLD+1 (e.g. `paypal.com.scam.ru`),
+        // flag Danger. Skip when the host itself is on the allowlist so
+        // `support.paypal.com` doesn't self-flag.
+        if (!allowlistHit) {
+            val impersonated = brandMisusedAsSubdomain(host, etldPlusOne)
+            if (impersonated != null) {
+                reasons += "Well-known brand \"$impersonated\" used as a subdomain of an unrelated domain — phishing shape."
+                worst = bump(worst, URLVerdict.Danger)
+            }
         }
 
         // 7 — typo-squat
@@ -157,7 +206,17 @@ object SmartLinkGuardRules {
             if (keyword != null && (!allowlistHit || shortenerHit)) {
                 reasons += "Path contains \"$keyword\" on an unverified host — classic phishing shape."
                 worst = bump(worst, URLVerdict.Caution)
+                cautionCount += 1
             }
+        }
+
+        // 12 — Weighted escalation. Two or more independent caution-level flags
+        // on the same URL aggregate into Danger. One flag alone stays at its
+        // original level so legitimate internationalized or http sites aren't
+        // blanket-blocked.
+        if (worst == URLVerdict.Caution && cautionCount >= 2) {
+            reasons += "Multiple caution flags on the same link — escalated to Danger."
+            worst = URLVerdict.Danger
         }
 
         if (reasons.isEmpty()) {
@@ -165,6 +224,51 @@ object SmartLinkGuardRules {
         }
 
         return URLSafetyResult(rawUrl, worst, reasons.toList())
+    }
+
+    /** Common Cyrillic / Greek / full-width lookalikes used in phishing. */
+    private val HOMOGLYPH_CODEPOINTS: Set<Char> = setOf(
+        // Cyrillic lookalikes for Latin a c e o p x y
+        'а', 'с', 'е', 'о', 'р', 'х', 'у',
+        // Greek lookalikes for Latin alpha / omicron / rho / nu / kappa / tau
+        'α', 'ο', 'ρ', 'ν', 'κ', 'τ',
+        // Full-width ASCII (CJK rendering)
+        'ａ', 'ｂ', 'ｃ', 'ｇ', 'ｏ', 'ｐ'
+    )
+
+    internal fun containsHomoglyph(host: String): Boolean =
+        host.any { it in HOMOGLYPH_CODEPOINTS }
+
+    /** Extract the host portion of a URL-ish string by hand, bypassing
+     *  java.net.URI (which rejects non-ASCII hostnames and loses the attack
+     *  signal before our rules get to see it). Returns everything between the
+     *  scheme separator and the next path / query / fragment / port delimiter. */
+    internal fun extractRawHost(rawInput: String): String {
+        var s = rawInput.trim()
+        val schemeIdx = s.indexOf("://")
+        if (schemeIdx >= 0) s = s.substring(schemeIdx + 3)
+        // Strip authority userinfo
+        val atIdx = s.indexOf('@')
+        if (atIdx >= 0) s = s.substring(atIdx + 1)
+        // Cut at first path / query / fragment / port
+        val cuts = intArrayOf(
+            s.indexOf('/'), s.indexOf('?'), s.indexOf('#'), s.indexOf(':')
+        ).filter { it >= 0 }
+        val cut = cuts.minOrNull() ?: s.length
+        return s.substring(0, cut)
+    }
+
+    /** Returns the brand name (first label of an allowlisted eTLD+1) that
+     *  appears as a sub-label of [host] when the host's own eTLD+1 is NOT on
+     *  the allowlist. Catches `paypal.com.scam.ru` → "paypal". */
+    internal fun brandMisusedAsSubdomain(host: String, etldPlusOne: String): String? {
+        if (etldPlusOne in ALLOWLIST) return null
+        val labels = host.split('.')
+        if (labels.size <= 2) return null
+        val brandLabels: Set<String> = ALLOWLIST
+            .mapNotNull { it.split('.').firstOrNull() }
+            .toSet()
+        return labels.dropLast(2).firstOrNull { it in brandLabels }
     }
 
     /** Extract every URL-looking substring from a block of SMS text. */

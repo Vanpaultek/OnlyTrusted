@@ -840,6 +840,11 @@ private struct HonestLimitsSheet: View {
                 limitBullet("Place watermarks over other apps on iOS.")
                 limitBullet("Prevent carrier or operating-system tracking.")
                 limitBullet("Guarantee that every unwanted contact will be blocked — some requires enabling Apple's system extensions in iOS Settings.")
+                limitBullet("Call Shield uses supported caller-blocking interfaces and cannot block every scam call.")
+                limitBullet("SMS Defense processes supported messages from unknown senders only. It cannot inspect your entire inbox or iMessages.")
+                limitBullet("Auto Privacy Shield stops OnlyTrusted-owned recording sessions. It does not disable other apps' microphones or cameras.")
+                limitBullet("Dead-Man Wipe destroys your on-device vault after the chosen interval. It cannot wipe backups you created outside OnlyTrusted, and cannot run while the device is powered off.")
+                limitBullet("Voice checks cannot prove a caller is genuinely who they claim. Verify sensitive requests via a trusted callback.")
             }
             .padding(20)
         }

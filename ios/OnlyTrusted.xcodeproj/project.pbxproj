@@ -39,6 +39,7 @@
 		2A8308A8CEF8DEF2DAEC42DE /* MessageFilterExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 883FF356FE2F6565E7E15758 /* MessageFilterExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */; };
 		2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51064799313EB1D6D00E144A /* BiometricPasskey.swift */; };
+		0FB1418D55E3A63E2B090875 /* PINRateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DD100145052F4665391E884 /* PINRateLimiter.swift */; };
 		2B729C872B9FAF9CA2B9FFE8 /* SmartLinkGuardExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = FE0DB6AA778E2CCDC147DAD3 /* SmartLinkGuardExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2C1C57334861C68F1D4697F5 /* SharedContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = E287E737C235F26B6F586928 /* SharedContainer.swift */; };
 		2C99252753A8A6EEE47E23D7 /* PrivacyShieldDashboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22B6CAC92610E21B4F8AE8A /* PrivacyShieldDashboard.swift */; };
@@ -355,6 +356,7 @@
 		DD57602976D8C9A69AEB4959 /* BlockListStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockListStore.swift; sourceTree = "<group>"; };
 		DF5C23DD1366EBCD7E51AE09 /* FieldCrypto.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCrypto.swift; sourceTree = "<group>"; };
 		51064799313EB1D6D00E144A /* BiometricPasskey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricPasskey.swift; sourceTree = "<group>"; };
+		5DD100145052F4665391E884 /* PINRateLimiter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PINRateLimiter.swift; sourceTree = "<group>"; };
 		E116181529A59548B1AA0523 /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
 		E1F192E38BF3AC823EDDE762 /* FaceLockState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceLockState.swift; sourceTree = "<group>"; };
 		E287E737C235F26B6F586928 /* SharedContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedContainer.swift; sourceTree = "<group>"; };
@@ -612,6 +614,7 @@
 			isa = PBXGroup;
 			children = (
 				B875C9E9199F8E854722B33A /* AppLockGate.swift */,
+				5DD100145052F4665391E884 /* PINRateLimiter.swift */,
 			);
 			path = Lock;
 			sourceTree = "<group>";
@@ -1190,6 +1193,7 @@
 				B8FE477ED7465279810CF711 /* FaceLockState.swift in Sources */,
 				2AA8ED70571262B71B0E8BC2 /* FieldCrypto.swift in Sources */,
 				2FBDE4B6E397B69B0DB24006 /* BiometricPasskey.swift in Sources */,
+				0FB1418D55E3A63E2B090875 /* PINRateLimiter.swift in Sources */,
 				EC2279C4173F8CBAFE9809BF /* LocaleStore.swift in Sources */,
 				90B98796B56DE636A96FABBA /* ReviewBadge.swift in Sources */,
 				6A9B0C82FC434CD00DF1B524 /* LanguageRegionScreen.swift in Sources */,

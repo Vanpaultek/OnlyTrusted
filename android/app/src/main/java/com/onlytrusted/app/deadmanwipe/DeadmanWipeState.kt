@@ -4,9 +4,12 @@ package com.onlytrusted.app.deadmanwipe
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.os.SystemClock
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import java.util.Date
+import kotlin.math.abs
+import kotlin.math.max
 
 /**
  * Dead-Man Wipe (Elite). Mirrors iOS `DeadmanWipeState`.
@@ -28,6 +31,12 @@ object DeadmanWipeState {
     private const val KEY_ENABLED = "enabled"
     private const val KEY_INTERVAL = "interval_days"
     private const val KEY_LAST_UNLOCK = "last_unlock_millis"
+    // Clock-skew defense (added 2026-10-25). Store SystemClock.elapsedRealtime at
+    // the moment of unlock + the estimated boot time (wall clock minus elapsed
+    // realtime). shouldWipeNow() uses max(wallClockElapsed, monotonicElapsed) so
+    // a user setting the clock backward can't buy themselves extra time.
+    private const val KEY_LAST_UNLOCK_ELAPSED = "last_unlock_elapsed_realtime"
+    private const val KEY_LAST_UNLOCK_BOOT_MS = "last_unlock_boot_time_millis"
 
     private const val DEFAULT_INTERVAL = 30
 
@@ -68,9 +77,30 @@ object DeadmanWipeState {
 
     fun wipeDeadline(ctx: Context): Date = Date(wipeDeadlineMillis(ctx))
 
-    fun shouldWipeNow(ctx: Context, now: Long = System.currentTimeMillis()): Boolean {
+    fun shouldWipeNow(
+        ctx: Context,
+        now: Long = System.currentTimeMillis(),
+        nowElapsedRealtime: Long = SystemClock.elapsedRealtime()
+    ): Boolean {
         if (!isEnabled(ctx)) return false
-        return now >= wipeDeadlineMillis(ctx)
+        val p = prefs(ctx)
+        val lastWall = lastUnlockMillis(ctx)
+        val intervalMs = intervalDays(ctx) * 86_400_000L
+
+        val wallElapsed = now - lastWall
+        val storedElapsed = p.getLong(KEY_LAST_UNLOCK_ELAPSED, 0L)
+        val storedBoot = p.getLong(KEY_LAST_UNLOCK_BOOT_MS, 0L)
+
+        // Detect reboot: if the current estimated boot time differs from the
+        // stored one by more than 60 s, elapsedRealtime has restarted and the
+        // monotonic reference is stale. Fall back to wall clock only.
+        val currentBoot = now - nowElapsedRealtime
+        val sameBoot = storedBoot > 0 && abs(currentBoot - storedBoot) < 60_000L
+        val monoElapsed = if (sameBoot) (nowElapsedRealtime - storedElapsed) else 0L
+
+        // Clock-skew defense: take the larger of the two measurements.
+        val effectiveElapsed = max(wallElapsed, monoElapsed)
+        return effectiveElapsed >= intervalMs
     }
 
     fun setIntervalDays(ctx: Context, days: Int) {
@@ -80,7 +110,14 @@ object DeadmanWipeState {
 
     /** Called by AppLockGate after a successful biometric unlock. Also by "Reset timer". */
     fun markUnlockNow(ctx: Context) {
-        prefs(ctx).edit().putLong(KEY_LAST_UNLOCK, System.currentTimeMillis()).apply()
+        val now = System.currentTimeMillis()
+        val elapsed = SystemClock.elapsedRealtime()
+        val bootTime = now - elapsed
+        prefs(ctx).edit()
+            .putLong(KEY_LAST_UNLOCK, now)
+            .putLong(KEY_LAST_UNLOCK_ELAPSED, elapsed)
+            .putLong(KEY_LAST_UNLOCK_BOOT_MS, bootTime)
+            .apply()
         if (isEnabled(ctx)) {
             DeadmanWipeScheduler.rescheduleAll(ctx)
         }
@@ -88,10 +125,14 @@ object DeadmanWipeState {
 
     /** Enable with the current (or newly-passed) interval; resets the timer. */
     fun enable(ctx: Context, intervalDays: Int) {
+        val now = System.currentTimeMillis()
+        val elapsed = SystemClock.elapsedRealtime()
         prefs(ctx).edit()
             .putBoolean(KEY_ENABLED, true)
             .putInt(KEY_INTERVAL, if (allowedIntervals.contains(intervalDays)) intervalDays else DEFAULT_INTERVAL)
-            .putLong(KEY_LAST_UNLOCK, System.currentTimeMillis())
+            .putLong(KEY_LAST_UNLOCK, now)
+            .putLong(KEY_LAST_UNLOCK_ELAPSED, elapsed)
+            .putLong(KEY_LAST_UNLOCK_BOOT_MS, now - elapsed)
             .apply()
         DeadmanWipeScheduler.rescheduleAll(ctx)
     }

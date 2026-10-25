@@ -39,6 +39,8 @@ import com.onlytrusted.app.OnlyTrustedApp
 import com.onlytrusted.app.R
 import com.onlytrusted.app.security.AppLockManager
 import com.onlytrusted.app.security.BiometricPasskey
+import com.onlytrusted.app.security.PINRateLimiter
+import kotlin.math.ceil
 import com.onlytrusted.app.ui.duress.DuressSmsSender
 import com.onlytrusted.app.ui.duress.DuressState
 import com.onlytrusted.app.ui.duress.DuressVaultStore
@@ -193,7 +195,15 @@ fun AppLockGate(
             },
             confirmButton = {
                 TextButton(onClick = {
+                    // Rate limit: refuse to even check the PIN during a lockout window.
+                    val lockoutSecs = PINRateLimiter.remainingLockoutSeconds(context)
+                    if (lockoutSecs > 0L) {
+                        val mins = ceil(lockoutSecs / 60.0).toInt()
+                        pinError = "Too many wrong PINs. Try again in $mins min."
+                        return@TextButton
+                    }
                     if (DuressState.matches(context, pin)) {
+                        PINRateLimiter.recordSuccess(context)
                         pinSheet = false
                         pin = ""
                         pinError = null
@@ -218,7 +228,13 @@ fun AppLockGate(
                             }
                         )
                     } else {
-                        pinError = "Incorrect PIN."
+                        val penalty = PINRateLimiter.recordFailure(context)
+                        pinError = if (penalty > 0L) {
+                            val mins = ceil(penalty / 60.0).toInt()
+                            "Too many wrong PINs. Locked for $mins min."
+                        } else {
+                            "Incorrect PIN."
+                        }
                     }
                 }) { Text(stringResource(R.string.lock_unlock)) }
             },
