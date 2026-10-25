@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0B1F2D">
+  <meta name="description" content="OnlyTrusted — complete user guide. Every feature, how to find it, how to use it.">
+  <title>OnlyTrusted · User Guide</title>
+  <link rel="icon" type="image/png" href="assets/brand_logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="#top" class="brand" aria-label="OnlyTrusted home">
+      <img src="assets/brand_logo.png" class="logo" alt="OnlyTrusted">
+      <span>Only<span class="accent-text">Trusted</span></span>
+    </a>
+    <a class="manage" href="../pricing/" target="_blank" rel="noopener">
+      View pricing ↗
+    </a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="eyebrow"><span class="dot"></span> COMPLETE USER GUIDE · EVERY FEATURE</div>
+      <h1>How to use <em>OnlyTrusted.</em></h1>
+      <p class="lede">
+        Every feature in the shipping app, where to find it, how to use it, and what it does under the hood.
+        Written for the person using the app — not for developers. 70+ features across 4 tiers; use the
+        filter + search below to find what you need.
+      </p>
+      <div class="hero-stats">
+        <span>70+ features</span>
+        <span>4 subscription tiers</span>
+        <span>Zero-cloud · zero-server</span>
+      </div>
+    </section>
+
+    <!-- Sticky toggle bar: tier filter + search. Pins when scrolled. -->
+    <div class="sticky-controls" role="group" aria-label="Guide filters">
+      <div class="result-count" aria-live="polite">
+        <span class="result-label">Showing</span>
+        <span class="result-number" id="resultCount">70+</span>
+        <span class="result-label">features</span>
+      </div>
+      <div class="seg tier-filter" role="group" aria-label="Tier filter">
+        <button data-tier="all" class="active" aria-pressed="true">All</button>
+        <button data-tier="free" aria-pressed="false">Free</button>
+        <button data-tier="premium" aria-pressed="false">Premium</button>
+        <button data-tier="pro" aria-pressed="false">Pro</button>
+        <button data-tier="elite" aria-pressed="false">Elite</button>
+      </div>
+      <input type="search"
+             id="searchBox"
+             class="search-box"
+             placeholder="Search features…"
+             aria-label="Search features">
+    </div>
+
+    <!-- First-time setup walkthrough -->
+    <section class="setup-section" id="setup">
+      <div class="section-head">
+        <span class="kicker">GETTING STARTED</span>
+        <h2>First-time setup</h2>
+        <p>Four screens, about 60 seconds end-to-end.</p>
+      </div>
+      <ol class="setup-steps" id="setupSteps"></ol>
+    </section>
+
+    <!-- Feature grid — populated by app.js from content.json -->
+    <section class="features-section" id="features">
+      <div class="section-head">
+        <span class="kicker">EVERY FEATURE EXPLAINED</span>
+        <h2>Feature library</h2>
+        <p>Tap any feature to expand full details — where to find it, how to use it, and what runs on-device vs through your carrier.</p>
+      </div>
+      <div class="features-grid" id="featuresGrid" aria-live="polite"></div>
+      <p class="empty-msg" id="emptyMsg" hidden>No features match your filter. Try a different tier or clear the search.</p>
+    </section>
+
+    <!-- Platform differences matrix -->
+    <section class="diffs-section" id="platforms">
+      <div class="section-head">
+        <span class="kicker">PLATFORM REALITY</span>
+        <h2>iOS vs Android</h2>
+        <p>Some features behave differently or aren't available on both platforms. OS limitations, not our choices.</p>
+      </div>
+      <div class="diffs-wrap">
+        <table class="diffs-table" id="diffsTable">
+          <thead><tr><th>Feature</th><th>iOS</th><th>Android</th><th>Why</th></tr></thead>
+          <tbody id="diffsRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Honest limits -->
+    <section class="limits-section" id="limits">
+      <div class="section-head">
+        <span class="kicker">HONEST LIMITS</span>
+        <h2>What OnlyTrusted cannot do</h2>
+        <p>Documented, plain-language. We'd rather admit a limit than overpromise.</p>
+      </div>
+      <ul class="limits-list" id="limitsList"></ul>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq-section" id="faq">
+      <div class="section-head">
+        <span class="kicker">QUESTIONS &amp; ANSWERS</span>
+        <h2>FAQ + troubleshooting</h2>
+      </div>
+      <div id="faqList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="brand">
+      <img src="assets/brand_logo.png" class="logo" alt="">
+      <span>Only<span class="accent-text">Trusted</span></span>
+    </div>
+    <p>Personal security, with clarity and control.</p>
+    <div class="foot-links">
+      <a href="#setup">Setup</a>
+      <a href="#features">Features</a>
+      <a href="#platforms">Platforms</a>
+      <a href="#limits">Honest Limits</a>
+      <a href="#faq">FAQ</a>
+      <a href="../pricing/" target="_blank" rel="noopener">Pricing ↗</a>
+      <a href="https://github.com/Vanpaultek/OnlyTrusted" target="_blank" rel="noopener">GitHub ↗</a>
+    </div>
+    <small>© <span id="year"></span> VanPaulTek Inc. · User Guide generated from v0.3.4 shipping code · <a href="mailto:admin@vanpaultek.com">admin@vanpaultek.com</a></small>
+  </footer>
+
+  <!-- Persistent install CTA — same pattern as pricing kit. -->
+  <a id="getCta"
+     class="get-cta"
+     href="https://play.google.com/store/apps/details?id=com.onlytrusted.app"
+     target="_blank"
+     rel="noopener"
+     aria-label="Get the OnlyTrusted app">
+    <svg class="store-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"></path>
+    </svg>
+    <span class="cta-text">Get OnlyTrusted</span>
+  </a>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
