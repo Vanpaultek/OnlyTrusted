@@ -51,16 +51,28 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 ROOT = Path(__file__).resolve().parent
 W, H = 1280, 720
 
-# Brand palette (Midnight) — mirrors ios/OnlyTrusted/Sources/Theme/
-BG = '#0B111A'
-PANEL = '#11192A'
-LINE = '#1F3B47'
-CYAN = '#55D9D4'
-BRIGHT_CYAN = '#4FE3DF'
-WHITE = '#F4FAFC'
-MUTED = '#B6C9D2'
-GOLD = '#F2B347'
+# Brand palette — mirrors docs/guide/styles.css so the video reads as a
+# moving excerpt of the written user guide (same bg, same accent, same
+# typographic ramp).
+BG = '#0B1F2D'          # --bg
+PANEL = '#1E2A3A'       # --bg-elevated — device frame fill
+LINE = '#2E3B4E'        # --card — pill border / separators
+CYAN = '#00D1C1'        # --accent — "Trusted" wordmark, divider, chapter counter
+WHITE = '#F4FAFC'       # --text
+MUTED = '#B6C9D2'       # --text-muted
+QUIET = '#8FA5B2'       # --text-quiet — footer line, pill text
+GOLD = '#F59E0B'        # --tier-pro
 DANGER = '#EF4444'
+
+# Fonts shipped with the kit so the video typography matches the website
+# exactly (DM Sans + Manrope). Pillow needs .ttf, not woff2, so these live
+# under assets/fonts/ instead of being fetched at runtime.
+MANROPE_BOLD = ROOT / 'assets' / 'fonts' / 'Manrope-Bold.ttf'
+DMSANS_REG = ROOT / 'assets' / 'fonts' / 'DMSans-Regular.ttf'
+
+# Scripts that need locale-specific fonts because Manrope + DM Sans only
+# carry Latin glyphs. For these langs we keep the FONT_CANDIDATES fallback.
+COMPLEX_SCRIPT_LANGS = {'hi', 'ar', 'te', 'he', 'fa', 'ur'}
 
 # Font paths — fallback chain. First existing wins per-locale.
 FONT_CANDIDATES = {
@@ -268,6 +280,21 @@ def pick_font(lang: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
+def pick_heading_font(lang: str, size: int) -> ImageFont.FreeTypeFont:
+    """Manrope Bold for Latin scripts, locale-specific font for complex scripts
+    (Devanagari/Arabic/Telugu) that Manrope doesn't cover."""
+    if lang in COMPLEX_SCRIPT_LANGS:
+        return pick_font(lang, size)
+    return ImageFont.truetype(str(MANROPE_BOLD), size)
+
+
+def pick_body_font(lang: str, size: int) -> ImageFont.FreeTypeFont:
+    """DM Sans for Latin scripts, locale-specific font for complex scripts."""
+    if lang in COMPLEX_SCRIPT_LANGS:
+        return pick_font(lang, size)
+    return ImageFont.truetype(str(DMSANS_REG), size)
+
+
 def wrap_text(draw, text: str, font: ImageFont.FreeTypeFont, max_w: int):
     words = text.split()
     lines, cur = [], ''
@@ -287,10 +314,11 @@ _BACKDROP = None  # populated lazily by _load_backdrop()
 
 
 def _load_backdrop() -> Image.Image:
-    """Dimmed + blurred SplashHero used as the global video canvas so every
-    scene sits inside the same mountain-lake atmosphere as the written user
-    guide, instead of a flat navy card."""
-    src = ROOT / 'assets' / 'splash.png'
+    """Same backdrop as the user guide website (docs/guide/assets/app_backdrop.webp)
+    with the same top→bottom darkening gradient the CSS applies — unblurred so
+    the mountain-lake art stays crisp behind the device + captions, matching the
+    hero section of the user guide 1:1."""
+    src = ROOT / 'assets' / 'backdrop.webp'
     bg = Image.open(src).convert('RGB')
     # Cover-fit to canvas (crop any overhang after upscaling to cover).
     src_ratio = bg.width / bg.height
@@ -303,13 +331,42 @@ def _load_backdrop() -> Image.Image:
     left = (new_w - W) // 2
     top = (new_h - H) // 2
     bg = bg.crop((left, top, left + W, top + H))
-    # Blur hides SplashHero copy ("OnlyTrusted", "Loading…") so it reads as
-    # ambient backdrop, not a duplicate of the device screen next to it.
-    bg = bg.filter(ImageFilter.GaussianBlur(radius=14))
-    # Darken toward brand BG so WHITE title + MUTED subtitle keep contrast.
-    overlay = Image.new('RGB', (W, H), BG)
-    bg = Image.blend(bg, overlay, 0.62)
+
+    # User guide gradient (docs/guide/styles.css body::before):
+    #   0%   → rgba(11,31,45,.72)
+    #   60%  → rgba(11,31,45,.88)
+    #   100% → rgba(11,31,45,.96)
+    overlay = Image.new('RGBA', (W, H))
+    o = ImageDraw.Draw(overlay)
+    for y in range(H):
+        t = y / (H - 1)
+        if t <= 0.6:
+            alpha = 0.72 + (0.88 - 0.72) * (t / 0.6)
+        else:
+            alpha = 0.88 + (0.96 - 0.88) * ((t - 0.6) / 0.4)
+        o.line([(0, y), (W, y)], fill=(11, 31, 45, int(round(alpha * 255))))
+    bg = bg.convert('RGBA')
+    bg.alpha_composite(overlay)
+    # Keep RGBA so semi-transparent pills composite correctly on top. The
+    # final save in build_video flattens back to RGB before ffmpeg concat.
     return bg
+
+
+def _draw_pill(d: ImageDraw.ImageDraw, xy, text: str, font: ImageFont.FreeTypeFont,
+               padding=(14, 7), fill=(30, 42, 58, 128), outline=LINE, text_fill=None):
+    """Rounded pill like the user guide .hero-stats / .manage buttons.
+    xy is (left, top) of the pill. Returns (right, bottom) so the caller can
+    chain pills."""
+    text_fill = text_fill or MUTED
+    pw, ph = d.textbbox((0, 0), text, font=font)[2:]
+    px, py = padding
+    left, top = xy
+    right = left + pw + 2 * px
+    bottom = top + ph + 2 * py
+    d.rounded_rectangle((left, top, right, bottom), radius=(bottom - top) // 2,
+                        fill=fill, outline=outline, width=1)
+    d.text((left + px, top + py - 2), text, font=font, fill=text_fill)
+    return right, bottom
 
 
 def frame_for_scene(idx: int, lang: str) -> Image.Image:
@@ -323,8 +380,10 @@ def frame_for_scene(idx: int, lang: str) -> Image.Image:
     im = _BACKDROP.copy()
     d = ImageDraw.Draw(im)
 
-    # Device frame — rounded rect that holds the screenshot
-    d.rounded_rectangle((70, 42, 550, 678), radius=36, fill=PANEL, outline=CYAN, width=3)
+    # Device frame — translucent elevated card like the user guide .section-head
+    # treatment: subtle border, dim fill so the backdrop reads through.
+    d.rounded_rectangle((70, 42, 550, 678), radius=36,
+                        fill=(30, 42, 58, 230), outline=CYAN, width=2)
 
     # Load screenshot. Try the chapter-specific one first, fall back to the
     # fallback_shot, then to dashboard, then to splash. Anything beats nothing.
@@ -348,42 +407,53 @@ def frame_for_scene(idx: int, lang: str) -> Image.Image:
     # Right-column text
     d = ImageDraw.Draw(im)
 
-    # Branded wordmark top-right — always Latin, so always use the default font
-    # (locale-specific fonts like Kohinoor Telugu don't carry Latin glyphs, so
-    # using pick_font(lang) here produces tofu for "Only" / "Trusted").
-    d.text((628, 112), 'Only', font=pick_font('default', 28), fill=WHITE)
-    d.text((704, 112), 'Trusted', font=pick_font('default', 28), fill=CYAN)
-    d.rounded_rectangle((625, 190, 1190, 194), radius=2, fill=CYAN)
+    # Branded wordmark top-right — always Latin, so always Manrope Bold to
+    # match the .brand style in docs/guide/styles.css (font: 800 20px Manrope).
+    d.text((628, 108), 'Only', font=pick_heading_font('en', 30), fill=WHITE)
+    only_w = d.textbbox((0, 0), 'Only', font=pick_heading_font('en', 30))[2]
+    d.text((628 + only_w + 2, 108), 'Trusted',
+           font=pick_heading_font('en', 30), fill=CYAN)
+    # Divider line — same cyan accent used across the user guide section heads
+    d.rounded_rectangle((625, 192, 1190, 195), radius=2, fill=CYAN)
 
     # Title + subtitle. For RTL scripts we pass direction='rtl' so Pillow (via
     # libraqm/HarfBuzz) does bidi reordering + Arabic ligature shaping.
     direction = 'rtl' if lang in RTL_LANGS else 'ltr'
 
-    title_lines = wrap_text(d, title, pick_font(lang, 44), 560)[:3]
+    title_font = pick_heading_font(lang, 46)
+    title_lines = wrap_text(d, title, title_font, 565)[:3]
     for i, line in enumerate(title_lines):
         y = 245 + i * 60
         if direction == 'rtl':
-            # Right-anchor the text so RTL reads from the right edge of the panel.
-            d.text((1190, y), line, font=pick_font(lang, 44), fill=WHITE,
+            d.text((1190, y), line, font=title_font, fill=WHITE,
                    anchor='ra', direction='rtl')
         else:
-            d.text((625, y), line, font=pick_font(lang, 44), fill=WHITE)
+            d.text((625, y), line, font=title_font, fill=WHITE)
 
     sub_y = 245 + len(title_lines) * 60 + 40
-    sub_lines = wrap_text(d, subtitle, pick_font(lang, 23), 560)[:5]
+    sub_font = pick_body_font(lang, 22)
+    sub_lines = wrap_text(d, subtitle, sub_font, 565)[:5]
     for i, line in enumerate(sub_lines):
-        y = sub_y + i * 36
+        y = sub_y + i * 34
         if direction == 'rtl':
-            d.text((1190, y), line, font=pick_font(lang, 23), fill=MUTED,
+            d.text((1190, y), line, font=sub_font, fill=MUTED,
                    anchor='ra', direction='rtl')
         else:
-            d.text((625, y), line, font=pick_font(lang, 23), fill=MUTED)
+            d.text((625, y), line, font=sub_font, fill=MUTED)
 
-    # Chapter counter + honest-limits footer — both are Latin-only text
-    d.text((625, 637), f'{idx + 1:02d} / {len(SCENES):02d}',
-           font=pick_font('default', 20), fill=CYAN)
-    footer = 'REAL app screens ,  on-device demo ,  no screens fabricated'
-    d.text((70, 689), footer, font=pick_font('default', 14), fill='#8FA5B2')
+    # Chapter counter styled like the user guide .eyebrow — small, bold,
+    # uppercase, letter-spaced, in the brand accent color.
+    counter = f'CHAPTER {idx + 1:02d} / {len(SCENES):02d}'
+    d.text((625, 637), counter, font=pick_body_font('en', 14), fill=CYAN)
+
+    # Honest-limits footer rendered as three user-guide-style pills instead of
+    # a single run-on line so it visually matches .hero-stats on the website.
+    pill_font = pick_body_font('en', 12)
+    pills = ['REAL app screens', 'on-device demo', 'no screens fabricated']
+    x = 70
+    for p in pills:
+        right, _ = _draw_pill(d, (x, 686), p, pill_font)
+        x = right + 10
     return im
 
 
@@ -399,6 +469,11 @@ def build_video(lang: str, out_path: Path, fps: int = 30):
     for idx, (_key, duration, _) in enumerate(SCENES):
         frame_path = frames_dir / f'scene_{idx:02d}.png'
         img = frame_for_scene(idx, lang)
+        if img.mode == 'RGBA':
+            # Flatten against a solid BG for h264 (yuv420p has no alpha channel)
+            flat = Image.new('RGB', img.size, BG)
+            flat.paste(img, mask=img.split()[-1])
+            img = flat
         img.save(frame_path, 'PNG', optimize=True)
         manifest.append((frame_path, duration))
         print(f'  scene {idx+1}/{len(SCENES)} ({_key}) rendered, {frame_path.name}')
