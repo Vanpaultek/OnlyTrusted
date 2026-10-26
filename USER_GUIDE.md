@@ -40,6 +40,12 @@ email runs against a hashed database shipped with the app — your email never
 leaves your phone. The distress-SMS you fire during an emergency goes out
 through your own cellular carrier — not through our servers (we have none).
 
+**Shipped in 8 languages** (English, Spanish, French, Portuguese, Hindi,
+Arabic, German, Indonesian) as of v0.3.4+. The language picker lives at
+Settings → Language & Region. Non-English translations are machine-generated
+and tagged for review; see the Language & Region section below for the
+honest-note on translation quality.
+
 If you can't audit this claim from the publicly available source code at
 [github.com/Vanpaultek/OnlyTrusted](https://github.com/Vanpaultek/OnlyTrusted),
 please open an issue. The whole value proposition hinges on it.
@@ -129,6 +135,15 @@ you're in. No password to type, no email code to wait for, no account to
 compromise. The credential lives in the Secure Enclave (iOS) or
 StrongBox / Keystore (Android) — biometric never leaves this device.
 
+**Hardware-bound (Phase 2, shipping as of v0.3.5+).** Enrolling creates
+an EC-256 keypair inside the Secure Enclave / StrongBox hardware chip
+that wraps your vault's master key. The OS kernel refuses to perform
+the key-agreement operation needed to unwrap the vault without a fresh
+biometric assertion in the same unlock session. Clearing or re-enrolling
+your device biometric invalidates the keypair (the `.biometryCurrentSet`
+ACL) so an attacker who physically acquires the device and registers
+their own face can't use it to open your vault.
+
 Phishing-proof by design: there's no server to phish and no code to
 intercept. The PIN set in Step 3 remains as a fallback for the moments
 biometric can't be presented (dirty finger, bright light defeating Face
@@ -137,9 +152,9 @@ ID, injured hand).
 Tap **Use PIN only** if you'd rather skip Passkey setup — you can
 enable it later from Settings → Account → Biometric unlock.
 
-See `docs/AUTH_MODEL.md` for the full authentication-model
-architecture, the deliberate rejection of email-code login, and the
-Phase 2 WebAuthn roadmap.
+See `docs/AUTH_MODEL.md` for the full architecture, the deliberate
+rejection of email-code login, and the dual-wrap migration plan for
+replacing the legacy Keychain-only fallback path in a future release.
 
 ### Step 5 — Consent
 
@@ -634,6 +649,11 @@ protection**.
   reopen the app. Default on. Timeout configurable (immediate / 1 min
   / 5 min / 15 min / 60 min). On the lock screen, Passkey fires
   automatically; tap **Use PIN instead** if biometric fails.
+  **PIN rate limiting (v0.3.5+):** 5 consecutive wrong PINs trigger a
+  60-second lockout. 10 → 5 min. 15 → 15 min. 20+ → 60 min lockouts
+  that repeat. The counter is stored in the Keychain (iOS) /
+  EncryptedSharedPreferences (Android) so a force-stop + relaunch
+  doesn't reset it. A successful unlock resets the counter to 0.
 - **Pocket-dial** — uses proximity sensor + accelerometer to detect
   when the phone is in your pocket or face-down. If you accidentally
   trigger a tap through fabric, the app refuses to act on it until
@@ -886,6 +906,28 @@ Recents list → Block Contact (iOS's built-in blocker).
    etc. One tap → OnlyTrusted inspects the URL + its full redirect
    chain + reports risk. Nothing is sent to any server.
 
+**Rules engine (12 checks, shared iOS + Android, all run on-device):**
+
+| # | Check | Verdict |
+|---|-------|---------|
+| 1 | Scheme — http / ftp / telnet / file flagged as insecure | Caution |
+| 2 | Known-shortener list (100+ domains) | Caution |
+| 3 | Suspicious TLD (.zip, .mov, .xyz, .top, …) | Caution |
+| 4 | Punycode `xn--` on hostname | Danger |
+| 5 | IP literal (direct IPv4 / IPv6 instead of domain) | Danger |
+| 6 | Known-good allowlist (~200 top legit domains) | Safe |
+| 7 | Typo-squat (Levenshtein ≤ 2 vs allowlist) | Danger |
+| 8 | Suspicious path keyword (/login, /verify, /wallet, …) on an unverified host | Caution |
+| 9 | Embedded `user:password@` in URL authority *(v0.3.5+)* | Danger |
+| 10 | Unicode homograph — Cyrillic / Greek lookalikes in a host *(v0.3.5+)* | Caution |
+| 11 | Brand-as-subdomain spoofing — `paypal.com.scam.ru` *(v0.3.5+)* | Danger |
+| 12 | Weighted escalation — 2+ independent Caution flags on the same URL *(v0.3.5+)* | Danger |
+
+Combined with the Offline Threat Intel feed (Elite tier) that bumps any
+host matching the APWG phishing list straight to Danger. All 12 checks
+are regression-tested on every commit via the JUnit + XCTest suites
+documented in `docs/TESTS.md`.
+
 ### Safety Check-In
 
 **Where:** Settings → **Safety Check-In**.
@@ -1077,6 +1119,22 @@ hits zero (resets to N days) OR disable the feature entirely (needs
 PIN + biometric + Hardware Key + Trusted Witness approval if
 configured — prevents a coercer from disabling it).
 
+**Clock-skew defense (v0.3.5+):** stores both wall-clock time AND
+monotonic uptime at every unlock. The wipe fires on `max(wall-clock
+elapsed, monotonic elapsed)`, so an attacker who sets the device
+clock backward to delay the wipe doesn't buy themselves extra time —
+monotonic uptime can't be rewound by the user. If the device reboots
+mid-interval the stored boot time no longer matches the current one
+and we fall back to wall-clock only (a reboot is a legitimate signal
+we accept, not something we treat as tampering).
+
+**What "wipe" actually destroys:** your Vault contents, blocked
+numbers, Events log, Settings prefs, and the master key material.
+The feature does NOT wipe the whole phone, iCloud or Google Drive
+backups you made outside OnlyTrusted, or data on an offline device
+during the deadline window (the next boot runs the check — if the
+device stays off past the deadline, it wipes on next boot).
+
 ### Encrypted Backup (export)
 
 **Where:** Settings → **Encrypted Backup**.
@@ -1200,9 +1258,46 @@ Updates ship via normal app updates — not live-fetched. See the
 - **Change PIN** — rotate your 4-6 digit PIN. Requires current PIN.
   Re-derives all encryption keys.
 - **Biometric unlock (Passkey)** — toggle Face ID / Touch ID /
-  fingerprint. See `docs/AUTH_MODEL.md` for the full architecture +
-  Phase 2 WebAuthn roadmap.
+  fingerprint. Backed by Secure Enclave (iOS) / StrongBox (Android)
+  since v0.3.5. See `docs/AUTH_MODEL.md` for the architecture.
 - **Auto-lock timeout** — immediate / 1 min / 5 min / 15 min / 60 min
+
+### Language & Region
+
+**Where:** Settings → **Language & Region**.
+
+**What it does:** Choose your region, country, and preferred language.
+English is always available regardless of country. OnlyTrusted ships
+with 8 UI languages as of v0.3.4+:
+
+- English (source)
+- Spanish — Español
+- French — Français
+- Portuguese — Português
+- Hindi — हिन्दी
+- Arabic — العربية (full RTL layout)
+- German — Deutsch
+- Indonesian — Bahasa Indonesia
+
+The picker has 3 cascading dropdowns: Region (5 regions) → Country
+(195 countries from the OnlyTrusted Localization Kit) → Language. The
+language list for each country includes the native language(s) + English
+as the fallback. Picking any language in the shipped-translated list
+flips the UI immediately; picking one we don't ship for yet keeps the
+underlying locale set correctly (so dates / numbers / currency format
+in the chosen locale) but renders UI text in English.
+
+**Honest note on translation quality:** every translation for the 7
+non-English languages shipping today is **machine-generated by Claude
+Opus** and awaits native-speaker review. Safety-critical strings
+(SOS, duress, legal, pricing, system alerts) are tagged in the
+resource files with a `[REVIEW]` sentinel and the UI shows a small
+amber **"⚠ Translation pending review"** caption so you can see
+exactly which strings a human hasn't signed off on yet.
+
+See `docs/NEEDS_REVIEW.md` for the full per-locale review checklist
+and the exact string keys that need professional review before any
+locale is listed in App Store / Play Store metadata.
 
 ### Appearance
 
@@ -1265,40 +1360,77 @@ Updates ship via normal app updates — not live-fetched. See the
 
 ## Honest Limits
 
-Everything OnlyTrusted **cannot** do, listed plainly:
+Everything OnlyTrusted **cannot** do, listed plainly. Also surfaced
+in-app at Dashboard → Honest Limits sheet (bullets kept in sync with
+this document — audited every release per `docs/RELEASE_GATES.md`
+gate 9).
 
-- **Cannot monitor other apps' microphone or camera use** at a hardware
-  level without root (Android) or MDM (iOS). What Privacy Shield shows
-  is what the OS exposes via Privacy Dashboard / SensorPrivacyManager
-  — which is OS-decided, not comprehensive.
-- **Cannot stop someone on a video call from recording** their own
-  screen or filming your face with another device.
-- **Cannot block screenshots of OTHER apps.** `FLAG_SECURE` only
-  applies to OnlyTrusted's own screens.
-- **Cannot make your phone untrackable by your carrier**, your ISP,
-  your operating-system vendor, or any system app with network
-  access.
-- **Cannot block all spam calls.** Carrier-level call paths bypass
-  Android call screening; iOS CallKit misses some. We catch most but
-  can't promise 100%.
-- **Cannot detect in-call voice-cloning / deepfake audio in real
-  time.** Neither platform exposes the live call audio stream to
-  third-party apps. Mitigation: use Voice Biometric (Elite) + a
-  pre-shared family passphrase.
-- **Cannot auto-block Wangiri numbers on iOS.** CallKit doesn't give
-  us the number. We can detect the pattern + warn; you must block
-  the number manually.
-- **Cannot read your SMS inbox on iOS.** iOS reserves this for Mail
-  + Messages. Scam SMS Scan is Android-only.
-- **Cannot create a WhatsApp group for you.** WhatsApp ToS reserves
-  that to its own UI. You create the group manually once + paste the
-  invite link; after that, Distress Signal opens the group chat with
-  the distress message pre-filled.
-- **Cannot guarantee Dead-Man Wipe fires if the device loses power
-  before the countdown completes.** Rebooting resets the countdown.
-- **Cannot recover your PIN or your Vault if you've forgotten both
-  your PIN and never set up Shamir Split with trusted shareholders.**
-  There is nowhere to recover from — by design.
+**Call Shield** uses supported caller-blocking interfaces and cannot
+block every scam call.
+
+**SMS Defense** processes supported messages from unknown senders
+only. It cannot inspect your entire inbox or iMessages. Scam SMS
+Scan (bulk-inbox audit) is Android-only — iOS reserves inbox read
+to Mail / Messages.
+
+**Auto Privacy Shield** stops OnlyTrusted-owned recording sessions.
+It does not disable other apps' microphones or cameras. Monitoring
+other apps' mic / camera use at a hardware level needs root (Android)
+or MDM (iOS); what Privacy Shield shows is what the OS exposes via
+Privacy Dashboard / SensorPrivacyManager — which is OS-decided, not
+comprehensive.
+
+**Dead-Man Wipe** destroys your on-device vault after the chosen
+interval. It cannot wipe backups you created outside OnlyTrusted
+(iCloud, Google Drive, screenshots, printouts). It cannot run while
+the device is powered off during the deadline — the check runs on
+next boot, so if the device stays off past the deadline the wipe
+fires on the subsequent power-on. The v0.3.5+ clock-skew defense
+means setting the device clock backward no longer buys an attacker
+extra time, but a reboot still falls back to wall-clock timing for
+that unlock cycle.
+
+**Voice checks** cannot prove a caller is genuinely who they claim.
+Verify sensitive requests via a trusted callback to a saved number,
+not a callback to the number that just called you. Voice Biometric
+(Elite) + a pre-shared family passphrase is the OnlyTrusted-owned
+mitigation; neither replaces a real callback.
+
+**Wangiri auto-block** is Android-only. iOS CallKit doesn't expose
+the caller number to third-party apps, so we can detect the one-ring
+pattern + warn you but can't programmatically block the number. On
+iOS you long-press the call in Recents → Block Contact to use the
+system blocker.
+
+**OS-level tracking is out of scope.** We cannot make your phone
+untrackable by your carrier, your ISP, your operating-system vendor,
+or any system app with network access.
+
+**Screenshots of OTHER apps** cannot be blocked by `FLAG_SECURE`.
+That flag only applies to OnlyTrusted's own screens. Someone can
+always photograph the screen with a second device.
+
+**Video-call recording** by the other party on their own screen or
+by filming your face with a separate device cannot be prevented by
+anything running on your phone.
+
+**WhatsApp groups** cannot be created programmatically. WhatsApp ToS
+reserves that to its own UI. You create the group manually once +
+paste the invite link into OnlyTrusted Settings → Distress Signal.
+After that, Distress Signal opens the group chat with your emergency
+message pre-filled.
+
+**PIN brute-force limits:** 5 wrong PINs → 60 s lockout, escalating
+to 60 min at 20+ failures (v0.3.5+). The counter is Keychain / 
+EncryptedSharedPreferences-backed so force-stop + relaunch doesn't
+reset it. But: if someone physically acquires an UNLOCKED device,
+PIN rate limiting doesn't help — the vault is already accessible to
+anyone operating that device.
+
+**PIN + biometric recovery** is impossible if you've forgotten your
+PIN AND never set up Shamir Split with trusted shareholders. There
+is nowhere to recover from — by design. Set up Shamir Split (Elite)
+BEFORE you need it.
 
 ---
 
@@ -1357,6 +1489,27 @@ Only true for releases built before the Android signing secrets were
 wired to the CI (which happened at `v0.3.1`). Every release from
 `v0.3.1` onward is signed with the OnlyTrusted upload key — verify
 with `jarsigner -verify OnlyTrusted-v0.3.x.aab`.
+
+### How do I change the app language?
+Settings → **Language & Region** → pick Region → Country → Language.
+English is always offered regardless of country. The UI flips
+immediately for most screens; a handful of system-controlled surfaces
+(StoreKit sheets on iOS, the system BiometricPrompt on Android) follow
+the device locale rather than OnlyTrusted's own override. 8 languages
+ship with v0.3.4+; the 7 non-English ones are machine-translated and
+flagged for review — see the Language & Region section + the "⚠
+Translation pending review" badge in-app.
+
+### My wrong-PIN lockout isn't lifting
+5 wrong PINs = 60-second lockout. 10 = 5 minutes. 15 = 15 minutes.
+20+ = 60-minute lockouts that keep repeating until you enter the
+correct PIN. The counter is Keychain / EncryptedSharedPreferences-
+backed, so quitting the app (even force-stop) doesn't reset it. The
+counter resets to zero the moment you successfully enter the right
+PIN. If you've genuinely forgotten the PIN, the only paths back in
+are Passkey (biometric) if enrolled, or Shamir Split recovery if you
+set that up BEFORE forgetting the PIN. Wait out the lockout window
+rather than reinstalling — reinstalling wipes the vault.
 
 ### I lost my phone — can I log into my OnlyTrusted account from a new one?
 No, because there is no account. Your Vault lives in encrypted storage
