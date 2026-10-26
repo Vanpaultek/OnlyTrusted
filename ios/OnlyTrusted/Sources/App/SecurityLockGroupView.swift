@@ -49,15 +49,24 @@ struct SecurityLockGroupView: View {
                 onAutoLockToggleChanged(now)
             }
 
-            // Inactivity window — only visible while Auto-lock is ON.
+            // Inactivity window — always visible; interactive only when
+            // Auto-lock is ON. Read-only when Auto-lock is OFF so the user
+            // can still see the stored value but can't change it without
+            // first enabling the parent toggle.
+            SettingsDivider()
             if autoLockToggle {
-                SettingsDivider()
                 Button(action: onAutoLockSecondsPicker) {
                     SettingsNavRow(icon: "timer", iconTint: Color.appAccent,
                                    label: "Inactivity window",
                                    value: AutoLockPrefs.label(for: autoLockSeconds))
                 }
                 .buttonStyle(.plain)
+            } else {
+                SettingsNavRow(icon: "timer", iconTint: Color.appAccent.opacity(0.4),
+                               label: "Inactivity window",
+                               value: AutoLockPrefs.label(for: autoLockSeconds))
+                    .opacity(0.45)
+                    .allowsHitTesting(false)
             }
 
             // Mic & Camera Lock — on iOS this is informational (Apple's sandbox

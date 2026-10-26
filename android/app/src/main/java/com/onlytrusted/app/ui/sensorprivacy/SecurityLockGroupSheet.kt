@@ -5,6 +5,7 @@ package com.onlytrusted.app.ui.sensorprivacy
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -111,21 +112,26 @@ fun SecurityLockGroupSheet(
                 )
             }
 
-            // Inactivity window (only when auto-lock on)
-            if (autoLockEnabled) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable { showWindowPicker = true },
-                ) {
-                    Spacer(Modifier.width(44.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("Inactivity window", color = PrimaryTextDark, fontSize = 14.sp)
-                    }
-                    Text(AutoLockPrefs.label(autoLockSeconds),
-                         color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                    Spacer(Modifier.width(6.dp))
-                    Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+            // Inactivity window — always visible; tappable only when auto-lock
+            // is ON. Read-only (dimmed, not clickable) when auto-lock is OFF so
+            // the user sees the stored value but can't change it without first
+            // enabling the parent toggle.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = if (autoLockEnabled) {
+                    Modifier.clickable { showWindowPicker = true }
+                } else {
+                    Modifier.alpha(0.45f)
+                },
+            ) {
+                Spacer(Modifier.width(44.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Inactivity window", color = PrimaryTextDark, fontSize = 14.sp)
                 }
+                Text(AutoLockPrefs.label(autoLockSeconds),
+                     color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.width(6.dp))
+                Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
             }
 
             Divider(color = SecondaryTextDark.copy(alpha = 0.08f))
