@@ -268,6 +268,21 @@ LANG = {
 
 RTL_LANGS = {'ar', 'he', 'fa', 'ur'}
 
+# macOS `say` voices per language. All ship with macOS by default (verified
+# against `say -v '?'`). Keeps the voice-over pipeline zero-cloud — no API
+# key, no outbound requests, same ethos as the rest of the kit.
+VOICES = {
+    'en': 'Samantha',       # en_US
+    'es': 'Paulina',        # es_MX
+    'fr': 'Thomas',         # fr_FR
+    'pt': 'Luciana',        # pt_BR
+    'hi': 'Lekha',          # hi_IN
+    'ar': 'Majed',          # ar_001
+    'de': 'Anna',           # de_DE
+    'id': 'Damayanti',      # id_ID
+    'te': 'Geeta',          # te_IN
+}
+
 
 def pick_font(lang: str, size: int) -> ImageFont.FreeTypeFont:
     candidates = FONT_CANDIDATES.get(lang, []) + FONT_CANDIDATES['default']
@@ -457,7 +472,70 @@ def frame_for_scene(idx: int, lang: str) -> Image.Image:
     return im
 
 
-def build_video(lang: str, out_path: Path, fps: int = 30):
+def _probe_duration(path: Path) -> float:
+    """Audio file duration in seconds via ffprobe."""
+    out = subprocess.check_output([
+        'ffprobe', '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        str(path),
+    ]).decode().strip()
+    return float(out)
+
+
+def build_voice_track(lang: str, frames_dir: Path):
+    """Generate per-scene TTS via macOS `say`, measure durations, mix into a
+    single AAC track that lines up with the scene timings.
+
+    Returns (voice_path, scene_durations). scene_durations is a per-scene
+    duration list = max(original_SCENES_duration, tts_duration + 0.5s pad)
+    so narration never gets clipped mid-sentence."""
+    voice = VOICES.get(lang)
+    if not voice:
+        raise RuntimeError(f'no `say` voice mapped for lang={lang}')
+    pad = 0.5
+    clips_dir = frames_dir / 'voice'
+    clips_dir.mkdir(exist_ok=True)
+    for p in clips_dir.glob('*'):
+        p.unlink()
+
+    scene_durations = []
+    aiff_paths = []
+    for idx, (_key, orig_dur, _) in enumerate(SCENES):
+        title, subtitle = LANG.get(lang, LANG['en'])[idx]
+        # "." makes `say` take a natural beat between title and subtitle
+        text = f'{title}. {subtitle}'
+        aiff = clips_dir / f'scene_{idx:02d}.aiff'
+        subprocess.run(['say', '-v', voice, '-o', str(aiff), text], check=True)
+        tts_dur = _probe_duration(aiff)
+        aiff_paths.append(aiff)
+        scene_durations.append(max(orig_dur, tts_dur + pad))
+
+    # Pad each clip with trailing silence so it occupies the full scene window,
+    # then concat them all into one audio track that aligns 1:1 with frames.
+    inputs = []
+    for aiff in aiff_paths:
+        inputs.extend(['-i', str(aiff)])
+    filter_parts = [
+        f'[{i}:a]apad=whole_dur={dur:.3f}[a{i}]'
+        for i, dur in enumerate(scene_durations)
+    ]
+    stream_refs = ''.join(f'[a{i}]' for i in range(len(aiff_paths)))
+    filter_complex = (';'.join(filter_parts)
+                      + f';{stream_refs}concat=n={len(aiff_paths)}:v=0:a=1[out]')
+
+    voice_path = clips_dir / f'voice_{lang}.m4a'
+    subprocess.run([
+        'ffmpeg', '-y', *inputs,
+        '-filter_complex', filter_complex,
+        '-map', '[out]',
+        '-c:a', 'aac', '-b:a', '128k',
+        str(voice_path),
+    ], check=True, capture_output=True)
+    return voice_path, scene_durations
+
+
+def build_video(lang: str, out_path: Path, fps: int = 30, voice: bool = False):
     """Render each scene as PNG, pipe to ffmpeg to produce the MP4."""
     frames_dir = ROOT / f'_frames_{lang}'
     frames_dir.mkdir(exist_ok=True)
@@ -465,8 +543,16 @@ def build_video(lang: str, out_path: Path, fps: int = 30):
     for p in frames_dir.glob('*.png'):
         p.unlink()
 
+    voice_path = None
+    if voice:
+        print(f'  TTS: {VOICES.get(lang, "?")} narrating {lang}')
+        voice_path, scene_durations = build_voice_track(lang, frames_dir)
+    else:
+        scene_durations = [d for _, d, _ in SCENES]
+
     manifest = []
-    for idx, (_key, duration, _) in enumerate(SCENES):
+    for idx, (_key, _old_dur, _) in enumerate(SCENES):
+        duration = scene_durations[idx]
         frame_path = frames_dir / f'scene_{idx:02d}.png'
         img = frame_for_scene(idx, lang)
         if img.mode == 'RGBA':
@@ -476,7 +562,7 @@ def build_video(lang: str, out_path: Path, fps: int = 30):
             img = flat
         img.save(frame_path, 'PNG', optimize=True)
         manifest.append((frame_path, duration))
-        print(f'  scene {idx+1}/{len(SCENES)} ({_key}) rendered, {frame_path.name}')
+        print(f'  scene {idx+1}/{len(SCENES)} ({_key}) {duration:.2f}s')
 
     # Build an ffconcat demuxer file so each scene holds for its duration.
     concat_path = frames_dir / 'concat.txt'
@@ -488,26 +574,32 @@ def build_video(lang: str, out_path: Path, fps: int = 30):
         f.write(f"file '{manifest[-1][0].name}'\n")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    cmd = [
-        'ffmpeg', '-y',
-        '-f', 'concat', '-safe', '0', '-i', str(concat_path),
-        '-vsync', 'vfr',
-        '-vf', f'fps={fps},format=yuv420p',
-        '-c:v', 'libx264', '-preset', 'medium', '-crf', '20',
-        '-movflags', '+faststart',
-        str(out_path),
-    ]
+    cmd = ['ffmpeg', '-y',
+           '-f', 'concat', '-safe', '0', '-i', str(concat_path)]
+    if voice_path:
+        cmd += ['-i', str(voice_path)]
+    cmd += ['-vsync', 'vfr',
+            '-vf', f'fps={fps},format=yuv420p',
+            '-c:v', 'libx264', '-preset', 'medium', '-crf', '20']
+    if voice_path:
+        cmd += ['-c:a', 'aac', '-b:a', '128k', '-shortest']
+    cmd += ['-movflags', '+faststart', str(out_path)]
     print(f'  ffmpeg, {out_path.name}')
     subprocess.run(cmd, check=True, cwd=str(frames_dir))
     print(f'DONE: {out_path} ({sum(d for _, d in manifest):.1f}s)')
+    return scene_durations
 
 
-def write_vtt(lang: str, out_path: Path):
-    """WebVTT caption track that matches the scene durations."""
+def write_vtt(lang: str, out_path: Path, scene_durations=None):
+    """WebVTT caption track that matches the scene durations.
+
+    If scene_durations is provided (voice-over run with adjusted timings),
+    captions sync against those instead of the default SCENES durations."""
     out_path.parent.mkdir(parents=True, exist_ok=True)
+    durations = scene_durations or [d for _, d, _ in SCENES]
     rows = ['WEBVTT', '']
     t = 0.0
-    for idx, (_k, duration, _) in enumerate(SCENES):
+    for idx, duration in enumerate(durations):
         title, subtitle = LANG.get(lang, LANG['en'])[idx]
         start = _ts(t)
         end = _ts(t + duration)
@@ -534,16 +626,19 @@ def main():
                     help='UI caption language (default: en)')
     ap.add_argument('--video', action='store_true',
                     help='Produce the MP4 (default: just the caption track)')
+    ap.add_argument('--voice', action='store_true',
+                    help='Add TTS voice-over via macOS `say` (local, no cloud). '
+                         'Extends scene durations to fit narration.')
     ap.add_argument('--fps', type=int, default=30)
     args = ap.parse_args()
 
     out_dir = ROOT / 'output'
-    vtt = out_dir / f'OnlyTrusted_{args.lang}.vtt'
-    write_vtt(args.lang, vtt)
-
+    scene_durations = None
     if args.video:
         mp4 = out_dir / f'OnlyTrusted_Real_UI_{args.lang}.mp4'
-        build_video(args.lang, mp4, args.fps)
+        scene_durations = build_video(args.lang, mp4, args.fps, voice=args.voice)
+    vtt = out_dir / f'OnlyTrusted_{args.lang}.vtt'
+    write_vtt(args.lang, vtt, scene_durations=scene_durations)
 
 
 if __name__ == '__main__':
