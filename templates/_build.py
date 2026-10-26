@@ -62,15 +62,18 @@ HEAD = '''<!DOCTYPE html>
        so it renders in local preview AND in clients that keep CSS backgrounds
        (Apple Mail, iOS Mail, Thunderbird, Yahoo). Gmail web / Outlook strip
        the url() — the dark #0B1F2D color fallback keeps the layout correct. -->
-<body style="margin:0; padding:0; background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.25) 0%, rgba(11,31,45,0.40) 60%, rgba(11,31,45,0.65) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat; background-attachment:fixed; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased; min-height:100vh;">
+<body style="margin:0; padding:0; background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.72) 0%, rgba(11,31,45,0.88) 60%, rgba(11,31,45,0.96) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat; background-attachment:fixed; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased; min-height:100vh;">
   <!-- Outer table has NO HTML background="" attribute (which would tile the image).
-       The body CSS backdrop above is the single source — one image, no repeat. -->
+       The body CSS backdrop above is the single source — one image, no repeat.
+       Matches the gradient tokens in docs/guide/styles.css body::before so email
+       + website share identical layering. -->
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td align="center" style="padding:48px 20px;">
-      <!-- Email card, 580 wide (narrower than the backdrop so the SplashHero
-           reads around the edges). Semi-transparent fill with a subtle teal
-           border + drop shadow so the dark card floats over the scene. -->
-      <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px; width:100%; background:rgba(15,36,54,0.86); border:1px solid rgba(0,209,193,0.22); border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+      <!-- Content wrapper — 640 wide, no visible card frame. Content sits
+           directly on the gradient-darkened backdrop like the user guide hero.
+           Translucent "card" strips appear only around the Under-All-Conditions
+           rail and footer, matching the website's section-card treatment. -->
+      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px; width:100%;">
 
         <!-- Brand bar: 44x44 logo + wordmark on the left, zero-cloud eyebrow on the right. -->
         <tr><td style="padding:22px 28px 18px 28px;">
