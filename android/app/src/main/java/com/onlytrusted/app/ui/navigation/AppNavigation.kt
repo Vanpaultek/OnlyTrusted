@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NetworkCheck
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -128,6 +129,11 @@ sealed class Destination(val route: String, val label: String, val icon: ImageVe
     // dialer + WhatsApp group fan-out. Settings for triggers + WhatsApp group URL.
     data object DistressSignal : Destination("distress_signal", "Distress Signal", Icons.Filled.Security)
     data object LanguageRegion : Destination("language_region", "Language & Region", Icons.Filled.Language)
+    // Mic & Camera Lock — honest sensor-privacy screen. Picks the active controller
+    // tier (Consumer / Device Owner / Privileged) and surfaces what this install can
+    // + cannot do around screen-lock sensor enforcement. See
+    // docs/SENSOR_PRIVACY_ARCHITECTURE.md.
+    data object SensorPrivacy : Destination("sensor_privacy", "Mic & Camera Lock", Icons.Filled.Lock)
 }
 
 private val bottomBarDestinations = listOf(
@@ -277,7 +283,13 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onOpenContactScan = { navController.navigate(Destination.ContactScan.route) },
                     onOpenSmsScan = { navController.navigate(Destination.SmsScan.route) },
                     onOpenDistressSignal = { navController.navigate(Destination.DistressSignal.route) },
-                    onOpenLanguageRegion = { navController.navigate(Destination.LanguageRegion.route) }
+                    onOpenLanguageRegion = { navController.navigate(Destination.LanguageRegion.route) },
+                    onOpenSensorPrivacy = { navController.navigate(Destination.SensorPrivacy.route) }
+                )
+            }
+            composable(Destination.SensorPrivacy.route) {
+                com.onlytrusted.app.ui.sensorprivacy.SensorPrivacyScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable(Destination.PrivacyShield.route) {

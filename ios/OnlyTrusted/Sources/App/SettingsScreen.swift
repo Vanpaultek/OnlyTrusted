@@ -1173,6 +1173,16 @@ struct SettingsScreen: View {
                     .buttonStyle(.plain)
                 }
 
+                // Mic & Camera Lock — honest UX about what consumer apps can + cannot do
+                // around sensor privacy on iOS. See docs/SENSOR_PRIVACY_ARCHITECTURE.md.
+                SettingsDivider()
+                NavigationLink { SensorPrivacyScreen() } label: {
+                    SettingsNavRow(icon: "mic.slash.fill", iconTint: Color.appAccent,
+                                   label: "Mic & Camera Lock",
+                                   value: "iOS limits apply")
+                }
+                .buttonStyle(.plain)
+
                 SettingsDivider()
                 Button { runExport { try DataExporter.write() } } label: {
                     SettingsNavRow(icon: "square.and.arrow.up", iconTint: Color.appAccent,

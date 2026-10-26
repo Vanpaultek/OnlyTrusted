@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Policies this DeviceAdmin uses. Keep this tightly scoped — Device Owner is
+  a heavy privilege; declaring unused policies broadens the attack surface.
+
+  See docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Device Owner" for the full flow.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <!-- setCameraDisabled() -->
+        <disable-camera />
+        <!-- UserManager.DISALLOW_UNMUTE_MICROPHONE via addUserRestriction() -->
+        <limit-password />
+    </uses-policies>
+</device-admin>

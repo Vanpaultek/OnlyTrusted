@@ -28,6 +28,20 @@ struct SecurityEventRecord: Codable, Identifiable {
         /// Fired by the Geo-fence Auto-Lock (Elite) when the device exits every trusted
         /// region. Triggers an auto-lock and a prepared SMS to the chosen contact.
         static let geofenceExit = "GEOFENCE_EXIT"
+        /// Fired by SensorPrivacyController on screen-lock proxy (iOS: willResignActive;
+        /// Android: ACTION_SCREEN_OFF). Detail carries the pre-lock SensorState snapshot.
+        /// See docs/SENSOR_PRIVACY_ARCHITECTURE.md.
+        static let screenLock = "SCREEN_LOCK"
+        static let screenUnlock = "SCREEN_UNLOCK"
+        /// Fired when SensorPrivacyController successfully changes a sensor's state.
+        /// Only ever fires on tiers that `canEnforceGlobally` (Android Device Owner +
+        /// Privileged OS build). Consumer tiers never fire this.
+        static let sensorPrivacyEnforced = "SENSOR_PRIVACY_ENFORCED"
+        static let sensorPrivacyRestored = "SENSOR_PRIVACY_RESTORED"
+        /// Fired when the controller attempted to change a sensor state but the OS
+        /// refused (missing permission). Auditable record that enforcement was NOT
+        /// applied — important for incident review.
+        static let sensorPrivacyRefused = "SENSOR_PRIVACY_REFUSED"
     }
 }
 

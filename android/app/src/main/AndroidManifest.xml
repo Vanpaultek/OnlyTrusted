@@ -228,6 +228,24 @@
             </intent-filter>
         </receiver>
 
+        <!-- Mic & Camera Lock — Device Owner receiver. Normally dormant; activates only
+             after `adb shell dpm set-device-owner com.onlytrusted.app/.ui.sensorprivacy.OTDeviceAdminReceiver`
+             on a freshly reset device. See docs/SENSOR_PRIVACY_ARCHITECTURE.md for the
+             provisioning flow. The Consumer tier never touches this receiver. -->
+        <receiver
+            android:name=".ui.sensorprivacy.OTDeviceAdminReceiver"
+            android:label="OnlyTrusted Device Owner"
+            android:description="@string/app_name"
+            android:permission="android.permission.BIND_DEVICE_ADMIN"
+            android:exported="true">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_sensor_privacy" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Smart Link Guard (Pro): inspects incoming SMS for URL-shaped substrings and
              runs each through the 100%-on-device rules engine. Fires only when the user
              is on Pro AND the Smart Link Guard SMS toggle is on; otherwise no-ops. -->

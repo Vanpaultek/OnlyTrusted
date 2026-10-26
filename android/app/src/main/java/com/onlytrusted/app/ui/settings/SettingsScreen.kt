@@ -141,6 +141,7 @@ fun SettingsScreen(
     onOpenLegal: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
     onOpenLanguageRegion: () -> Unit = {},
+    onOpenSensorPrivacy: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onOpenReports: () -> Unit = {},
     onOpenBilling: () -> Unit = {},
@@ -893,6 +894,19 @@ fun SettingsScreen(
                             voiceBioUpsellOpen = true
                         }
                     }
+                )
+
+                // Mic & Camera Lock — honest sensor-privacy screen. The badge auto-adapts:
+                // "Android limits apply" on Consumer tier, "Device Owner active" when
+                // provisioned. See docs/SENSOR_PRIVACY_ARCHITECTURE.md.
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.MicNone,
+                    tint = BrandCyanDark,
+                    title = "Mic & Camera Lock",
+                    value = if (com.onlytrusted.app.ui.sensorprivacy.DeviceOwnerSensorPrivacyController.isActive(context))
+                        "Device Owner active" else "Android limits apply",
+                    onClick = onOpenSensorPrivacy,
                 )
 
                 // Face-Change Shoulder-Surfing Lock (Elite) — front camera watches for faces
