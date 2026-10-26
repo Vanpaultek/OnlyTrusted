@@ -31,7 +31,7 @@ def _datauri(src: Path) -> str:
 
 # Full-page backdrop: the SplashHero (glossy shield + mountain-lake scene).
 # Resized to 1200x800 JPG@q60 for a reasonable email size.
-BG_SRC = Path('/tmp/email_bg2.jpg')
+BG_SRC = Path('/tmp/email_bg3.jpg')  # clean mountain-lake, no baked overlays
 LOGO_SRC = Path('/tmp/email_logo.png')
 if not LOGO_SRC.exists():
     LOGO_SRC = ROOT.parent / 'docs' / 'guide' / 'assets' / 'brand_logo.png'
@@ -62,8 +62,10 @@ HEAD = '''<!DOCTYPE html>
        so it renders in local preview AND in clients that keep CSS backgrounds
        (Apple Mail, iOS Mail, Thunderbird, Yahoo). Gmail web / Outlook strip
        the url() — the dark #0B1F2D color fallback keeps the layout correct. -->
-<body style="margin:0; padding:0; background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.35) 0%, rgba(11,31,45,0.55) 55%, rgba(11,31,45,0.80) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat; background-attachment:fixed; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased; min-height:100vh;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="{bg_uri}">
+<body style="margin:0; padding:0; background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.25) 0%, rgba(11,31,45,0.40) 60%, rgba(11,31,45,0.65) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat; background-attachment:fixed; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased; min-height:100vh;">
+  <!-- Outer table has NO HTML background="" attribute (which would tile the image).
+       The body CSS backdrop above is the single source — one image, no repeat. -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr><td align="center" style="padding:48px 20px;">
       <!-- Email card, 580 wide (narrower than the backdrop so the SplashHero
            reads around the edges). Semi-transparent fill with a subtle teal
