@@ -81,6 +81,47 @@ fun SecurityLockGroupSheet(
             // scoped to mic + camera lock on device screen state; app-open PIN
             // / biometric belongs with the general app settings.
 
+            // Mic & Camera Lock — primary row of this sheet (moved to the top).
+            // Actual ON/OFF switch for the lock-watcher service. When ON, mic
+            // mutes on ACTION_SCREEN_OFF and un-mutes on ACTION_USER_PRESENT.
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconChip(Icons.Filled.MicNone)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Auto-lock mic & camera",
+                         color = PrimaryTextDark, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (micCamAutoLock)
+                            "On — mic mutes on screen-off, restores on unlock."
+                        else "Off — mic + camera unchanged when the screen locks.",
+                        color = SecondaryTextDark, fontSize = 12.sp,
+                    )
+                }
+                Switch(
+                    checked = micCamAutoLock,
+                    onCheckedChange = { want ->
+                        if (want) SensorPrivacyForegroundService.start(context)
+                        else SensorPrivacyForegroundService.stop(context)
+                        micCamAutoLock = want
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = BrandCyanDark),
+                )
+            }
+
+            // Detail-screen link (Device Admin, battery exemption, Quick Settings tile).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { onOpenMicCameraLock(); onDismiss() },
+            ) {
+                Spacer(Modifier.width(44.dp))
+                Text("More options (Device Admin, battery, tile)",
+                     color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+            }
+
+            Divider(color = SecondaryTextDark.copy(alpha = 0.08f))
+
             // Auto-lock after inactivity
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconChip(Icons.Filled.Timer)
@@ -131,48 +172,6 @@ fun SecurityLockGroupSheet(
                 Text(AutoLockPrefs.label(autoLockSeconds),
                      color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.width(6.dp))
-                Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
-            }
-
-            Divider(color = SecondaryTextDark.copy(alpha = 0.08f))
-
-            // Mic & Camera Lock — actual ON/OFF switch for the lock-watcher
-            // service. When ON, mic mutes on ACTION_SCREEN_OFF and un-mutes
-            // on ACTION_USER_PRESENT. Device Admin adds camera-disable to
-            // the same cycle (configure in the detail screen).
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconChip(Icons.Filled.MicNone)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Auto-lock mic & camera",
-                         color = PrimaryTextDark, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(
-                        if (micCamAutoLock)
-                            "On — mic mutes on screen-off, restores on unlock."
-                        else "Off — mic + camera unchanged when the screen locks.",
-                        color = SecondaryTextDark, fontSize = 12.sp,
-                    )
-                }
-                Switch(
-                    checked = micCamAutoLock,
-                    onCheckedChange = { want ->
-                        if (want) SensorPrivacyForegroundService.start(context)
-                        else SensorPrivacyForegroundService.stop(context)
-                        micCamAutoLock = want
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = BrandCyanDark),
-                )
-            }
-
-            // Detail-screen link (Device Admin, battery exemption, Quick Settings tile).
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable { onOpenMicCameraLock(); onDismiss() },
-            ) {
-                Spacer(Modifier.width(44.dp))
-                Text("More options (Device Admin, battery, tile)",
-                     color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.weight(1f))
                 Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
             }
 

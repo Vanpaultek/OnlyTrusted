@@ -34,6 +34,19 @@ struct SecurityLockGroupView: View {
             // story; app-level lock (require PIN to open OnlyTrusted) is a
             // different concern and belongs with the general app settings.
 
+            // Mic & Camera Lock — primary row of this sheet. On iOS this is
+            // informational (Apple's sandbox forbids a consumer app from
+            // globally disabling sensors). The nav link opens the detail
+            // screen with honest limits + deep-links to iOS Settings → Privacy.
+            NavigationLink { SensorPrivacyScreen() } label: {
+                SettingsNavRow(icon: "mic.slash.fill", iconTint: Color.appAccent,
+                               label: "Mic & Camera Lock",
+                               value: "iOS limits apply")
+            }
+            .buttonStyle(.plain)
+
+            SettingsDivider()
+
             // Auto-lock after inactivity
             Toggle(isOn: $autoLockToggle) {
                 row(icon: "clock.fill",
@@ -68,18 +81,6 @@ struct SecurityLockGroupView: View {
                     .opacity(0.45)
                     .allowsHitTesting(false)
             }
-
-            // Mic & Camera Lock — on iOS this is informational (Apple's sandbox
-            // forbids a consumer app from globally disabling sensors). The nav
-            // link opens the detail screen that explains the honest limits +
-            // deep-links to iOS Settings → Privacy for per-app revocation.
-            SettingsDivider()
-            NavigationLink { SensorPrivacyScreen() } label: {
-                SettingsNavRow(icon: "mic.slash.fill", iconTint: Color.appAccent,
-                               label: "Mic & Camera Lock",
-                               value: "iOS limits apply")
-            }
-            .buttonStyle(.plain)
         }
     }
 
