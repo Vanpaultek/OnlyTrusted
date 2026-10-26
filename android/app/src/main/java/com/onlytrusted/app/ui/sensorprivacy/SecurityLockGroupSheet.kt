@@ -56,6 +56,9 @@ fun SecurityLockGroupSheet(
     var autoLockSeconds by remember { mutableStateOf(AutoLockPrefs.currentSeconds(context)) }
     val autoLockEnabled = autoLockSeconds > 0
     var showWindowPicker by remember { mutableStateOf(false) }
+    // Mic & Camera auto-lock service: starting it registers ScreenStateReceiver,
+    // so mic mutes on ACTION_SCREEN_OFF and un-mutes on ACTION_USER_PRESENT.
+    var micCamAutoLock by remember { mutableStateOf(isServiceActive(context)) }
 
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MidnightElevated) {
         Column(
@@ -144,20 +147,43 @@ fun SecurityLockGroupSheet(
 
             Divider(color = SecondaryTextDark.copy(alpha = 0.08f))
 
-            // Mic & Camera Lock
+            // Mic & Camera Lock — actual ON/OFF switch for the lock-watcher
+            // service. When ON, mic mutes on ACTION_SCREEN_OFF and un-mutes
+            // on ACTION_USER_PRESENT. Device Admin adds camera-disable to
+            // the same cycle (configure in the detail screen).
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconChip(Icons.Filled.MicNone)
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Auto-lock mic & camera",
+                         color = PrimaryTextDark, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        if (micCamAutoLock)
+                            "On — mic mutes on screen-off, restores on unlock."
+                        else "Off — mic + camera unchanged when the screen locks.",
+                        color = SecondaryTextDark, fontSize = 12.sp,
+                    )
+                }
+                Switch(
+                    checked = micCamAutoLock,
+                    onCheckedChange = { want ->
+                        if (want) SensorPrivacyForegroundService.start(context)
+                        else SensorPrivacyForegroundService.stop(context)
+                        micCamAutoLock = want
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = BrandCyanDark),
+                )
+            }
+
+            // Detail-screen link (Device Admin, battery exemption, Quick Settings tile).
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.clickable { onOpenMicCameraLock(); onDismiss() },
             ) {
-                IconChip(Icons.Filled.MicNone)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("Mic & Camera Lock",
-                         color = PrimaryTextDark, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Mute mic + disable camera when the device screen locks.",
-                         color = SecondaryTextDark, fontSize = 12.sp)
-                }
-                Text("Open", color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.width(44.dp))
+                Text("More options (Device Admin, battery, tile)",
+                     color = BrandCyanDark, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
                 Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
             }
 
@@ -180,6 +206,14 @@ fun SecurityLockGroupSheet(
             onDismiss = { showWindowPicker = false },
         )
     }
+}
+
+/** Heuristic — true if the lock-watcher foreground service is currently running. */
+private fun isServiceActive(context: android.content.Context): Boolean {
+    val am = context.getSystemService(android.app.ActivityManager::class.java) ?: return false
+    @Suppress("DEPRECATION")
+    val running = runCatching { am.getRunningServices(Int.MAX_VALUE) }.getOrDefault(emptyList())
+    return running.any { it.service.className == SensorPrivacyForegroundService::class.java.name }
 }
 
 @Composable
