@@ -12,13 +12,22 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Listens for `ACTION_SCREEN_OFF` + `ACTION_SCREEN_ON` and relays to the
+ * Listens for `ACTION_SCREEN_OFF` + `ACTION_USER_PRESENT` and relays to the
  * active [SensorPrivacyController]. Must be registered at runtime
  * (manifest registration doesn't receive screen-off broadcasts on modern
  * Android — these are "protected" intents).
  *
- * Usage: register once from `MainActivity.onCreate` (or an Application
- * subclass) via [register], unregister on destroy.
+ * Why `ACTION_USER_PRESENT` and NOT `ACTION_SCREEN_ON`:
+ *   - `ACTION_SCREEN_ON` fires when the screen wakes to show the lock
+ *     screen itself — if we restored sensors on that event, someone who
+ *     picked up the phone would re-enable the mic + camera BEFORE
+ *     authenticating. That's a security hole.
+ *   - `ACTION_USER_PRESENT` fires only after the user successfully
+ *     unlocks (PIN, pattern, fingerprint, face). This is the honest
+ *     signal for "the owner is back; it's safe to restore sensors."
+ *
+ * Usage: register once from the foreground service via [register],
+ * unregister on destroy.
  */
 class ScreenStateReceiver private constructor(
     private val controller: SensorPrivacyController,
@@ -41,7 +50,12 @@ class ScreenStateReceiver private constructor(
                 }
                 scope.launch { controller.enforceLock() }
             }
-            Intent.ACTION_SCREEN_ON -> scope.launch { controller.restoreAfterUnlock() }
+            // Intentional: restore ONLY on USER_PRESENT, not on SCREEN_ON.
+            // SCREEN_ON fires when the lock screen appears — before the user
+            // has authenticated. Restoring there would re-enable mic + camera
+            // for anyone who picks up the phone. USER_PRESENT fires only
+            // after a successful PIN / pattern / biometric unlock.
+            Intent.ACTION_USER_PRESENT -> scope.launch { controller.restoreAfterUnlock() }
         }
     }
 
@@ -53,7 +67,7 @@ class ScreenStateReceiver private constructor(
             val receiver = ScreenStateReceiver(controller)
             val filter = IntentFilter().apply {
                 addAction(Intent.ACTION_SCREEN_OFF)
-                addAction(Intent.ACTION_SCREEN_ON)
+                addAction(Intent.ACTION_USER_PRESENT)
             }
             context.applicationContext.registerReceiver(receiver, filter)
             active = receiver
