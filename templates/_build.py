@@ -29,16 +29,14 @@ def _datauri(src: Path) -> str:
     return f'data:{mime};base64,{b64}'
 
 
-# Pre-sized assets live in /tmp during local build; fall back to the
-# full-res docs/guide/assets copies when running without the pre-sized ones.
-HERO_SRC = Path('/tmp/email_hero.jpg')
+# Full-page backdrop: the SplashHero (glossy shield + mountain-lake scene).
+# Resized to 1200x800 JPG@q60 for a reasonable email size.
+BG_SRC = Path('/tmp/email_bg2.jpg')
 LOGO_SRC = Path('/tmp/email_logo.png')
-if not HERO_SRC.exists():
-    HERO_SRC = ROOT.parent / 'docs' / 'guide' / 'assets' / 'app_backdrop.jpg'
 if not LOGO_SRC.exists():
     LOGO_SRC = ROOT.parent / 'docs' / 'guide' / 'assets' / 'brand_logo.png'
 
-HERO_URI = _datauri(HERO_SRC)
+BG_URI = _datauri(BG_SRC)
 LOGO_URI = _datauri(LOGO_SRC)
 
 
@@ -60,14 +58,21 @@ HEAD = '''<!DOCTYPE html>
   <title>{title}</title>
 </head>
 <body style="margin:0; padding:0; background:#0B1F2D; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B1F2D" style="background:#0B1F2D;">
-    <tr><td align="center" style="padding:36px 16px;">
-      <!-- Email card, 640 wide, matches the user guide's content column. -->
-      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px; width:100%; background:#0F2436; border:1px solid rgba(0,209,193,0.18); border-radius:20px; overflow:hidden;">
+  <!-- Full-page backdrop: the SplashHero (shield + mountain-lake) fills the
+       whole canvas, with a dark gradient over it for text contrast. Base64
+       inlined so it renders in local preview AND in clients that keep CSS
+       backgrounds (Apple Mail, iOS Mail, Thunderbird, Yahoo). Gmail web /
+       Outlook strip the url() — the dark #0B1F2D fallback is still correct. -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B1F2D"
+         background="{bg_uri}"
+         style="background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.72) 0%, rgba(11,31,45,0.88) 60%, rgba(11,31,45,0.96) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat;">
+    <tr><td align="center" style="padding:40px 16px;">
+      <!-- Email card, 640 wide, matches the user guide's content column.
+           Semi-transparent fill so the SplashHero shows through at the edges. -->
+      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px; width:100%; background:rgba(15,36,54,0.84); border:1px solid rgba(0,209,193,0.22); border-radius:20px; overflow:hidden;">
 
-        <!-- Brand bar: 44x44 logo + wordmark on the left, zero-cloud eyebrow on the right.
-             Logo is inlined base64 so it renders in previews + sent email alike. -->
-        <tr><td style="padding:22px 28px 18px 28px; background:#0F2436;">
+        <!-- Brand bar: 44x44 logo + wordmark on the left, zero-cloud eyebrow on the right. -->
+        <tr><td style="padding:22px 28px 18px 28px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td align="left" valign="middle">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
@@ -84,25 +89,19 @@ HEAD = '''<!DOCTYPE html>
               Zero cloud · Zero account
             </td>
           </tr></table>
+          <div style="height:1px; background:rgba(0,209,193,0.28); margin-top:18px;"></div>
         </td></tr>
 
-        <!-- Hero: mountain-lake backdrop image, 640x320. Rendered as a regular
-             <img> rather than a background-image so Outlook / Yahoo / older
-             clients that strip CSS backgrounds still show it. The dark card
-             sits directly below with no overlap so there's no fragile layering. -->
-        <tr><td style="padding:0; line-height:0; font-size:0;">
-          <img src="{hero_uri}" width="640" alt="OnlyTrusted" style="display:block; width:100%; max-width:640px; height:auto;">
-        </td></tr>
-
-        <!-- Hero text block — eyebrow + big heading, matches the user guide's
-             .eyebrow + h1 pair exactly. -->
-        <tr><td style="padding:28px 32px 8px 32px; background:#0F2436;">
+        <!-- Hero text block — eyebrow + big heading, mirrors the user guide's
+             .eyebrow + h1 pair. The SplashHero backdrop reads through the
+             translucent card so the composition matches the website hero. -->
+        <tr><td style="padding:14px 32px 8px 32px;">
           <div style="font-size:11px; letter-spacing:2px; font-weight:800; color:#00D1C1; text-transform:uppercase; margin-bottom:12px;">{eyebrow}</div>
           <h1 style="font-family:'Manrope', sans-serif; font-weight:800; font-size:32px; letter-spacing:-1px; color:#F4FAFC; margin:0 0 4px 0; line-height:1.15;">{heading}</h1>
         </td></tr>
 '''
 
-CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px; background:#0F2436;">
+CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px; background:transparent;">
           <div style="background:rgba(11,31,45,0.65); border:1px solid rgba(182,201,210,0.14); border-radius:14px; padding:18px 20px;">
             <div style="font-family:'Manrope', sans-serif; font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8FA5B2; margin-bottom:10px;">Under all conditions</div>
             <p style="margin:0 0 10px 0; font-family:'DM Sans', sans-serif; font-size:13px; color:#B6C9D2; line-height:1.55;">
@@ -114,7 +113,7 @@ CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px; background:#0F2
           </div>
         </td></tr>
 
-        <tr><td style="padding:0 32px 24px 32px; background:#0F2436;" align="center">
+        <tr><td style="padding:0 32px 24px 32px; background:transparent;" align="center">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding:4px 6px;"><a href="https://onlytrusted.app/legal/privacy" style="display:inline-block; padding:8px 14px; border:1px solid rgba(182,201,210,0.14); border-radius:50px; background:rgba(30,42,58,0.5); font-family:'DM Sans', sans-serif; font-size:12px; color:#B6C9D2; text-decoration:none;">Privacy Policy</a></td>
@@ -130,7 +129,7 @@ CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px; background:#0F2
         </td></tr>
 '''
 
-FOOT_TEMPLATE = '''        <tr><td style="padding:20px 32px 28px 32px; background:#0B1F2D; border-top:1px solid rgba(182,201,210,0.08);">
+FOOT_TEMPLATE = '''        <tr><td style="padding:20px 32px 28px 32px; background:rgba(11,31,45,0.65); border-top:1px solid rgba(182,201,210,0.08);">
           <p style="margin:0 0 8px 0; font-family:'DM Sans', sans-serif; font-size:12px; color:#8FA5B2; line-height:1.5;">
             {footer_reason}
           </p>
@@ -168,7 +167,7 @@ def content_block(body_html: str, cta_label: str, cta_url: str, note: str = '') 
           </tr></table>'''
         if cta_label else ''
     )
-    return f'''        <tr><td style="padding:12px 32px 28px 32px; background:#0F2436; font-family:'DM Sans', sans-serif; color:#B6C9D2; font-size:15px; line-height:1.6;">
+    return f'''        <tr><td style="padding:12px 32px 28px 32px; background:transparent; font-family:'DM Sans', sans-serif; color:#B6C9D2; font-size:15px; line-height:1.6;">
           {body_html}
           {cta_html}
           {note_html}
@@ -374,7 +373,7 @@ def build():
             placeholders=data['placeholders'],
             title=data['title'],
             logo_uri=LOGO_URI,
-            hero_uri=HERO_URI,
+            bg_uri=BG_URI,
             eyebrow=data['eyebrow'],
             heading=data['heading'],
         )
