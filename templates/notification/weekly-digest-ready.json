@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "id": "weekly-digest-ready",
+    "trigger": "Scheduled on-device every Monday 9:00 local time when the Weekly Digest (Premium) is enabled.",
+    "scheduler": "iOS: UNCalendarNotificationTrigger (weekday=2, hour=9). Android: AlarmManager + NotificationCompat.Builder.",
+    "placeholders": ["{{blocked_count}}", "{{filtered_count}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Your weekly OnlyTrusted digest",
+        "subtitle": "Last 7 days on your device",
+        "body": "{{blocked_count}} calls blocked · {{filtered_count}} SMS filtered. Tap to see the full breakdown."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "weekly-digest",
+      "category": "OT_WEEKLY_DIGEST",
+      "mutable-content": 1
+    },
+    "deeplink": "onlytrusted://events?filter=week"
+  },
+  "android": {
+    "channel_id": "ot_weekly_digest",
+    "channel_name": "Weekly digest",
+    "channel_description": "A one-shot weekly summary of what OnlyTrusted did on your device.",
+    "importance": "DEFAULT",
+    "title": "Your weekly OnlyTrusted digest",
+    "body": "{{blocked_count}} calls blocked · {{filtered_count}} SMS filtered. Tap to see the full breakdown.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "onlytrusted://events?filter=week",
+    "auto_cancel": true
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "id": "smartlink-daily-summary",
+    "trigger": "Scheduled daily at 20:00 local when Smart Link Guard (Pro) blocked ≥1 URL that day. Suppressed on days with zero blocks.",
+    "scheduler": "iOS: UNCalendarNotificationTrigger. Android: AlarmManager. Logic: on-device daily tick checks SmartLinkGuardState.todayBlockedCount — fires only if > 0.",
+    "placeholders": ["{{blocked_count}}", "{{top_rule_name}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Smart Link Guard — today",
+        "body": "{{blocked_count}} suspicious URLs caught. Top rule: {{top_rule_name}}. Tap to review."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "smartlink",
+      "category": "OT_SMARTLINK_DAILY"
+    },
+    "deeplink": "onlytrusted://smartlink/verdicts"
+  },
+  "android": {
+    "channel_id": "ot_smartlink",
+    "channel_name": "Smart Link Guard",
+    "channel_description": "Daily summary of suspicious URLs Smart Link Guard caught on your device.",
+    "importance": "LOW",
+    "title": "Smart Link Guard — today",
+    "body": "{{blocked_count}} suspicious URLs caught. Top rule: {{top_rule_name}}. Tap to review.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "onlytrusted://smartlink/verdicts",
+    "auto_cancel": true
+  }
+}

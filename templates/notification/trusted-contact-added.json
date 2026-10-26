@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "id": "trusted-contact-added",
+    "trigger": "User added a new contact to the Trusted Contacts list. Confirms the add + reminds them the contact can now reach them + see SOS alerts.",
+    "scheduler": "iOS: UNUserNotificationCenter immediate trigger. Android: NotificationManagerCompat.notify().",
+    "placeholders": ["{{contact_name}}", "{{contact_relation}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Added {{contact_name}}",
+        "body": "{{contact_relation}} — their calls and texts come through. They'll also receive SOS alerts."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "contacts",
+      "category": "OT_CONTACT_ADDED"
+    },
+    "deeplink": "onlytrusted://contacts/trusted"
+  },
+  "android": {
+    "channel_id": "ot_contacts",
+    "channel_name": "Trusted Contacts",
+    "channel_description": "Confirmations when you add or remove a Trusted Contact.",
+    "importance": "LOW",
+    "title": "Added {{contact_name}}",
+    "body": "{{contact_relation}} — their calls and texts come through. They'll also receive SOS alerts.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "onlytrusted://contacts/trusted",
+    "auto_cancel": true
+  }
+}

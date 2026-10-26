@@ -1,0 +1,35 @@
+{
+  "_meta": {
+    "id": "pin-reset-success",
+    "trigger": "After the user completes a PIN reset flow (device presence + Passkey). Fires immediately as a security confirmation.",
+    "scheduler": "iOS: UNUserNotificationCenter immediate trigger. Android: NotificationManagerCompat.notify().",
+    "placeholders": ["{{reset_time}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Your PIN was reset",
+        "body": "Reset at {{reset_time}}. If this wasn't you, lock down the device immediately."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "security",
+      "category": "OT_SECURITY_EVENT",
+      "interruption-level": "time-sensitive"
+    },
+    "deeplink": "onlytrusted://events?filter=security"
+  },
+  "android": {
+    "channel_id": "ot_security_alerts",
+    "channel_name": "Security alerts",
+    "channel_description": "PIN resets, duress triggers, and other security-critical events.",
+    "importance": "HIGH",
+    "title": "Your PIN was reset",
+    "body": "Reset at {{reset_time}}. If this wasn't you, lock down the device immediately.",
+    "small_icon": "ic_notification_shield_alert",
+    "color": "#F59E0B",
+    "deeplink": "onlytrusted://events?filter=security",
+    "auto_cancel": false,
+    "ongoing": false
+  }
+}

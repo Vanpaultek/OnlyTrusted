@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "id": "blocked-call-milestone",
+    "trigger": "OnlyTrusted blocked its 100th / 500th / 1000th / 5000th call on this device. Scheduled when EventStore crosses a milestone threshold.",
+    "scheduler": "iOS: UNUserNotificationCenter immediate trigger from EventStore observer. Android: NotificationManagerCompat.notify() from the same observer.",
+    "placeholders": ["{{milestone_count}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "{{milestone_count}} calls blocked",
+        "body": "That's a lot of calls your phone didn't ring for. Thanks for using OnlyTrusted."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "milestones",
+      "category": "OT_MILESTONE"
+    },
+    "deeplink": "onlytrusted://events?filter=blocked"
+  },
+  "android": {
+    "channel_id": "ot_milestones",
+    "channel_name": "Milestones",
+    "channel_description": "Celebratory one-shots when OnlyTrusted hits a protection milestone on your device.",
+    "importance": "LOW",
+    "title": "{{milestone_count}} calls blocked",
+    "body": "That's a lot of calls your phone didn't ring for. Thanks for using OnlyTrusted.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "onlytrusted://events?filter=blocked",
+    "auto_cancel": true
+  }
+}

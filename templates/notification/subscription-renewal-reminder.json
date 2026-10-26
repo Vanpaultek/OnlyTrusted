@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "id": "subscription-renewal-reminder",
+    "trigger": "7 days before auto-renewal of a yearly subscription (optional for monthly).",
+    "scheduler": "iOS: UNCalendarNotificationTrigger using the local renewal date minus 7 days. Android: AlarmManager at the same offset.",
+    "placeholders": ["{{plan_name}}", "{{renewal_date}}", "{{price_label}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "{{plan_name}} renews in 7 days",
+        "body": "{{price_label}} on {{renewal_date}}. Manage or cancel in your App Store subscriptions."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "billing",
+      "category": "OT_RENEWAL_REMINDER"
+    },
+    "deeplink": "itms-apps://apps.apple.com/account/subscriptions"
+  },
+  "android": {
+    "channel_id": "ot_billing",
+    "channel_name": "Billing",
+    "channel_description": "Subscription renewals, cancellations, and billing confirmations.",
+    "importance": "DEFAULT",
+    "title": "{{plan_name}} renews in 7 days",
+    "body": "{{price_label}} on {{renewal_date}}. Manage or cancel in Google Play subscriptions.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "https://play.google.com/store/account/subscriptions",
+    "auto_cancel": true
+  }
+}

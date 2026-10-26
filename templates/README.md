@@ -37,13 +37,22 @@ templates/
 │   ├── support-reply.html
 │   ├── legal-update.html
 │   └── pin-reset.html
-└── message/                  (6 plain-text SMS / WhatsApp templates)
-    ├── sos-alert.txt
-    ├── sos-whatsapp.txt
-    ├── trusted-contact-invite.txt
-    ├── duress-alert.txt
-    ├── carrier-spam-report.txt
-    └── pin-reset-code.txt
+├── message/                  (6 plain-text SMS / WhatsApp templates)
+│   ├── sos-alert.txt
+│   ├── sos-whatsapp.txt
+│   ├── trusted-contact-invite.txt
+│   ├── duress-alert.txt
+│   ├── carrier-spam-report.txt
+│   └── pin-reset-code.txt
+└── notification/             (8 JSON payloads for on-device local notifications)
+    ├── weekly-digest-ready.json
+    ├── export-ready.json
+    ├── subscription-renewal-reminder.json
+    ├── pin-reset-success.json
+    ├── trusted-contact-added.json
+    ├── smartlink-daily-summary.json
+    ├── duress-triggered.json
+    └── blocked-call-milestone.json
 ```
 
 ---
@@ -104,6 +113,57 @@ SMS templates intentionally skip the User Guide / Rate links in the bodies
 (SMS budget is tight, and SOS / duress are safety-critical moments — not a
 place for marketing). Where appropriate they include an unobtrusive
 `onlytrusted.app/guide#<anchor>` link for recipients who need context.
+
+---
+
+## Notification templates — on-device local notifications
+
+OnlyTrusted does not operate a push server (zero-cloud). All notifications
+are **local** — scheduled on-device via `UNUserNotificationCenter` (iOS) or
+`NotificationManager` + `AlarmManager` (Android). The JSON files under
+`notification/` are the payload template per event: title, body, channel
+metadata, deeplink, visibility hints.
+
+| File | Trigger | Placeholders |
+|------|---------|--------------|
+| `weekly-digest-ready.json` | Mondays 9:00 local (Premium opt-in) | `{{blocked_count}}` `{{filtered_count}}` |
+| `export-ready.json` | On-device export finished | `{{export_type}}` `{{export_size}}` |
+| `subscription-renewal-reminder.json` | 7 days before yearly auto-renewal | `{{plan_name}}` `{{renewal_date}}` `{{price_label}}` |
+| `pin-reset-success.json` | PIN reset flow completed | `{{reset_time}}` |
+| `trusted-contact-added.json` | New Trusted Contact added | `{{contact_name}}` `{{contact_relation}}` |
+| `smartlink-daily-summary.json` | Daily 20:00 if ≥1 URL blocked (Pro) | `{{blocked_count}}` `{{top_rule_name}}` |
+| `duress-triggered.json` | Duress PIN entered (**covert, lockscreen-hidden**) | `{{timestamp}}` `{{dispatched_count}}` |
+| `blocked-call-milestone.json` | Milestone hits (100 / 500 / 1000 / 5000) | `{{milestone_count}}` |
+
+Each file contains:
+- `_meta` — trigger / scheduler / placeholder docs + security notes
+- `ios` — APNS-style payload (`aps.alert`, `aps.sound`, `aps.category`,
+  `interruption-level`) + `deeplink` for tap handling
+- `android` — channel metadata (`channel_id`, `channel_name`,
+  `channel_description`, `importance`, `visibility`) + title + body +
+  `small_icon` + `color` + `deeplink`
+
+**Channels / categories** — register these at app launch so iOS can offer
+category-level permissions and Android groups notifications by purpose:
+
+| Channel | iOS category | Android channel_id | Importance |
+|---------|--------------|---------------------|------------|
+| Billing | `OT_RENEWAL_REMINDER` | `ot_billing` | DEFAULT |
+| Weekly digest | `OT_WEEKLY_DIGEST` | `ot_weekly_digest` | DEFAULT |
+| Exports | `OT_EXPORT_READY` | `ot_exports` | HIGH |
+| Security | `OT_SECURITY_EVENT` | `ot_security_alerts` | HIGH |
+| Security (covert) | `OT_DURESS` | `ot_security_covert` | MIN / SECRET |
+| Contacts | `OT_CONTACT_ADDED` | `ot_contacts` | LOW |
+| Smart Link Guard | `OT_SMARTLINK_DAILY` | `ot_smartlink` | LOW |
+| Milestones | `OT_MILESTONE` | `ot_milestones` | LOW |
+
+**Critical security note for `duress-triggered.json`:** this notification
+MUST NOT surface on the lock screen or the pulldown notification center.
+iOS: use `interruption-level: "passive"` + treat it as post-authentication
+only. Android: set `visibility=VISIBILITY_SECRET` on the channel so the
+attacker holding the device never sees the confirmation that a duress
+dispatch happened. The user sees it only inside the app after they
+re-authenticate past the (fake) unlock.
 
 ---
 

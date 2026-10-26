@@ -11,13 +11,31 @@
   <title>Your OnlyTrusted account is deleted</title>
 </head>
 <body style="margin:0; padding:0; background:#0B1F2D; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%), url('https://onlytrusted.app/email-backdrop.jpg'); background-size:cover; background-position:center;">
+  <!-- Mountain-lake backdrop. JPG for max client compatibility (Gmail / Outlook
+       Web / iOS Mail all render JPG; WebP is spotty). If an image blocker strips
+       it, the dark gradient still looks correct over a flat #0B1F2D background. -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%), url('https://onlytrusted.app/guide/assets/app_backdrop.jpg'); background-size:cover; background-position:center;">
     <tr><td align="center" style="padding:40px 16px;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background:rgba(30,42,58,0.68); border:1px solid rgba(0,209,193,0.18); border-radius:18px; overflow:hidden;">
         <tr><td style="padding:28px 32px 20px 32px;">
+          <!-- Brand lockup: 44×44 app icon + "OnlyTrusted" wordmark on the left,
+               zero-cloud eyebrow on the right. Mirrors the .brand selector in
+               docs/guide/styles.css so the website and the email share one
+               identity. The <img> alt text degrades to text if images are blocked. -->
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td align="left" style="font-family:'Manrope', sans-serif; font-weight:800; font-size:22px; letter-spacing:-0.4px; color:#F4FAFC;"><span style="color:#F4FAFC;">Only</span><span style="color:#00D1C1;">Trusted</span></td>
-            <td align="right" style="font-family:'DM Sans', sans-serif; font-size:11px; color:#8FA5B2; letter-spacing:1.5px; text-transform:uppercase;">Zero cloud · Zero account</td>
+            <td align="left" valign="middle">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                <td valign="middle" style="padding-right:12px;">
+                  <img src="https://onlytrusted.app/guide/assets/brand_logo.png"
+                       width="44" height="44" alt="OnlyTrusted"
+                       style="display:block; width:44px; height:44px; border-radius:10px; box-shadow:0 4px 20px rgba(0,209,193,0.25);">
+                </td>
+                <td valign="middle" style="font-family:'Manrope', sans-serif; font-weight:800; font-size:22px; letter-spacing:-0.4px; color:#F4FAFC;">
+                  <span style="color:#F4FAFC;">Only</span><span style="color:#00D1C1;">Trusted</span>
+                </td>
+              </tr></table>
+            </td>
+            <td align="right" valign="middle" style="font-family:'DM Sans', sans-serif; font-size:11px; color:#8FA5B2; letter-spacing:1.5px; text-transform:uppercase;">Zero cloud · Zero account</td>
           </tr></table>
           <div style="height:1px; background:rgba(0,209,193,0.28); margin-top:18px;"></div>
         </td></tr>

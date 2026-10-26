@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "id": "duress-triggered",
+    "trigger": "User entered the duress PIN (covert panic). Fires AFTER the duress SMS has been dispatched to Trusted Contacts. The on-screen UI pretends to unlock normally — this notification is deliberately silent + hidden-from-lockscreen so the attacker doesn't see it.",
+    "scheduler": "iOS: UNUserNotificationCenter immediate trigger with sound:nil + visibility:private. Android: NotificationManagerCompat.notify() with visibility=SECRET.",
+    "placeholders": ["{{timestamp}}", "{{dispatched_count}}"],
+    "security_note": "This notification must NEVER appear on the lock screen or notification center UI the attacker can see. iOS: use UNNotificationInterruptionLevel.passive + alert.title/body only shown post-authentication. Android: visibility=VISIBILITY_SECRET."
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Duress alert sent",
+        "body": "Dispatched to {{dispatched_count}} Trusted Contacts at {{timestamp}}."
+      },
+      "sound": null,
+      "badge": 0,
+      "thread-id": "security",
+      "category": "OT_DURESS",
+      "interruption-level": "passive"
+    },
+    "deeplink": "onlytrusted://events?filter=duress",
+    "visibility_hint": "Shows only after user authenticates past App Lock. Do not surface on lock screen."
+  },
+  "android": {
+    "channel_id": "ot_security_covert",
+    "channel_name": "Security (hidden)",
+    "channel_description": "Covert security confirmations that never surface on the lock screen.",
+    "importance": "MIN",
+    "visibility": "SECRET",
+    "title": "Duress alert sent",
+    "body": "Dispatched to {{dispatched_count}} Trusted Contacts at {{timestamp}}.",
+    "small_icon": "ic_notification_shield_alert",
+    "color": "#F59E0B",
+    "deeplink": "onlytrusted://events?filter=duress",
+    "auto_cancel": false,
+    "silent": true
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "id": "export-ready",
+    "trigger": "User triggered an export (JSON / CSV / evidence pack) and the on-device generator finished writing the file.",
+    "scheduler": "iOS: UNUserNotificationCenter.add(request:) with immediate trigger. Android: NotificationManagerCompat.notify().",
+    "placeholders": ["{{export_type}}", "{{export_size}}"]
+  },
+  "ios": {
+    "aps": {
+      "alert": {
+        "title": "Your {{export_type}} export is ready",
+        "body": "{{export_size}} — tap to open the Share Sheet and send it anywhere."
+      },
+      "sound": "default",
+      "badge": 1,
+      "thread-id": "exports",
+      "category": "OT_EXPORT_READY"
+    },
+    "deeplink": "onlytrusted://settings/export?open=last"
+  },
+  "android": {
+    "channel_id": "ot_exports",
+    "channel_name": "Exports",
+    "channel_description": "Notifications when a data export is ready to share.",
+    "importance": "HIGH",
+    "title": "Your {{export_type}} export is ready",
+    "body": "{{export_size}} — tap to open the Share Sheet and send it anywhere.",
+    "small_icon": "ic_notification_shield",
+    "color": "#00D1C1",
+    "deeplink": "onlytrusted://settings/export?open=last",
+    "auto_cancel": true
+  }
+}
