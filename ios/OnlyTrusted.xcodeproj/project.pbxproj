@@ -12,6 +12,7 @@
 		02D0D358918D9FC0B5994FE3 /* PINRateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D23121887B3FCAB8EDCBE5 /* PINRateLimiter.swift */; };
 		02DF6BB8286CD18B89E73ACB /* guide in Resources */ = {isa = PBXBuildFile; fileRef = 011C69656B970FBECF8F2BAF /* guide */; };
 		02F54BAE6260F6C6D3EF5DB3 /* CSVExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA4D28EB9A8DA24BCA4B8C3 /* CSVExporter.swift */; };
+		04A85A181C37485686A3F25E /* SecurityLockGroupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5F7D5EB0C8B41A7DBCC2C39 /* SecurityLockGroupView.swift */; };
 		05619DDEA5F1EA37C3BFA180 /* PrivacyShieldState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89DE746BE75DFBB63A137C9F /* PrivacyShieldState.swift */; };
 		060D4680CD2152FBD423536B /* BreachWatchScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C551D05C802A950159173D3 /* BreachWatchScheduler.swift */; };
 		06B64183C02925954AB1C87B /* AboutScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0393312C797275B88012608 /* AboutScreen.swift */; };
@@ -353,6 +354,7 @@
 		B1E76DA3F7913747A56B51D1 /* HardwareKeySetupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HardwareKeySetupScreen.swift; sourceTree = "<group>"; };
 		B22B6CAC92610E21B4F8AE8A /* PrivacyShieldDashboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShieldDashboard.swift; sourceTree = "<group>"; };
 		B39CEFE3438DEA9D4B888894 /* ContactScanState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactScanState.swift; sourceTree = "<group>"; };
+		B5F7D5EB0C8B41A7DBCC2C39 /* SecurityLockGroupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityLockGroupView.swift; sourceTree = "<group>"; };
 		B624AA0E449B364901659D23 /* EventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStore.swift; sourceTree = "<group>"; };
 		B65AEDFD1E0C39BCF257EA4A /* CaptureRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureRegistry.swift; sourceTree = "<group>"; };
 		B67E35947FEDCCD998311AE4 /* AppBackdrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBackdrop.swift; sourceTree = "<group>"; };
@@ -564,6 +566,7 @@
 				0181DD98D26C9984555D6A90 /* MainTabs.swift */,
 				F86321B3D7ECFD06EC4746E3 /* NotificationsScreen.swift */,
 				CA8A4B571B36982CD4221F2A /* OnlyTrustedApp.swift */,
+				B5F7D5EB0C8B41A7DBCC2C39 /* SecurityLockGroupView.swift */,
 				E116181529A59548B1AA0523 /* SettingsScreen.swift */,
 				A751149F1B0D6CFD467F357D /* SplashScreen.swift */,
 			);
@@ -1321,6 +1324,7 @@
 				B2AD3CD9C0FEB54C48DDD780 /* SIMSwapUpsellSheet.swift in Sources */,
 				E21E9DF964E0A7F510A78D7C /* SafetyCheckInScreen.swift in Sources */,
 				6BF24298F1FCC081CE0F460B /* SafetyFeatures.swift in Sources */,
+				04A85A181C37485686A3F25E /* SecurityLockGroupView.swift in Sources */,
 				07C89D89782964D1D7C6BFA9 /* SensorPrivacyController.swift in Sources */,
 				9060FFF54E35E0325269E8E8 /* SensorPrivacyScreen.swift in Sources */,
 				9E3FC5A389094A3AF0331964 /* SettingsScreen.swift in Sources */,

@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 VanPaulTek Inc
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import LocalAuthentication
 import SwiftUI
 
 struct MainTabs: View {
@@ -224,6 +225,20 @@ struct DashboardScreen: View {
     @State private var showHonestLimitsSheet = false
     @State private var confirmDuressExit = false
 
+    // Security Lock sheet — groups App Lock / Auto-lock / Mic & Camera Lock.
+    // State mirrors what SettingsScreen owns; changes persist via AppGate +
+    // AutoLockPrefs so both screens stay in sync automatically.
+    @State private var showSecurityLockSheet = false
+    @State private var sheetAppLockToggle = false
+    @State private var sheetAutoLockToggle = false
+    @State private var sheetAutoLockSeconds = 0
+    @State private var sheetShowAutoLockPicker = false
+    @State private var sheetShowLockDenied = false
+    private var sheetCanUseAuth: Bool {
+        var err: NSError?
+        return LAContext().canEvaluatePolicy(.deviceOwnerAuthentication, error: &err)
+    }
+
     // F4 weekly digest + F5 honest-limits refresher banner state.
     @State private var showWeeklyDigest = false
     @State private var weeklyDigestCounts = WeeklyDigestCounts(callsBlocked: 0, textsBlocked: 0)
@@ -274,6 +289,7 @@ struct DashboardScreen: View {
                     }
                 statsRow
                 quickActionsSection
+                securityLockCard
                 HonestLimitsCallout(onTap: { showHonestLimitsSheet = true })
             }
             .padding(.horizontal, 18)
@@ -291,6 +307,38 @@ struct DashboardScreen: View {
             NavigationStack {
                 HonestLimitsSheet()
             }
+        }
+        .sheet(isPresented: $showSecurityLockSheet) {
+            SecurityLockGroupSheet(
+                appLockToggle: $sheetAppLockToggle,
+                autoLockToggle: $sheetAutoLockToggle,
+                autoLockSeconds: $sheetAutoLockSeconds,
+                canUseAuth: sheetCanUseAuth,
+                onAppLockChanged: { gate.appLockEnabled = $0 },
+                onAutoLockToggleChanged: { now in
+                    if now {
+                        if sheetAutoLockSeconds == 0 { sheetAutoLockSeconds = 60 }
+                        AutoLockPrefs.setSeconds(sheetAutoLockSeconds)
+                    } else {
+                        sheetAutoLockSeconds = 0
+                        AutoLockPrefs.setSeconds(0)
+                    }
+                },
+                onAutoLockSecondsPicker: { sheetShowAutoLockPicker = true },
+                onLockDenied: { sheetShowLockDenied = true },
+                onDone: { showSecurityLockSheet = false },
+            )
+        }
+        .confirmationDialog("Enable device biometric or passcode first.", isPresented: $sheetShowLockDenied, titleVisibility: .visible) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Set up Face ID / Touch ID / a passcode in iOS Settings first, otherwise App Lock would lock you out.")
+        }
+        .confirmationDialog("Inactivity window", isPresented: $sheetShowAutoLockPicker, titleVisibility: .visible) {
+            Button("1 minute") { sheetAutoLockSeconds = 60; AutoLockPrefs.setSeconds(60) }
+            Button("5 minutes") { sheetAutoLockSeconds = 300; AutoLockPrefs.setSeconds(300) }
+            Button("15 minutes") { sheetAutoLockSeconds = 900; AutoLockPrefs.setSeconds(900) }
+            Button("Cancel", role: .cancel) {}
         }
         .confirmationDialog("dash_exit_duress_title", isPresented: $confirmDuressExit, titleVisibility: .visible) {
             Button("dash_exit", role: .destructive) {
@@ -317,6 +365,46 @@ struct DashboardScreen: View {
                      value: scamContactsCount,
                      label: LocaleStore.shared.localized("dash_scam_contacts"))
         }
+    }
+
+    /// Dashboard card that opens the Security Lock sheet with the 3 grouped
+    /// controls (App Lock / Auto-lock / Mic & Camera Lock). Same component is
+    /// mounted inline in Settings so both entry points edit identical state.
+    private var securityLockCard: some View {
+        Button {
+            // Snapshot current persisted state into the sheet bindings before showing.
+            sheetAppLockToggle = gate.appLockEnabled
+            sheetAutoLockSeconds = AutoLockPrefs.currentSeconds
+            sheetAutoLockToggle = sheetAutoLockSeconds > 0
+            showSecurityLockSheet = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.appAccent)
+                    .frame(width: 44, height: 44)
+                    .background(Color.appAccent.opacity(0.16))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Security Lock")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Text("App Lock, auto-lock timer, and Mic & Camera Lock in one place.")
+                        .font(.caption)
+                        .foregroundStyle(Color.appSecondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.appSecondaryText)
+            }
+            .padding(14)
+            .background(Color.appCardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appAccent.opacity(0.18), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+        }
+        .buttonStyle(.plain)
     }
 
     private var quickActionsSection: some View {

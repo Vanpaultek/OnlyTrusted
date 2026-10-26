@@ -32,6 +32,8 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.GppGood
@@ -122,6 +124,11 @@ fun DashboardScreen(
     val runtime by vm.runtimeState.collectAsStateWithLifecycle()
     var showHonestLimitsSheet by remember { mutableStateOf(false) }
     var showNoContactAlert by remember { mutableStateOf(false) }
+    // Security Lock sheet state — opens from the Dashboard card below the quick
+    // actions. Edits persist via AppLockManager + AutoLockPrefs so SettingsScreen
+    // stays in sync automatically.
+    var showSecurityLockSheet by remember { mutableStateOf(false) }
+    var showSensorPrivacyScreen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     // Distress Signal: the countdown overlay + dispatcher + result dialog all live at
     // MainActivity level so they work above any screen (triggered by SOS button, shake
@@ -234,6 +241,7 @@ fun DashboardScreen(
                 onBlockNumber = onGoToBlockList,
                 onViewLog = onGoToEvents
             )
+            SecurityLockEntryCard(onClick = { showSecurityLockSheet = true })
             HonestLimitsCallout(onTap = { showHonestLimitsSheet = true })
 
             // --- Android-only advanced protections (preserved) ---
@@ -313,6 +321,25 @@ fun DashboardScreen(
                 }
             },
             containerColor = MidnightCard
+        )
+    }
+
+    if (showSecurityLockSheet) {
+        com.onlytrusted.app.ui.sensorprivacy.SecurityLockGroupSheet(
+            appLockInitiallyEnabled = com.onlytrusted.app.security.AppLockManager.isEnabled(context),
+            onAppLockChanged = {
+                com.onlytrusted.app.security.AppLockManager.setEnabled(context, it)
+            },
+            onOpenMicCameraLock = {
+                showSecurityLockSheet = false
+                showSensorPrivacyScreen = true
+            },
+            onDismiss = { showSecurityLockSheet = false },
+        )
+    }
+    if (showSensorPrivacyScreen) {
+        com.onlytrusted.app.ui.sensorprivacy.SensorPrivacyScreen(
+            onBack = { showSensorPrivacyScreen = false }
         )
     }
 
@@ -696,6 +723,41 @@ private fun QuickActionCard(
                 fontSize = 11.sp,
                 lineHeight = 14.sp
             )
+        }
+    }
+}
+
+// MARK: - Security Lock entry card
+
+@Composable
+private fun SecurityLockEntryCard(onClick: () -> Unit) {
+    androidx.compose.material3.Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = BrandAccentDark.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandAccentDark.copy(alpha = 0.3f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(14.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(BrandAccentDark.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+            ) {
+                Icon(Icons.Filled.Lock, null, tint = BrandAccentDark, modifier = Modifier.size(22.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text("Security Lock",
+                     color = PrimaryTextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text("App Lock, auto-lock timer, and Mic & Camera Lock in one place.",
+                     color = SecondaryTextDark, fontSize = 12.sp)
+            }
+            Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
         }
     }
 }
