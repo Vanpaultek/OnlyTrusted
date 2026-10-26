@@ -2,8 +2,8 @@
 
 Last updated: 2026-10-25 · covers release `v0.3.5+`
 
-OnlyTrusted ships 8 UI languages: **English, Spanish, French, Portuguese, Hindi,
-Arabic, German, Indonesian**. The non-English translations in `v0.3.5` are
+OnlyTrusted ships 9 UI languages: **English, Spanish, French, Portuguese, Hindi,
+Arabic, German, Indonesian, Telugu**. The non-English translations in `v0.3.5` are
 **machine translations produced by Claude Opus** and have not been reviewed by
 native speakers. Every safety-critical string carries a `[REVIEW]` prefix in the
 translated resource file; the `ReviewBadge` UI component on both platforms strips
@@ -144,6 +144,7 @@ speaker signed off on.
 | ar     | _pending native review_  | —          | —                  | RTL layout tested; copy still pending  |
 | de     | _pending native review_  | —          | —                  |                                        |
 | id     | _pending native review_  | —          | —                  |                                        |
+| te     | _pending native review_  | —          | —                  | Added v0.3.6; especially important given India-first launch |
 
 ---
 

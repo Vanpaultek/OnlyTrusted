@@ -14,23 +14,23 @@ struct MainTabs: View {
                 NavigationStack {
                     DashboardScreen(onNavigate: { selectedTab = $0 })
                 }
-                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tabItem { Label { Text("nav_dashboard") } icon: { Image(systemName: "house.fill") } }
                 .tag(Tab.home)
 
                 NavigationStack { VaultScreen() }
-                    .tabItem { Label("Contacts", systemImage: "person.2.fill") }
+                    .tabItem { Label { Text("nav_contacts") } icon: { Image(systemName: "person.2.fill") } }
                     .tag(Tab.contacts)
 
                 NavigationStack { BlockListScreen() }
-                    .tabItem { Label("Blocked", systemImage: "nosign") }
+                    .tabItem { Label { Text("nav_blocked") } icon: { Image(systemName: "nosign") } }
                     .tag(Tab.blocked)
 
                 NavigationStack { EventsScreen() }
-                    .tabItem { Label("Log", systemImage: "doc.text.fill") }
+                    .tabItem { Label { Text("nav_log") } icon: { Image(systemName: "doc.text.fill") } }
                     .tag(Tab.log)
 
                 NavigationStack { SettingsScreen() }
-                    .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                    .tabItem { Label { Text("nav_settings") } icon: { Image(systemName: "gearshape.fill") } }
                     .tag(Tab.settings)
             }
             .tint(Color.appAccent)
@@ -310,12 +310,12 @@ struct DashboardScreen: View {
             StatTile(icon: "person.2.fill",
                      tint: Color.appAccent,
                      value: trustedCount,
-                     label: NSLocalizedString("dash_trusted_contacts", comment: ""))
+                     label: LocaleStore.shared.localized("dash_trusted_contacts"))
             BlockedCombinedTile(blockedToday: blockedToday, blockedWeek: blockedWeek)
             StatTile(icon: "exclamationmark.triangle.fill",
                      tint: scamContactsCount > 0 ? Color.appDanger : Color.appAccent,
                      value: scamContactsCount,
-                     label: NSLocalizedString("dash_scam_contacts", comment: ""))
+                     label: LocaleStore.shared.localized("dash_scam_contacts"))
         }
     }
 
@@ -328,22 +328,22 @@ struct DashboardScreen: View {
             HStack(spacing: 10) {
                 QuickActionCard(
                     icon: "person.badge.plus.fill",
-                    title: NSLocalizedString("dash_qa_emergency_title", comment: ""),
-                    subtitle: NSLocalizedString("dash_qa_emergency_subtitle", comment: ""),
+                    title: LocaleStore.shared.localized("dash_qa_emergency_title"),
+                    subtitle: LocaleStore.shared.localized("dash_qa_emergency_subtitle"),
                     tint: Color.appAccent,
                     action: { onNavigate(.contacts) }
                 )
                 QuickActionCard(
                     icon: "phone.down.fill",
-                    title: NSLocalizedString("dash_qa_block_title", comment: ""),
-                    subtitle: NSLocalizedString("dash_qa_block_subtitle", comment: ""),
+                    title: LocaleStore.shared.localized("dash_qa_block_title"),
+                    subtitle: LocaleStore.shared.localized("dash_qa_block_subtitle"),
                     tint: Color.appDanger,
                     action: { onNavigate(.blocked) }
                 )
                 QuickActionCard(
                     icon: "doc.text.fill",
-                    title: NSLocalizedString("dash_qa_log_title", comment: ""),
-                    subtitle: NSLocalizedString("dash_qa_log_subtitle", comment: ""),
+                    title: LocaleStore.shared.localized("dash_qa_log_title"),
+                    subtitle: LocaleStore.shared.localized("dash_qa_log_subtitle"),
                     tint: Color.appBrightCyan,
                     action: { onNavigate(.log) }
                 )
@@ -451,9 +451,9 @@ private struct WeeklyDigestBanner: View {
 
     private var summary: String {
         if callCount == 0 && textCount == 0 {
-            return NSLocalizedString("dash_week_empty", comment: "")
+            return LocaleStore.shared.localized("dash_week_empty")
         }
-        let fmt = NSLocalizedString("dash_week_fmt", comment: "")
+        let fmt = LocaleStore.shared.localized("dash_week_fmt")
         return String(format: fmt, callCount, textCount)
     }
 }
@@ -527,7 +527,7 @@ private struct CinematicHeader: View {
         if h < 12 { key = "dash_good_morning" }
         else if h < 18 { key = "dash_good_afternoon" }
         else { key = "dash_good_evening" }
-        return NSLocalizedString(key, comment: "")
+        return LocaleStore.shared.localized(key)
     }
 
     var body: some View {
@@ -597,7 +597,7 @@ private struct CinematicHeader: View {
                     .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(.white)
                 HStack(spacing: 8) {
-                    Text(name ?? NSLocalizedString("dash_welcome", comment: ""))
+                    Text(name ?? LocaleStore.shared.localized("dash_welcome"))
                         .font(.system(size: 28, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.appAccent)
                     Text("👋")
@@ -690,7 +690,7 @@ private struct BlockedCombinedTile: View {
             Text("dash_blocked")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(Color.appPrimaryText)
-            Text(String(format: NSLocalizedString("dash_today_week_fmt", comment: ""), blockedWeek))
+            Text(String(format: LocaleStore.shared.localized("dash_today_week_fmt"), blockedWeek))
                 .font(.system(size: 10))
                 .foregroundStyle(Color.appSecondaryText)
         }

@@ -25,7 +25,7 @@ final class LocaleStore: ObservableObject {
     private static let defaultsKey = "onlytrusted.language"
 
     /// Locales we actually ship translated strings for. English always first.
-    let shippedLanguages: [String] = ["en", "es", "fr", "pt", "hi", "ar", "de", "id"]
+    let shippedLanguages: [String] = ["en", "es", "fr", "pt", "hi", "ar", "de", "id", "te"]
 
     struct Country: Decodable, Identifiable {
         let code: String
@@ -70,6 +70,24 @@ final class LocaleStore: ObservableObject {
 
     /// Returns true when the current locale uses right-to-left script.
     var isRTL: Bool { ["ar", "he", "fa", "ur"].contains(language) }
+
+    /// Locale-aware NSLocalizedString replacement. SwiftUI's `Text(LocalizedStringKey)`
+    /// honors the `.environment(\.locale, ...)` override automatically; raw
+    /// `NSLocalizedString(_:comment:)` doesn't — it falls back to the device's
+    /// system language. Call sites that need a `String` (not a `Text`) go through
+    /// here so they follow the user's in-app language choice.
+    ///
+    /// Looks up the key in the <language>.lproj inside the main bundle. Falls
+    /// back to the device's standard resolution path if the lproj isn't present
+    /// (e.g. a locale we don't ship — then `Bundle.main.localizedString` picks
+    /// English per the CFBundleDevelopmentRegion key).
+    func localized(_ key: String) -> String {
+        if let path = Bundle.main.path(forResource: language, ofType: "lproj"),
+           let bundle = Bundle(path: path) {
+            return bundle.localizedString(forKey: key, value: nil, table: nil)
+        }
+        return NSLocalizedString(key, comment: "")
+    }
 
     private init() {
         loadDirectory()

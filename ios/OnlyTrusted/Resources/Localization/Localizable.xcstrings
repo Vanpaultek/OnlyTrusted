@@ -51,6 +51,12 @@
             "state": "translated",
             "value": "OnlyTrusted"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OnlyTrusted"
+          }
         }
       }
     },
@@ -103,6 +109,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perlindungan aktif"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సురక్ష సక్రియంగా ఉంది"
           }
         }
       }
@@ -157,6 +169,12 @@
             "state": "translated",
             "value": "Memantau mikrofon dan kamera. Tidak ada yang mencurigakan sekarang."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మైక్రోఫోన్ మరియు కెమెరాను గమనిస్తున్నాము. ప్రస్తుతం ఏదీ అనుమానాస్పదంగా లేదు."
+          }
         }
       }
     },
@@ -209,6 +227,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perlindungan panggilan tak sengaja aktif."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పాకెట్-డయల్ రక్షణ నడుస్తోంది."
           }
         }
       }
@@ -263,6 +287,12 @@
             "state": "translated",
             "value": "[REVIEW] Mikrofon sedang digunakan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] మైక్రోఫోన్ ఉపయోగంలో ఉంది"
+          }
         }
       }
     },
@@ -315,6 +345,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Sesuatu di ponsel Anda menggunakan mikrofon."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] మీ ఫోన్‌లో ఏదో మైక్రోఫోన్‌ను ఉపయోగిస్తోంది."
           }
         }
       }
@@ -369,6 +405,12 @@
             "state": "translated",
             "value": "[REVIEW] %1$@ sedang menggunakan mikrofon."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$@ మైక్రోఫోన్‌ను ఉపయోగిస్తోంది."
+          }
         }
       }
     },
@@ -421,6 +463,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Kamera sedang digunakan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] కెమెరా ఉపయోగంలో ఉంది"
           }
         }
       }
@@ -475,6 +523,12 @@
             "state": "translated",
             "value": "[REVIEW] Kamera %1$@ baru saja dibuka."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] కెమెరా %1$@ ఇప్పుడే తెరిచారు."
+          }
         }
       }
     },
@@ -527,6 +581,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Panggilan diblokir"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] కాల్ బ్లాక్ చేయబడింది"
           }
         }
       }
@@ -581,6 +641,12 @@
             "state": "translated",
             "value": "[REVIEW] Panggilan masuk dari %1$@ telah diblokir."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$@ నుండి వచ్చే కాల్ బ్లాక్ చేయబడింది."
+          }
         }
       }
     },
@@ -633,6 +699,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] SMS spam terdeteksi"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] స్పామ్ SMS గుర్తించబడింది"
           }
         }
       }
@@ -687,6 +759,12 @@
             "state": "translated",
             "value": "[REVIEW] Pesan dari %1$@ cocok dengan daftar blokir Anda."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$@ నుండి వచ్చిన సందేశం మీ బ్లాక్ జాబితాతో సరిపోలింది."
+          }
         }
       }
     },
@@ -739,6 +817,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Panggilan tidak tepercaya dibisukan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] అనిశ్చిత కాల్ నిశ్శబ్దం చేయబడింది"
           }
         }
       }
@@ -793,6 +877,12 @@
             "state": "translated",
             "value": "[REVIEW] %1$@ tidak ada di brankas keluarga Anda. Panggilan telah dibisukan."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$@ మీ కుటుంబ వాల్ట్‌లో లేదు. కాల్ నిశ్శబ్దం చేయబడింది."
+          }
         }
       }
     },
@@ -845,6 +935,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] SMS tidak tepercaya"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] అనిశ్చిత SMS"
           }
         }
       }
@@ -899,6 +995,12 @@
             "state": "translated",
             "value": "[REVIEW] %1$@ tidak ada di brankas keluarga Anda."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$@ మీ కుటుంబ వాల్ట్‌లో లేదు."
+          }
         }
       }
     },
@@ -951,6 +1053,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Kemungkinan robocall dibisukan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] సంభావ్య రోబోకాల్ నిశ్శబ్దం చేయబడింది"
           }
         }
       }
@@ -1005,6 +1113,12 @@
             "state": "translated",
             "value": "[REVIEW] Penelepon mencurigakan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] అనుమానాస్పద కాలర్"
+          }
         }
       }
     },
@@ -1057,6 +1171,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Watermark perlindungan aktif. Tangkapan yang diambil sekarang akan membawa kode sesi Anda."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "షీల్డ్ వాటర్‌మార్క్ ఆన్. ఇప్పుడు తీసిన క్యాప్చర్‌లు మీ సెషన్ కోడ్‌ను కలిగి ఉంటాయి."
           }
         }
       }
@@ -1111,6 +1231,12 @@
             "state": "translated",
             "value": "[REVIEW] Peringatan OnlyTrusted"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] OnlyTrusted హెచ్చరిక"
+          }
         }
       }
     },
@@ -1163,6 +1289,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Buka kunci ponsel untuk melihat detail."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] వివరాలను చూడటానికి ఫోన్‌ను అన్‌లాక్ చేయండి."
           }
         }
       }
@@ -1217,6 +1349,12 @@
             "state": "translated",
             "value": "Terkunci"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "లాక్ చేయబడింది"
+          }
         }
       }
     },
@@ -1269,6 +1407,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Coba lagi"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మళ్ళీ ప్రయత్నించండి"
           }
         }
       }
@@ -1323,6 +1467,12 @@
             "state": "translated",
             "value": "Buka kunci"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అన్‌లాక్ చేయండి"
+          }
         }
       }
     },
@@ -1375,6 +1525,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gunakan PIN sebagai gantinya"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బదులుగా PIN ఉపయోగించండి"
           }
         }
       }
@@ -1429,6 +1585,12 @@
             "state": "translated",
             "value": "Masukkan PIN"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN నమోదు చేయండి"
+          }
         }
       }
     },
@@ -1478,6 +1640,12 @@
           }
         },
         "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "PIN"
@@ -1535,6 +1703,12 @@
             "state": "translated",
             "value": "Batal"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "రద్దు చేయండి"
+          }
         }
       }
     },
@@ -1587,6 +1761,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buka dengan Passkey Anda"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ Passkey తో అన్‌లాక్ చేయండి"
           }
         }
       }
@@ -1641,6 +1821,12 @@
             "state": "translated",
             "value": "Wajah / sidik jari — di perangkat, anti-phishing"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ముఖం / వేలిముద్ర — పరికరంపై, ఫిషింగ్ నిరోధకం"
+          }
         }
       }
     },
@@ -1693,6 +1879,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siapkan Passkey Anda"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ Passkey ని సెటప్ చేయండి"
           }
         }
       }
@@ -1747,6 +1939,12 @@
             "state": "translated",
             "value": "Konfirmasi dengan wajah atau sidik jari — terikat perangkat keras, di perangkat."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ముఖం లేదా వేలిముద్రతో నిర్ధారించండి — హార్డ్‌వేర్‌కి బంధించబడింది, పరికరంపై."
+          }
         }
       }
     },
@@ -1796,6 +1994,12 @@
           }
         },
         "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OnlyTrusted"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "OnlyTrusted"
@@ -1853,6 +2057,12 @@
             "state": "translated",
             "value": "Ponsel yang lebih aman dan tenang\\ndimulai di sini."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మరింత సురక్షితమైన, నిశ్శబ్ద ఫోన్\\nఇక్కడ ప్రారంభమవుతుంది."
+          }
         }
       }
     },
@@ -1905,6 +2115,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mulai"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించండి"
           }
         }
       }
@@ -1959,6 +2175,12 @@
             "state": "translated",
             "value": "Mohon konfirmasi"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "దయచేసి నిర్ధారించండి"
+          }
         }
       }
     },
@@ -2011,6 +2233,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Untuk menggunakan OnlyTrusted, Anda harus meninjau dan mengkonfirmasi hal berikut."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OnlyTrusted ఉపయోగించడానికి, మీరు కింది వాటిని సమీక్షించి నిర్ధారించాలి."
           }
         }
       }
@@ -2065,6 +2293,12 @@
             "state": "translated",
             "value": "Saya dewasa"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నేను వయోజనుడిని"
+          }
         }
       }
     },
@@ -2117,6 +2351,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saya berusia 18 tahun atau lebih."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నేను 18 ఏళ్ళు లేదా అంతకంటే ఎక్కువ."
           }
         }
       }
@@ -2171,6 +2411,12 @@
             "state": "translated",
             "value": "Saya memiliki perangkat ini atau berwenang menggunakannya"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ పరికరం నాది లేదా దీనిని ఉపయోగించడానికి నాకు అధికారం ఉంది"
+          }
         }
       }
     },
@@ -2223,6 +2469,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saya berhak menggunakan dan mengkonfigurasi perangkat ini."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ పరికరాన్ని ఉపయోగించడానికి మరియు కాన్ఫిగర్ చేయడానికి నాకు హక్కు ఉంది."
           }
         }
       }
@@ -2277,6 +2529,12 @@
             "state": "translated",
             "value": "Saya telah membaca dan memahami batasan jujur"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నేను నిజాయితీ పరిమితులను చదివి అర్థం చేసుకున్నాను"
+          }
         }
       }
     },
@@ -2329,6 +2587,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Saya memahami apa yang bisa dan tidak bisa dilakukan OnlyTrusted, dan batasan di Android."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OnlyTrusted ఏమి చేయగలదు, ఏమి చేయలేదు, మరియు Android పై పరిమితుల గురించి నాకు తెలుసు."
           }
         }
       }
@@ -2383,6 +2647,12 @@
             "state": "translated",
             "value": "Saya konfirmasi dan lanjutkan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నేను నిర్ధారించి కొనసాగిస్తాను"
+          }
         }
       }
     },
@@ -2435,6 +2705,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kebijakan Privasi"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "గోప్యతా విధానం"
           }
         }
       }
@@ -2489,6 +2765,12 @@
             "state": "translated",
             "value": "Ketentuan Penggunaan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఉపయోగ నిబంధనలు"
+          }
         }
       }
     },
@@ -2541,6 +2823,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Klaim Jujur"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిజాయితీ ప్రకటనలు"
           }
         }
       }
@@ -2595,6 +2883,12 @@
             "state": "translated",
             "value": "Email Anda"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ ఇమెయిల్"
+          }
         }
       }
     },
@@ -2647,6 +2941,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Disimpan hanya di perangkat ini. OnlyTrusted tidak punya server, jadi email Anda tidak pernah dikirim ke mana pun."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ పరికరంపై మాత్రమే నిల్వ చేయబడింది. OnlyTrusted కి సర్వర్ లేదు, కాబట్టి మీ ఇమెయిల్ ఎక్కడికీ ప్రసారం చేయబడదు."
           }
         }
       }
@@ -2701,6 +3001,12 @@
             "state": "translated",
             "value": "anda@contoh.com"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "meeru@udaaharana.com"
+          }
         }
       }
     },
@@ -2753,6 +3059,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lanjut"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొనసాగించండి"
           }
         }
       }
@@ -2807,6 +3119,12 @@
             "state": "translated",
             "value": "Tetapkan PIN 4-6 digit"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4-6 అంకెల PIN ని సెట్ చేయండి"
+          }
         }
       }
     },
@@ -2859,6 +3177,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pembuka cadangan saat Passkey Anda tidak bisa digunakan. Di-hash dengan PBKDF2 (100k iterasi) — kami tidak bisa membacanya."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey ని ప్రదర్శించలేనప్పుడు బ్యాకప్ అన్‌లాక్. నిల్వ చేయడానికి ముందు PBKDF2 తో (100k iterations) హాష్ చేయబడింది — మేము దానిని చదవలేము."
           }
         }
       }
@@ -2913,6 +3237,12 @@
             "state": "translated",
             "value": "PIN 4-6 digit"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4-6 అంకెల PIN"
+          }
         }
       }
     },
@@ -2965,6 +3295,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Konfirmasi PIN"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN ని నిర్ధారించండి"
           }
         }
       }
@@ -3019,6 +3355,12 @@
             "state": "translated",
             "value": "Tetapkan PIN"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN సెట్ చేయండి"
+          }
         }
       }
     },
@@ -3071,6 +3413,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siapkan Passkey Anda"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ Passkey ని సెటప్ చేయండి"
           }
         }
       }
@@ -3125,6 +3473,12 @@
             "state": "translated",
             "value": "Wajah / sidik jari jadi pembuka utama Anda — anti-phishing, tidak perlu mengetik. Pakai Keystore / StrongBox perangkat keras; biometrik Anda tidak pernah keluar dari perangkat."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ముఖం / వేలిముద్ర మీ ప్రధాన అన్‌లాక్ అవుతుంది — ఫిషింగ్ నిరోధకం, టైప్ చేయవలసిన అవసరం లేదు. హార్డ్‌వేర్ Keystore / StrongBox ని ఉపయోగిస్తుంది; మీ బయోమెట్రిక్ ఈ పరికరం నుండి ఎప్పుడూ బయటకు రాదు."
+          }
         }
       }
     },
@@ -3177,6 +3531,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Siapkan Passkey"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey ని సెటప్ చేయండి"
           }
         }
       }
@@ -3231,6 +3591,12 @@
             "state": "translated",
             "value": "Pakai PIN saja"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN మాత్రమే ఉపయోగించండి"
+          }
         }
       }
     },
@@ -3283,6 +3649,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dasbor"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "డాష్‌బోర్డ్"
           }
         }
       }
@@ -3337,6 +3709,12 @@
             "state": "translated",
             "value": "Kontak"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సంప్రదింపులు"
+          }
         }
       }
     },
@@ -3389,6 +3767,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diblokir"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాక్ చేయబడినవి"
           }
         }
       }
@@ -3443,6 +3827,12 @@
             "state": "translated",
             "value": "Catatan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "లాగ్"
+          }
         }
       }
     },
@@ -3495,6 +3885,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pengaturan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సెట్టింగ్‌లు"
           }
         }
       }
@@ -3549,6 +3945,12 @@
             "state": "translated",
             "value": "Bahasa & Wilayah"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "భాష మరియు ప్రాంతం"
+          }
         }
       }
     },
@@ -3601,6 +4003,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pilih wilayah, negara, dan bahasa pilihan Anda."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ ప్రాంతం, దేశం మరియు ప్రాధాన్య భాషను ఎంచుకోండి."
           }
         }
       }
@@ -3655,6 +4063,12 @@
             "state": "translated",
             "value": "Wilayah"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రాంతం"
+          }
         }
       }
     },
@@ -3707,6 +4121,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Negara"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "దేశం"
           }
         }
       }
@@ -3761,6 +4181,12 @@
             "state": "translated",
             "value": "Bahasa aplikasi"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "యాప్ భాష"
+          }
         }
       }
     },
@@ -3813,6 +4239,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bahasa Inggris selalu tersedia."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఆంగ్లం ఎల్లప్పుడూ అందుబాటులో ఉంటుంది."
           }
         }
       }
@@ -3867,6 +4299,12 @@
             "state": "translated",
             "value": "⚠ Terjemahan menunggu peninjauan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⚠ అనువాదం సమీక్ష కోసం వేచి ఉంది"
+          }
         }
       }
     },
@@ -3919,6 +4357,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bahasa dipilih: %1$@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఎంచుకున్న భాష: %1$@"
           }
         }
       }
@@ -3973,6 +4417,12 @@
             "state": "translated",
             "value": "Beberapa layar diperbarui langsung; lainnya di pembukaan aplikasi berikutnya."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొన్ని స్క్రీన్‌లు వెంటనే నవీకరించబడతాయి; ఇతరులు తదుపరి యాప్ ప్రారంభంలో రిఫ్రెష్ అవుతాయి."
+          }
         }
       }
     },
@@ -4025,6 +4475,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Sinyal darurat"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] సహాయ సంకేతం"
           }
         }
       }
@@ -4079,6 +4535,12 @@
             "state": "translated",
             "value": "[REVIEW] Kirim sinyal darurat"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] సహాయ సంకేతం పంపండి"
+          }
         }
       }
     },
@@ -4131,6 +4593,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Mengirim dalam %1$d…"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] %1$d లో పంపబడుతోంది…"
           }
         }
       }
@@ -4185,6 +4653,12 @@
             "state": "translated",
             "value": "[REVIEW] Batal"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] రద్దు చేయండి"
+          }
         }
       }
     },
@@ -4237,6 +4711,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] SOS dikirim ke %1$d kontak."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] SOS %1$d పరిచయస్థులకు పంపబడింది."
           }
         }
       }
@@ -4291,6 +4771,12 @@
             "state": "translated",
             "value": "[REVIEW] TOLONG — saya butuh bantuan segera."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] సహాయం — నాకు అత్యవసర సహాయం అవసరం."
+          }
         }
       }
     },
@@ -4343,6 +4829,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Lokasi saya saat ini: %1$@"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] నా ప్రస్తుత స్థానం: %1$@"
           }
         }
       }
@@ -4397,6 +4889,12 @@
             "state": "translated",
             "value": "[REVIEW] Brankas umpan terbuka. SOS senyap dikirim."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] డికాయ్ వాల్ట్ తెరవబడింది. నిశ్శబ్ద SOS పంపబడింది."
+          }
         }
       }
     },
@@ -4449,6 +4947,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Diperpanjang otomatis dengan harga yang ditampilkan. Batalkan kapan saja di Langganan Google Play."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] చూపిన ధరకు స్వయంచాలకంగా పునరుద్ధరించబడుతుంది. Google Play సభ్యత్వాల్లో ఎప్పుడైనా రద్దు చేయండి."
           }
         }
       }
@@ -4503,6 +5007,12 @@
             "state": "translated",
             "value": "[REVIEW] OnlyTrusted tidak punya server. Semua tetap di perangkat ini."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] OnlyTrusted కి సర్వర్ లేదు. అన్నీ ఈ పరికరంపై ఉంటాయి."
+          }
         }
       }
     },
@@ -4555,6 +5065,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selamat datang"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "స్వాగతం"
           }
         }
       }
@@ -4609,6 +5125,12 @@
             "state": "translated",
             "value": "Selamat pagi"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "శుభోదయం"
+          }
         }
       }
     },
@@ -4661,6 +5183,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Selamat siang"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "శుభ మధ్యాహ్నం"
           }
         }
       }
@@ -4715,6 +5243,12 @@
             "state": "translated",
             "value": "Selamat malam"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "శుభ సాయంత్రం"
+          }
         }
       }
     },
@@ -4767,6 +5301,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Perlindungan aktif"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సురక్ష సక్రియంగా ఉంది"
           }
         }
       }
@@ -4821,6 +5361,12 @@
             "state": "translated",
             "value": "Perlu pengaturan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సెటప్ అవసరం"
+          }
         }
       }
     },
@@ -4873,6 +5419,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hampir selesai"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "దాదాపు పూర్తయింది"
           }
         }
       }
@@ -4927,6 +5479,12 @@
             "state": "translated",
             "value": "Hanya kontak tepercaya yang bisa menghubungi Anda."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ విశ్వసనీయ పరిచయస్థులు మాత్రమే మిమ్మల్ని చేరుకోగలరు."
+          }
         }
       }
     },
@@ -4979,6 +5537,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tambahkan kontak tepercaya untuk mulai."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించడానికి విశ్వసనీయ పరిచయస్థులను జోడించండి."
           }
         }
       }
@@ -5033,6 +5597,12 @@
             "state": "translated",
             "value": "Aktifkan \"Bisukan panggilan di luar brankas\" untuk mulai."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ప్రారంభించడానికి «వాల్ట్‌లో లేని కాల్‌లను నిశ్శబ్దం చేయండి» ఆన్ చేయండి."
+          }
         }
       }
     },
@@ -5085,6 +5655,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kontak\ntepercaya"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విశ్వసనీయ\nపరిచయస్థులు"
           }
         }
       }
@@ -5139,6 +5715,12 @@
             "state": "translated",
             "value": "Kontak\npenipuan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మోసపూరిత\nపరిచయస్థులు"
+          }
         }
       }
     },
@@ -5191,6 +5773,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diblokir"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాక్ చేయబడింది"
           }
         }
       }
@@ -5245,6 +5833,12 @@
             "state": "translated",
             "value": "Hari ini · %1$d minggu ini"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈరోజు · ఈ వారం %1$d"
+          }
         }
       }
     },
@@ -5297,6 +5891,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tambahkan kontak tepercaya dulu"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ముందుగా ఒక విశ్వసనీయ పరిచయస్థుడిని జోడించండి"
           }
         }
       }
@@ -5351,6 +5951,12 @@
             "state": "translated",
             "value": "[REVIEW] Tombol SOS memberi tahu semua kontak tepercaya Anda. Tambahkan setidaknya satu di tab Kontak untuk menggunakannya."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] SOS బటన్ మీ అన్ని విశ్వసనీయ పరిచయస్థులను హెచ్చరిస్తుంది. దీన్ని ఉపయోగించడానికి సంప్రదింపులు ట్యాబ్‌లో కనీసం ఒకరిని జోడించండి."
+          }
         }
       }
     },
@@ -5403,6 +6009,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Buka Kontak"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సంప్రదింపులను తెరవండి"
           }
         }
       }
@@ -5457,6 +6069,12 @@
             "state": "translated",
             "value": "[REVIEW] Keluar dari mode paksaan?"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] ఒత్తిడి మోడ్ నుండి నిష్క్రమించాలా?"
+          }
         }
       }
     },
@@ -5509,6 +6127,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Anda akan kembali ke layar kunci. Buka dengan kredensial asli untuk melihat brankas asli."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] మీరు లాక్ స్క్రీన్‌కి తిరిగి వెళ్తారు. నిజమైన వాల్ట్‌ను చూడటానికి మీ నిజమైన ఆధారాలతో అన్‌లాక్ చేయండి."
           }
         }
       }
@@ -5563,6 +6187,12 @@
             "state": "translated",
             "value": "Keluar"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిష్క్రమించండి"
+          }
         }
       }
     },
@@ -5615,6 +6245,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aksi cepat"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "త్వరిత చర్యలు"
           }
         }
       }
@@ -5669,6 +6305,12 @@
             "state": "translated",
             "value": "Kontak darurat"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అత్యవసర పరిచయం"
+          }
         }
       }
     },
@@ -5721,6 +6363,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manual atau dari Kontak"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మాన్యువల్ లేదా సంప్రదింపుల నుండి"
           }
         }
       }
@@ -5775,6 +6423,12 @@
             "state": "translated",
             "value": "Blokir nomor"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నంబర్ బ్లాక్ చేయండి"
+          }
         }
       }
     },
@@ -5827,6 +6481,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blokir panggilan & pesan tidak diinginkan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "అవాంఛిత కాల్‌లు మరియు సందేశాలను బ్లాక్ చేయండి"
           }
         }
       }
@@ -5881,6 +6541,12 @@
             "state": "translated",
             "value": "Lihat log"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "లాగ్ చూడండి"
+          }
         }
       }
     },
@@ -5933,6 +6599,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lihat aktivitas yang baru diblokir"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇటీవల బ్లాక్ చేసిన కార్యకలాపాలను చూడండి"
           }
         }
       }
@@ -5987,6 +6659,12 @@
             "state": "translated",
             "value": "Minggu perlindungan Anda"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ సురక్షిత వారం"
+          }
         }
       }
     },
@@ -6039,6 +6717,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak ada aktivitas diblokir dalam 7 hari terakhir. Semua tenang."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "గత 7 రోజుల్లో బ్లాక్ చేసిన కార్యకలాపాలు లేవు. అంతా ప్రశాంతంగా ఉంది."
           }
         }
       }
@@ -6093,6 +6777,12 @@
             "state": "translated",
             "value": "Minggu ini kami memblokir %1$d panggilan dan %2$d pesan untuk Anda."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఈ వారం మేము మీ కోసం %1$d కాల్ మరియు %2$d సందేశాలను బ్లాక్ చేశాము."
+          }
         }
       }
     },
@@ -6145,6 +6835,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lihat laporan lengkap"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తి నివేదికను చూడండి"
           }
         }
       }
@@ -6199,6 +6895,12 @@
             "state": "translated",
             "value": "Tutup"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కొట్టివేయండి"
+          }
         }
       }
     },
@@ -6251,6 +6953,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pelajari lebih lanjut"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మరింత తెలుసుకోండి"
           }
         }
       }
@@ -6305,6 +7013,12 @@
             "state": "translated",
             "value": "Pengingat bulanan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నెలవారీ గుర్తింపు"
+          }
         }
       }
     },
@@ -6357,6 +7071,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Aplikasi ini tidak dapat memantau penggunaan mikrofon atau kamera oleh aplikasi lain."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] ఈ యాప్ ఇతర యాప్‌ల మైక్రోఫోన్ లేదా కెమెరా వినియోగాన్ని పర్యవేక్షించలేదు."
           }
         }
       }
@@ -6411,6 +7131,12 @@
             "state": "translated",
             "value": "Batasan jujur"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నిజాయితీ పరిమితులు"
+          }
         }
       }
     },
@@ -6463,6 +7189,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Aplikasi ini tidak dapat memantau penggunaan mikrofon atau kamera oleh aplikasi lain. Ketuk untuk melihat semua batasan platform."
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] ఈ యాప్ ఇతర యాప్‌ల మైక్రోఫోన్ లేదా కెమెరా వినియోగాన్ని పర్యవేక్షించలేదు. అన్ని ప్లాట్‌ఫారమ్ పరిమితులను చూడటానికి నొక్కండి."
           }
         }
       }
@@ -6517,6 +7249,12 @@
             "state": "translated",
             "value": "Selesai"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పూర్తయింది"
+          }
         }
       }
     },
@@ -6569,6 +7307,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mode tepercaya saja"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విశ్వసనీయులు మాత్రమే మోడ్"
           }
         }
       }
@@ -6623,6 +7367,12 @@
             "state": "translated",
             "value": "Bisukan panggilan di luar brankas"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వాల్ట్‌లో లేని కాల్‌లను నిశ్శబ్దం చేయండి"
+          }
         }
       }
     },
@@ -6675,6 +7425,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tandai SMS di luar brankas"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "వాల్ట్‌లో లేని SMS లను గుర్తించండి"
           }
         }
       }
@@ -6729,6 +7485,12 @@
             "state": "translated",
             "value": "Tidak ada hasil"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సరిపోలికలు లేవు"
+          }
         }
       }
     },
@@ -6781,6 +7543,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Belum ada kontak tepercaya"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంకా విశ్వసనీయ పరిచయస్థులు లేరు"
           }
         }
       }
@@ -6835,6 +7603,12 @@
             "state": "translated",
             "value": "Ketuk + untuk menambah yang pertama."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మొదటిదాన్ని జోడించడానికి + ని నొక్కండి."
+          }
         }
       }
     },
@@ -6887,6 +7661,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cari kontak tepercaya…"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విశ్వసనీయ పరిచయస్థులను వెతకండి…"
           }
         }
       }
@@ -6941,6 +7721,12 @@
             "state": "translated",
             "value": "Tambah kontak"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "పరిచయం జోడించండి"
+          }
         }
       }
     },
@@ -6993,6 +7779,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hapus %1$@?"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ని తొలగించాలా?"
           }
         }
       }
@@ -7047,6 +7839,12 @@
             "state": "translated",
             "value": "Ini menghapus kontak dan semua detail terenkripsi secara permanen."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇది పరిచయం మరియు దాని అన్ని ఎన్‌క్రిప్టెడ్ వివరాలను శాశ్వతంగా తొలగిస్తుంది."
+          }
         }
       }
     },
@@ -7099,6 +7897,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Hapus"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "తొలగించండి"
           }
         }
       }
@@ -7153,6 +7957,12 @@
             "state": "translated",
             "value": "Edit"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "సవరించండి"
+          }
         }
       }
     },
@@ -7205,6 +8015,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pemilik"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "యజమాని"
           }
         }
       }
@@ -7259,6 +8075,12 @@
             "state": "translated",
             "value": "Pemblokiran & Tidak Dikenal"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాకింగ్ మరియు తెలియనివారు"
+          }
         }
       }
     },
@@ -7311,6 +8133,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blokir sebuah nomor"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఒక నంబర్ బ్లాక్ చేయండి"
           }
         }
       }
@@ -7365,6 +8193,12 @@
             "state": "translated",
             "value": "Memuat ulang…"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మళ్ళీ లోడ్ అవుతోంది…"
+          }
         }
       }
     },
@@ -7417,6 +8251,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Daftar blokir Anda"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మీ బ్లాక్ జాబితా"
           }
         }
       }
@@ -7471,6 +8311,12 @@
             "state": "translated",
             "value": "Belum ada nomor ditambahkan. Ketuk + di atas untuk memblokir nomor spesifik di perangkat ini."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంకా నంబర్లు జోడించబడలేదు. ఈ పరికరంపై ఒక నిర్దిష్ట నంబర్‌ను బ్లాక్ చేయడానికి పైన + నొక్కండి."
+          }
         }
       }
     },
@@ -7523,6 +8369,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nomor"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "నంబర్"
           }
         }
       }
@@ -7577,6 +8429,12 @@
             "state": "translated",
             "value": "Label (opsional)"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "లేబుల్ (ఐచ్ఛికం)"
+          }
         }
       }
     },
@@ -7629,6 +8487,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Blokir panggilan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కాల్‌లు బ్లాక్ చేయండి"
           }
         }
       }
@@ -7683,6 +8547,12 @@
             "state": "translated",
             "value": "Blokir SMS"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMS బ్లాక్ చేయండి"
+          }
         }
       }
     },
@@ -7735,6 +8605,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tambahkan ke daftar blokir"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "బ్లాక్ జాబితాకు జోడించండి"
           }
         }
       }
@@ -7789,6 +8665,12 @@
             "state": "translated",
             "value": "Belum ada nomor diblokir."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ఇంకా బ్లాక్ చేసిన నంబర్లు లేవు."
+          }
         }
       }
     },
@@ -7842,6 +8724,12 @@
             "state": "translated",
             "value": "Panggilan"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కాల్‌లు"
+          }
         }
       }
     },
@@ -7891,6 +8779,12 @@
           }
         },
         "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SMS"
+          }
+        },
+        "te": {
           "stringUnit": {
             "state": "translated",
             "value": "SMS"
@@ -7948,6 +8842,12 @@
             "state": "translated",
             "value": "Log aktivitas"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "కార్యకలాప లాగ్"
+          }
         }
       }
     },
@@ -8000,6 +8900,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "[REVIEW] Rantai audit dirusak"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] ఆడిట్ గొలుసు మార్చబడింది"
           }
         }
       }
@@ -8054,6 +8960,12 @@
             "state": "translated",
             "value": "[REVIEW] Rantai hash log kejadian terputus. Suatu kejadian mungkin telah diedit."
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "[REVIEW] ఈవెంట్ లాగ్ హాష్ గొలుసు విచ్ఛిన్నమైంది. ఒక ఈవెంట్ సవరించబడి ఉండవచ్చు."
+          }
         }
       }
     },
@@ -8106,6 +9018,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tidak ada kejadian untuk ditampilkan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "చూపించడానికి ఈవెంట్‌లు లేవు"
           }
         }
       }
@@ -8160,6 +9078,12 @@
             "state": "translated",
             "value": "Tepercaya"
           }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "విశ్వసనీయమైనది"
+          }
         }
       }
     },
@@ -8212,6 +9136,12 @@
           "stringUnit": {
             "state": "translated",
             "value": "Laporkan penipuan"
+          }
+        },
+        "te": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "మోసాన్ని నివేదించండి"
           }
         }
       }

@@ -26,7 +26,7 @@ import java.util.Locale
 object LocaleManager {
 
     /** Locales we actually ship translated strings for. English always first. */
-    val SHIPPED_LANGUAGES: List<String> = listOf("en", "es", "fr", "pt", "hi", "ar", "de", "id")
+    val SHIPPED_LANGUAGES: List<String> = listOf("en", "es", "fr", "pt", "hi", "ar", "de", "id", "te")
 
     data class Country(
         val code: String,

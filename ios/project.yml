@@ -7,6 +7,13 @@ options:
   developmentLanguage: en
   xcodeVersion: "26.0"
 
+# The 9 shipped locales (en + 8 others) are declared inside
+# OnlyTrusted/Resources/Localization/Localizable.xcstrings and the Android
+# resourceConfigurations list in android/app/build.gradle.kts. Xcode
+# compiles the .xcstrings into per-locale .strings files at build time, so
+# the project-level knownRegions doesn't need to list every locale — the
+# OS resolves locale from the bundle's compiled <lang>.lproj dirs.
+
 settings:
   base:
     SWIFT_VERSION: "6.0"

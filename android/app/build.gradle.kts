@@ -29,7 +29,7 @@ android {
         // res/xml/locales_config.xml and the values-<lang>/strings.xml dirs.
         // Any locale not in this list is stripped from the final build regardless
         // of whether a sibling resource exists.
-        resourceConfigurations += listOf("en", "es", "fr", "pt", "hi", "ar", "de", "id")
+        resourceConfigurations += listOf("en", "es", "fr", "pt", "hi", "ar", "de", "id", "te")
     }
 
     // Release signing config. Only wired up when the four environment
