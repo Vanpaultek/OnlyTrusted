@@ -120,7 +120,7 @@ jobs:
           subject-path: ${{ steps.locate.outputs.aab_path }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: android-release
           path: |
@@ -176,7 +176,7 @@ jobs:
           subject-path: ${{ steps.pack.outputs.ipa_path }}
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ios-release
           path: ${{ runner.temp }}/OnlyTrusted-${{ env.RELEASE_TAG }}-unsigned.ipa
