@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+  OnlyTrusted email template — base skeleton.
+
+  Visual language mirrors docs/guide/index.html:
+    - Dark #0B1F2D background with lakescape backdrop
+    - Manrope Bold for headings, DM Sans for body
+    - Teal accent #00D1C1
+    - Rounded pills for footer links
+    - Zero-cloud footer badge
+
+  Email clients strip <style> tags inconsistently, so every rule is
+  inlined on the elements that need it. Keep this file as the
+  reference; new templates should start from here and overwrite only
+  the content block.
+
+  Placeholders use {{double-brace}} and should be substituted by the
+  sender (SES, SendGrid, Postmark, or an in-app Mail composer).
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{subject}}</title>
+</head>
+<body style="margin:0; padding:0; background:#0B1F2D; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased;">
+  <!-- Mountain-lake backdrop wrapper. 100% viewport dark; email clients that
+       don't load remote images fall back to the solid dark bg. -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+         style="background:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%), url('https://onlytrusted.app/email-backdrop.jpg'); background-size:cover; background-position:center;">
+    <tr>
+      <td align="center" style="padding:40px 16px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+               style="max-width:600px; width:100%; background:rgba(30,42,58,0.68); border:1px solid rgba(0,209,193,0.18); border-radius:18px; overflow:hidden;">
+
+          <!-- Brand bar -->
+          <tr>
+            <td style="padding:28px 32px 20px 32px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="left" style="font-family:'Manrope', sans-serif; font-weight:800; font-size:22px; letter-spacing:-0.4px; color:#F4FAFC;">
+                    <span style="color:#F4FAFC;">Only</span><span style="color:#00D1C1;">Trusted</span>
+                  </td>
+                  <td align="right" style="font-family:'DM Sans', sans-serif; font-size:11px; color:#8FA5B2; letter-spacing:1.5px; text-transform:uppercase;">
+                    Zero cloud · Zero account
+                  </td>
+                </tr>
+              </table>
+              <div style="height:1px; background:rgba(0,209,193,0.28); margin-top:18px;"></div>
+            </td>
+          </tr>
+
+          <!-- ============================================================
+               CONTENT BLOCK — overridden per template. Lead with an
+               eyebrow, then an H1, then body paragraphs. Add primary
+               CTA button via the macro below.
+               ============================================================ -->
+          <tr>
+            <td style="padding:8px 32px 32px 32px; font-family:'DM Sans', sans-serif; color:#B6C9D2; font-size:15px; line-height:1.6;">
+              <div style="font-size:11px; letter-spacing:2px; font-weight:800; color:#00D1C1; text-transform:uppercase; margin-bottom:10px;">
+                {{eyebrow}}
+              </div>
+              <h1 style="font-family:'Manrope', sans-serif; font-weight:800; font-size:30px; letter-spacing:-1px; color:#F4FAFC; margin:0 0 18px 0; line-height:1.2;">
+                {{heading}}
+              </h1>
+              <p style="margin:0 0 16px 0;">
+                {{body_paragraph_1}}
+              </p>
+              <p style="margin:0 0 16px 0;">
+                {{body_paragraph_2}}
+              </p>
+
+              <!-- Primary CTA pill -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 8px 0;">
+                <tr>
+                  <td style="background:#00D1C1; border-radius:50px;">
+                    <a href="{{cta_url}}" style="display:inline-block; padding:14px 28px; font-family:'Manrope', sans-serif; font-weight:700; font-size:15px; color:#0B1F2D; text-decoration:none; letter-spacing:-0.2px;">
+                      {{cta_label}}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Secondary notes / disclaimers inside content -->
+              <p style="margin:16px 0 0 0; font-size:13px; color:#8FA5B2;">
+                {{secondary_note}}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Under-all-conditions legal rail -->
+          <tr>
+            <td style="padding:0 32px 20px 32px;">
+              <div style="background:rgba(11,31,45,0.6); border:1px solid rgba(182,201,210,0.14); border-radius:14px; padding:18px 20px;">
+                <div style="font-family:'Manrope', sans-serif; font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8FA5B2; margin-bottom:10px;">
+                  Under all conditions
+                </div>
+                <p style="margin:0 0 10px 0; font-family:'DM Sans', sans-serif; font-size:13px; color:#B6C9D2; line-height:1.55;">
+                  OnlyTrusted stores all app data on your device. We do not operate a backend that holds your contacts, messages, call logs, PIN, or Passkey. Account recovery is therefore device-bound — losing the device loses the data. This email itself is the only remote channel we use, and it is sent only in response to actions you took in the app.
+                </p>
+                <p style="margin:0; font-family:'DM Sans', sans-serif; font-size:13px; color:#B6C9D2; line-height:1.55;">
+                  Features labeled Premium, Pro, or Elite require a subscription. iOS limitations prevent OnlyTrusted from monitoring other apps, your microphone, or your camera; the orange and green dots in your status bar are Apple's answer for that.
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Legal + resource link rail -->
+          <tr>
+            <td style="padding:0 32px 24px 32px;" align="center">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:4px 6px;">
+                    <a href="https://onlytrusted.app/legal/privacy" style="display:inline-block; padding:8px 14px; border:1px solid rgba(182,201,210,0.14); border-radius:50px; background:rgba(30,42,58,0.5); font-family:'DM Sans', sans-serif; font-size:12px; color:#B6C9D2; text-decoration:none;">
+                      Privacy Policy
+                    </a>
+                  </td>
+                  <td style="padding:4px 6px;">
+                    <a href="https://onlytrusted.app/legal/terms" style="display:inline-block; padding:8px 14px; border:1px solid rgba(182,201,210,0.14); border-radius:50px; background:rgba(30,42,58,0.5); font-family:'DM Sans', sans-serif; font-size:12px; color:#B6C9D2; text-decoration:none;">
+                      Terms of Use
+                    </a>
+                  </td>
+                  <td style="padding:4px 6px;">
+                    <a href="https://onlytrusted.app/legal/honest-claims" style="display:inline-block; padding:8px 14px; border:1px solid rgba(182,201,210,0.14); border-radius:50px; background:rgba(30,42,58,0.5); font-family:'DM Sans', sans-serif; font-size:12px; color:#B6C9D2; text-decoration:none;">
+                      Honest Claims
+                    </a>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:4px 6px;">
+                    <a href="https://onlytrusted.app/guide" style="display:inline-block; padding:8px 14px; border:1px solid rgba(0,209,193,0.28); border-radius:50px; background:rgba(0,209,193,0.08); font-family:'DM Sans', sans-serif; font-size:12px; color:#4FE3DF; text-decoration:none; font-weight:600;">
+                      User Guide
+                    </a>
+                  </td>
+                  <td style="padding:4px 6px;">
+                    <a href="https://apps.apple.com/app/onlytrusted?action=write-review" style="display:inline-block; padding:8px 14px; border:1px solid rgba(0,209,193,0.28); border-radius:50px; background:rgba(0,209,193,0.08); font-family:'DM Sans', sans-serif; font-size:12px; color:#4FE3DF; text-decoration:none; font-weight:600;">
+                      ★ Rate on App Store
+                    </a>
+                  </td>
+                  <td style="padding:4px 6px;">
+                    <a href="https://play.google.com/store/apps/details?id=com.onlytrusted.app&showAllReviews=true" style="display:inline-block; padding:8px 14px; border:1px solid rgba(0,209,193,0.28); border-radius:50px; background:rgba(0,209,193,0.08); font-family:'DM Sans', sans-serif; font-size:12px; color:#4FE3DF; text-decoration:none; font-weight:600;">
+                      ★ Rate on Play Store
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px 28px 32px; background:rgba(11,31,45,0.75); border-top:1px solid rgba(182,201,210,0.08);">
+              <p style="margin:0 0 8px 0; font-family:'DM Sans', sans-serif; font-size:12px; color:#8FA5B2; line-height:1.5;">
+                You received this email because you created an OnlyTrusted account on this address or took an action in the app that requires an email confirmation. We never add anyone to a marketing list.
+              </p>
+              <p style="margin:0 0 8px 0; font-family:'DM Sans', sans-serif; font-size:12px; color:#8FA5B2; line-height:1.5;">
+                <a href="https://onlytrusted.app/unsubscribe?token={{unsubscribe_token}}" style="color:#8FA5B2; text-decoration:underline;">Unsubscribe from this type of email</a> ·
+                <a href="mailto:admin@vanpaultek.com" style="color:#8FA5B2; text-decoration:underline;">Contact support</a>
+              </p>
+              <p style="margin:0; font-family:'DM Sans', sans-serif; font-size:11px; color:#6D808B; line-height:1.5;">
+                VanPaulTek Inc · admin@vanpaultek.com<br>
+                © 2026 VanPaulTek Inc. OnlyTrusted is a VanPaulTek product. Licensed under AGPL-3.0 — <a href="https://github.com/Vanpaultek/OnlyTrusted" style="color:#6D808B; text-decoration:underline;">source on GitHub</a>.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

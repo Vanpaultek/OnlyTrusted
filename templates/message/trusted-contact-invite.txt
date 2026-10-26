@@ -1,0 +1,28 @@
+OnlyTrusted — invite a contact to be a Trusted Contact.
+Sent when the owner adds someone to their Trusted Contacts list and asks the app to notify them. Delivered via SMS or WhatsApp Share Intent.
+
+Placeholders: {{owner_name}} {{relation}} {{app_store_link}}
+
+----- MESSAGE BODY (SMS, keep under 320 chars) -----
+
+Hi — this is {{owner_name}}. I added you as a Trusted Contact on OnlyTrusted, a private safety app on my phone. You now get through my call/SMS filter, and if I ever trigger an SOS you'll get an alert with my approximate location.
+
+You don't need to install anything. If you want the app yourself: {{app_store_link}}
+
+Guide: onlytrusted.app/guide#trusted-contacts
+
+----- WHATSAPP VARIANT (longer, Markdown allowed) -----
+
+Hi — this is *{{owner_name}}* 👋
+
+I just added you as a *Trusted Contact* on OnlyTrusted, a private safety app I use.
+
+What this means for you:
+• My phone no longer silences your calls or texts.
+• If I ever trigger an SOS from inside the app, you'll get a one-shot alert with my approximate location.
+• You don't have to install anything. OnlyTrusted runs entirely on my phone — zero cloud, zero account.
+
+Relationship I set in the app: {{relation}}
+
+If you want OnlyTrusted on your own phone: {{app_store_link}}
+Full user guide: https://onlytrusted.app/guide

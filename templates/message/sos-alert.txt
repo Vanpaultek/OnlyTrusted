@@ -1,0 +1,16 @@
+OnlyTrusted — SOS alert.
+Sent to all Trusted Contacts when the SOS button is pressed and the 3-second countdown completes.
+
+Placeholders: {{owner_name}} {{timestamp}} {{approx_location_url}}
+
+----- MESSAGE BODY (max 320 chars so it fits two SMS segments) -----
+
+⚠️ OnlyTrusted SOS from {{owner_name}}: triggered at {{timestamp}}. Approx. location: {{approx_location_url}}. If you can't reach them, call 911. Guide: onlytrusted.app/guide#sos
+
+----- NOTES -----
+
+- Carriers may split long SMS into multiple segments. The body is intentionally under 320 chars (2 segments at 160 each on GSM-7, or 1 segment on UCS-2 if emoji present pushes to UCS-2).
+- The ⚠️ emoji forces UCS-2 encoding — 1 segment is 70 chars. Keep the body short.
+- Location is a short URL (goo.gl / app-signed URL) rather than coordinates for readability.
+- The "onlytrusted.app/guide#sos" link lets the recipient read what SOS means + what to do, even if they've never heard of OnlyTrusted.
+- Rate / review links are intentionally omitted — this is a safety message, not a marketing moment.

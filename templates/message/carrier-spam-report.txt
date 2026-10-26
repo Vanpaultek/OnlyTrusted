@@ -1,0 +1,16 @@
+OnlyTrusted — carrier spam report.
+Sent via the Call Directory Extension's "Report as spam" flow to the carrier's spam-report shortcode (e.g. US 7726 / UK 7726 / IN 1909). The user picks "Report to carrier" from the Blocked tab's call row.
+
+Placeholders: {{spam_phone_number}} {{report_timestamp}}
+
+----- MESSAGE BODY (short — carriers truncate at ~140 chars) -----
+
+{{spam_phone_number}}
+
+----- NOTES -----
+
+- Most carriers expect just the phone number in the body — they match the reporter's number against known-spam databases.
+- Some carriers accept "SPAM <number>" or "JUNK <number>" — the Blocked tab's Call row sends whichever format the user's carrier is configured for.
+- OnlyTrusted does NOT send the user's identity or the full call log — only the 10- or 11-digit number being reported.
+- The carrier handles the message silently; the user does not receive a reply SMS.
+- Guide: onlytrusted.app/guide#carrier-spam-report (shown in the Blocked tab UI, not in the sent SMS).

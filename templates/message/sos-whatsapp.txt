@@ -1,0 +1,22 @@
+OnlyTrusted — SOS alert (WhatsApp variant).
+Sent via WhatsApp Share Intent / wa.me link when SOS triggers. WhatsApp has no segment limit so this version is longer + richer.
+
+Placeholders: {{owner_name}} {{timestamp}} {{approx_location_url}} {{maps_coords}}
+
+----- MESSAGE BODY -----
+
+🚨 *OnlyTrusted SOS from {{owner_name}}*
+
+Triggered: {{timestamp}}
+Approx. location: {{approx_location_url}}
+Coordinates: {{maps_coords}}
+
+If you can't reach them within 60 seconds, call local emergency services (911 US, 999 UK, 112 EU, 108 IN).
+
+What this is: {{owner_name}} is using OnlyTrusted, a private safety app on their device. They triggered an SOS from inside the app. The location is a best-effort snapshot — accuracy depends on GPS at the moment of trigger.
+
+What this is NOT: a tracker. OnlyTrusted does not continuously share location. This message is a one-shot distress signal, not a stream.
+
+More context: https://onlytrusted.app/guide#sos
+
+— Sent via OnlyTrusted (VanPaulTek Inc)

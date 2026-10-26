@@ -1,0 +1,16 @@
+OnlyTrusted — PIN reset verification code (device-local).
+Shown as an in-app toast / banner (NOT sent as SMS). Rendered when the user starts a PIN reset flow and needs to verify device presence with a one-time code before Passkey biometric kicks in.
+
+Placeholders: {{reset_code}} {{expires_in_minutes}}
+
+----- SHOWN IN APP -----
+
+Your OnlyTrusted PIN reset code is {{reset_code}}. Enter it to continue. It expires in {{expires_in_minutes}} minutes.
+
+----- NOTES -----
+
+- OnlyTrusted does not operate a server. This code is NEVER sent over SMS, email, or any network — it's generated on-device, shown on-device, verified on-device.
+- The purpose of the code is to force the user to physically see the device screen before the Passkey biometric prompt — defends against the attacker who has the device unlocked but hopes to brute-force a PIN change in the background.
+- If the user requested a PIN reset, they confirm the code they see on screen matches the one the reset flow asked them to type (in a separate app, e.g. Notes, or on paper). This is intentional friction.
+- For the EMAIL counterpart that gets sent after a successful reset, see email/pin-reset.html.
+- Guide: onlytrusted.app/guide#pin-reset

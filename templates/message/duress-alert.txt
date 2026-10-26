@@ -1,0 +1,15 @@
+OnlyTrusted — Duress alert.
+Sent to Trusted Contacts when the duress PIN is entered (silent coercion signal — the attacker thinks they unlocked the phone but a duress message was dispatched covertly).
+
+Placeholders: {{owner_name}} {{timestamp}}
+
+----- MESSAGE BODY (SMS, kept short — covert channel) -----
+
+⚠️ OnlyTrusted DURESS ALERT from {{owner_name}}: duress unlock triggered at {{timestamp}}. If you weren't expecting this, call them or 911.
+
+----- NOTES -----
+
+- Intentionally short + non-descriptive so the device owner can plausibly deny if the attacker sees the sent message in the Messages app history.
+- No location in this one (unlike SOS) — adding a map link makes it obvious to the attacker that a safety app was involved.
+- The word "DURESS" is deliberately plain English so a trained Trusted Contact knows exactly what it means.
+- Guide link omitted here (would signal to the attacker). Trusted Contacts learn what to do with duress alerts when they're first set up via the trusted-contact-invite.txt flow.
