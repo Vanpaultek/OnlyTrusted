@@ -34,8 +34,15 @@ with the same Python + ffmpeg + fonts.
 cd tools/video
 
 # 1. One-time setup
-pip install Pillow                      # anywhere Python 3.9+ is
-brew install ffmpeg                     # macOS; apt install ffmpeg on Linux
+#    libraqm/fribidi are REQUIRED for complex-script shaping (Telugu, Hindi,
+#    Arabic). Without them, non-Latin text renders as empty boxes even if the
+#    font has the glyphs. See the "Complex-script rendering" section below.
+brew install ffmpeg libraqm fribidi     # macOS
+# apt install ffmpeg libraqm0 libfribidi0  # Linux
+pip install --force-reinstall --no-binary=:all: Pillow
+
+# Verify raqm support ships with Pillow:
+python3 -c "from PIL import features; assert features.check('raqm')"
 
 # 2. Capture real app screens (interactive — see capture_screens.sh)
 ./capture_screens.sh
@@ -48,6 +55,32 @@ for lang in en es fr pt hi ar de id te; do
     python3 build_video.py --lang $lang --video
 done
 ```
+
+## Complex-script rendering (Telugu, Hindi, Arabic)
+
+Pillow's default build (`pip install Pillow`) is linked against FreeType
+only — it can rasterize individual glyphs but doesn't do OpenType shaping,
+which Telugu / Hindi / Arabic require for conjuncts, combining marks, and
+RTL bidi. Without libraqm, non-Latin text renders as empty boxes even when
+the font has every glyph.
+
+The fix: install `libraqm` + `fribidi` at the system level, then rebuild
+Pillow from source with `--no-binary=:all:` so the build links against
+them. Verify with `python3 -c "from PIL import features; print(features.check('raqm'))"`
+— should print `True`.
+
+Already handled in the generator:
+  - RTL (Arabic): `direction='rtl'` + `anchor='ra'` so text right-anchors
+    inside the panel and bidi + Arabic ligatures resolve correctly.
+  - Mixed-script fonts for Hindi + Telugu: Devanagari Sangam MN + Telugu
+    Sangam MN carry both local script AND Latin glyphs, so lines like
+    "3 सेकंड, स्थान SMS + WhatsApp" render in a single pass without
+    tofu where English words appear inside the local text.
+  - Separator choice: use `, ` (comma + space) not `→` or ` · ` for
+    inter-phrase separators. Arrows + middle dots sometimes break
+    cluster resolution adjacent to a virama (observed with Telugu
+    virama + middle dot pair rendering as a tofu box even with a font
+    that has the dot glyph).
 
 Outputs land at `output/OnlyTrusted_Real_UI_<lang>.mp4` + matching
 `OnlyTrusted_<lang>.vtt` caption tracks.
