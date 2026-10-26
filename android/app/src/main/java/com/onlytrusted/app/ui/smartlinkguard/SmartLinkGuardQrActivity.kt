@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 VanPaulTek Inc
 // SPDX-License-Identifier: AGPL-3.0-or-later
+@file:androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
 package com.onlytrusted.app.ui.smartlinkguard
 
 import android.Manifest
@@ -14,6 +15,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -200,6 +202,12 @@ private fun CameraPreview(onDetected: (String) -> Unit) {
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also {
+                        // ImageProxy.image is annotated @ExperimentalGetImage upstream;
+                        // we need the raw Image to hand to ML Kit's InputImage factory.
+                        // This is Google's documented pattern for ML Kit + CameraX.
+                        // File-level @OptIn at the top of the file acknowledges the
+                        // experimental API — expression-level @OptIn is a Kotlin
+                        // compile error.
                         it.setAnalyzer(executor) { proxy ->
                             val mediaImage = proxy.image
                             if (mediaImage == null || fired) {

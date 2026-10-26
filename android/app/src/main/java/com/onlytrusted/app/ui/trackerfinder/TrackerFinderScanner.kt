@@ -3,6 +3,7 @@
 package com.onlytrusted.app.ui.trackerfinder
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
@@ -87,8 +88,11 @@ class TrackerFinderScanner(
         // We don't restrict by filter — payload-level classification needs to see every
         // advertisement so we can identify mfr-data-only trackers. For the Tile service
         // UUID filter we could narrow but then unknown-BLE wouldn't surface.
+        // Suppress: hasRequiredPermissions(context) above gates every call site; the
+        // try/catch below handles the lint-contract SecurityException escape anyway.
         try {
-            scanner.startScan(null, settings, callback)
+            @SuppressLint("MissingPermission")
+            val _ignored = scanner.startScan(null, settings, callback)
             isScanning = true
             return true
         } catch (t: Throwable) {
@@ -101,8 +105,12 @@ class TrackerFinderScanner(
         if (!isScanning) return
         val adapter = BluetoothAdapter.getDefaultAdapter()
             ?: (context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager)?.adapter
+        // Suppress: stop() is only reachable after start() returned true, which can
+        // only happen if hasRequiredPermissions(context) was true. The permission can
+        // only have been revoked by the user mid-session; try/catch handles that race.
         try {
-            adapter?.bluetoothLeScanner?.stopScan(callback)
+            @SuppressLint("MissingPermission")
+            val _ignored = adapter?.bluetoothLeScanner?.stopScan(callback)
         } catch (_: Throwable) { /* ignore */ }
         isScanning = false
         onFinished(detections)
@@ -112,7 +120,12 @@ class TrackerFinderScanner(
         val record = result.scanRecord ?: return
         val localName = record.deviceName
             ?: runCatching {
-                if (hasConnectPermission(context)) result.device?.name else null
+                // Suppress: hasConnectPermission(context) IS the runtime check lint
+                // wants — it just can't see through the helper to the inlined
+                // ContextCompat.checkSelfPermission call.
+                @SuppressLint("MissingPermission")
+                val name = if (hasConnectPermission(context)) result.device?.name else null
+                name
             }.getOrNull()
         val serviceUUIDs: List<ParcelUuid> = record.serviceUuids ?: emptyList()
 
