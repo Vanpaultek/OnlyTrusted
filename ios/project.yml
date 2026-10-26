@@ -38,6 +38,16 @@ targets:
       # trying to compile them. Keep tightly scoped to the four shipping files.
       - path: OnlyTrusted/Data
         type: folder
+      # i18n resources (v0.3.4+). Localizable.xcstrings is the Apple String
+      # Catalog with 155 keys × 8 locales — SwiftUI auto-resolves Text("key")
+      # lookups against it at render time. countries.json backs the Settings →
+      # Language & Region picker's region/country/language cascade.
+      # Were previously hand-added to pbxproj and silently dropped the first
+      # time xcodegen regenerated — causing the UI to render raw string keys
+      # like "dash_welcome" instead of resolved values. project.yml is the
+      # source of truth so this can't happen again.
+      - path: OnlyTrusted/Resources/Localization/Localizable.xcstrings
+      - path: OnlyTrusted/Resources/Localization/countries.json
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.onlytrusted.app
