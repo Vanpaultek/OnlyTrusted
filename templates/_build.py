@@ -57,19 +57,18 @@ HEAD = '''<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{title}</title>
 </head>
-<body style="margin:0; padding:0; background:#0B1F2D; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased;">
-  <!-- Full-page backdrop: the SplashHero (shield + mountain-lake) fills the
-       whole canvas, with a dark gradient over it for text contrast. Base64
-       inlined so it renders in local preview AND in clients that keep CSS
-       backgrounds (Apple Mail, iOS Mail, Thunderbird, Yahoo). Gmail web /
-       Outlook strip the url() — the dark #0B1F2D fallback is still correct. -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B1F2D"
-         background="{bg_uri}"
-         style="background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.72) 0%, rgba(11,31,45,0.88) 60%, rgba(11,31,45,0.96) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat;">
-    <tr><td align="center" style="padding:40px 16px;">
-      <!-- Email card, 640 wide, matches the user guide's content column.
-           Semi-transparent fill so the SplashHero shows through at the edges. -->
-      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px; width:100%; background:rgba(15,36,54,0.84); border:1px solid rgba(0,209,193,0.22); border-radius:20px; overflow:hidden;">
+<!-- Full-page backdrop: the SplashHero (shield + mountain-lake scene) fills
+       the body background, lightly darkened for text contrast. Base64 inlined
+       so it renders in local preview AND in clients that keep CSS backgrounds
+       (Apple Mail, iOS Mail, Thunderbird, Yahoo). Gmail web / Outlook strip
+       the url() — the dark #0B1F2D color fallback keeps the layout correct. -->
+<body style="margin:0; padding:0; background-color:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,0.35) 0%, rgba(11,31,45,0.55) 55%, rgba(11,31,45,0.80) 100%), url('{bg_uri}'); background-size:cover; background-position:center top; background-repeat:no-repeat; background-attachment:fixed; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased; min-height:100vh;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="{bg_uri}">
+    <tr><td align="center" style="padding:48px 20px;">
+      <!-- Email card, 580 wide (narrower than the backdrop so the SplashHero
+           reads around the edges). Semi-transparent fill with a subtle teal
+           border + drop shadow so the dark card floats over the scene. -->
+      <table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="max-width:580px; width:100%; background:rgba(15,36,54,0.86); border:1px solid rgba(0,209,193,0.22); border-radius:20px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
 
         <!-- Brand bar: 44x44 logo + wordmark on the left, zero-cloud eyebrow on the right. -->
         <tr><td style="padding:22px 28px 18px 28px;">
