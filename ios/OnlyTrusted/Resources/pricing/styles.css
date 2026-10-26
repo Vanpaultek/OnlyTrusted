@@ -1,0 +1,807 @@
+/* SPDX-FileCopyrightText: 2026 VanPaulTek Inc
+   SPDX-License-Identifier: AGPL-3.0-or-later
+
+   OnlyTrusted pricing kit — themed to match the shipping app's Midnight
+   Cybersecurity palette + lakescape backdrop. Color tokens mirror
+   android/.../theme/Color.kt and ios/.../Theme/Theme.swift exactly so
+   this web surface and the in-app Upgrade screens stay visually aligned.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* OnlyTrusted Midnight palette — unified across Android + iOS */
+  --bg:            #0B1F2D;  /* MidnightBackground */
+  --bg-elevated:   #1E2A3A;  /* MidnightElevated */
+  --card:          #2E3B4E;  /* MidnightCard */
+  --text:          #F4FAFC;  /* PrimaryTextDark */
+  --text-muted:    #B6C9D2;  /* SecondaryTextDark */
+  --text-quiet:    #8FA5B2;  /* TertiaryTextDark */
+  --accent:        #00D1C1;  /* BrandAccentDark / BrandCyanDark (unified) */
+  --accent-dim:    #0F6A66;  /* BrandAccentLight (hover / contrast) */
+  --danger:        #EF4444;  /* DangerDark */
+  --line:          rgba(182,201,210,.14);
+  --radius:        22px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+  background: var(--bg);
+}
+
+/* OnlyTrusted lakescape backdrop — same image bundled in the shipping
+   app (android/.../drawable/app_backdrop.webp). Darkened overlay keeps
+   text readable at every scroll position. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%),
+    url('assets/app_backdrop.webp') center/cover no-repeat;
+  z-index: -2;
+}
+
+/* Soft cyan ambient highlights (same two-blur treatment the Dashboard
+   Protection card uses). */
+body::after {
+  content: "";
+  position: fixed;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  background: var(--accent);
+  filter: blur(140px);
+  opacity: .12;
+  pointer-events: none;
+  z-index: -1;
+}
+
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible, a:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* --- Layout --- */
+.nav, main, footer {
+  max-width: 1200px;
+  margin: auto;
+  position: relative;
+}
+
+.nav {
+  padding: 24px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font: 800 20px 'Manrope', sans-serif;
+  letter-spacing: -0.8px;
+}
+
+.accent-text { color: var(--accent); }
+
+/* Real OnlyTrusted brand logo — the shield tile with "OnlyTrusted"
+   wordmark baked in. Masked to a rounded square to match the
+   Dashboard Protection card presentation. */
+.logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 4px 20px rgba(0,209,193,.25);
+}
+
+.manage {
+  font-size: 13px;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  padding: 10px 16px;
+  background: rgba(30,42,58,.4);
+  backdrop-filter: blur(10px);
+}
+.manage:hover { border-color: var(--accent); color: var(--text); }
+
+/* --- Hero --- */
+.hero {
+  text-align: center;
+  padding: 90px 22px 75px;
+}
+.eyebrow, .kicker {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 8px;
+  box-shadow: 0 0 16px var(--accent);
+}
+h1, h2, h3 {
+  font-family: 'Manrope', sans-serif;
+  letter-spacing: -1.8px;
+}
+h1 {
+  font-size: clamp(40px, 6vw, 76px);
+  line-height: 1.12;
+  margin: 22px 0 20px;
+}
+h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.lede {
+  max-width: 650px;
+  margin: 0 auto;
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--text-muted);
+}
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+}
+.hero-stats span {
+  border: 1px solid var(--line);
+  border-radius: 50px;
+  padding: 9px 15px;
+  color: var(--text-muted);
+  font-size: 12px;
+  background: rgba(30,42,58,.3);
+}
+
+/* --- Pricing section --- */
+.pricing, .compare, .trust, .faq { padding: 32px; }
+
+.heading-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 24px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+
+/* Sticky toggle bar — when the user scrolls past the heading, the
+   Individual/Family + Yearly/Monthly segmented controls pin to the top
+   so you can flip variants and watch prices update without scrolling
+   back up. Backdrop blur keeps the lakescape visible underneath. */
+.sticky-controls {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 14px 32px;
+  margin: 0 -32px 20px;
+  background: rgba(11, 31, 45, 0.78);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sticky-controls .seg { background: rgba(30, 42, 58, 0.9); }
+
+/* Live-updating price readout — shows the cheapest paid-tier price
+   (Premium) for the currently-selected Individual/Family × Monthly/Yearly
+   combination so users scrolling through Compare still see the price
+   change immediately when they flip toggles. */
+.starting-at {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4px 14px 4px 4px;
+  border-right: 1px solid var(--line);
+  margin-right: 4px;
+  min-width: 140px;
+}
+.starting-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-quiet);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.starting-price {
+  font: 800 20px 'Manrope', sans-serif;
+  color: var(--accent);
+  margin-top: 4px;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  transition: color .18s;
+  display: inline-block;  /* needed for transform in flash animation */
+  transform-origin: left center;
+}
+
+/* Brief cyan flash when the price value changes (via toggle flip).
+   Scales up slightly + brightens with a glow pulse, settling back
+   to the baseline in ~800ms. Matches the "neon shield" aesthetic
+   the Dashboard Protection card uses. */
+@keyframes priceFlash {
+  0%   { color: var(--accent); transform: scale(1);    text-shadow: none; }
+  25%  { color: #B4FFF5;       transform: scale(1.08); text-shadow: 0 0 20px rgba(0,209,193,.9), 0 0 40px rgba(0,209,193,.5); }
+  60%  { color: #B4FFF5;       transform: scale(1.04); text-shadow: 0 0 12px rgba(0,209,193,.6); }
+  100% { color: var(--accent); transform: scale(1);    text-shadow: none; }
+}
+.starting-price.flash {
+  animation: priceFlash 800ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .starting-price.flash { animation: none; }
+}
+h2 {
+  font-size: clamp(28px, 3vw, 40px);
+  margin: 12px 0;
+}
+
+.controls {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.seg {
+  background: var(--bg-elevated);
+  padding: 4px;
+  border-radius: 100px;
+  display: flex;
+  border: 1px solid var(--line);
+}
+.seg button {
+  border: 0;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 10px 15px;
+  font-size: 13px;
+}
+.seg button.active {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 800;
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.seg small {
+  font-size: 10px;
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 15px;
+}
+
+.plan {
+  border: 1px solid var(--line);
+  background: rgba(30, 42, 58, 0.85);
+  backdrop-filter: blur(14px);
+  border-radius: var(--radius);
+  padding: 25px 22px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 565px;
+}
+
+.plan.featured {
+  background: linear-gradient(170deg, rgba(15, 106, 102, 0.4), rgba(30, 42, 58, 0.9) 55%);
+  border-color: rgba(0, 209, 193, 0.7);
+  box-shadow: 0 10px 50px rgba(3, 14, 26, 0.4), 0 0 40px rgba(0, 209, 193, 0.15);
+}
+
+.ribbon {
+  position: absolute;
+  right: 18px;
+  top: -13px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 800;
+  border-radius: 50px;
+  padding: 7px 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.plan-label {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.3px;
+}
+
+.plan h3 {
+  font-size: 25px;
+  margin: 10px 0;
+}
+
+.plan .desc {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--text-muted);
+  min-height: 63px;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  margin: 18px 0 3px;
+  gap: 3px;
+}
+.amount {
+  font: 800 39px 'Manrope', sans-serif;
+  letter-spacing: -2px;
+}
+.period {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+.subprice {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-height: 36px;
+}
+.save {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.action {
+  display: block;
+  text-align: center;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--text);
+  font-weight: 800;
+  padding: 13px;
+  margin: 12px 0 17px;
+  transition: filter .18s;
+}
+.featured .action {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 209, 193, 0.35);
+}
+.action:hover { filter: brightness(1.12); }
+
+.feature-title {
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-quiet);
+  letter-spacing: 1px;
+  border-top: 1px solid var(--line);
+  padding-top: 17px;
+}
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 11px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.check {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.disclaimer {
+  font-size: 12px;
+  color: var(--text-quiet);
+  line-height: 1.7;
+  margin: 17px 0;
+}
+
+/* --- Comparison table --- */
+.center { text-align: center; }
+.center p {
+  color: var(--text-muted);
+  max-width: 650px;
+  margin: 0 auto 30px;
+  line-height: 1.6;
+}
+
+.table-wrap {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(30,42,58,.85);
+  backdrop-filter: blur(14px);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent) transparent;
+}
+.table-wrap::-webkit-scrollbar { height: 8px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+.table-wrap::-webkit-scrollbar-track { background: transparent; }
+
+/* Right-edge fade — visual hint that the table scrolls horizontally
+   on narrow viewports (where Elite column is cut off). */
+.table-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 40px;
+  background: linear-gradient(90deg, transparent, rgba(11,31,45,.9));
+  pointer-events: none;
+  border-radius: 0 18px 18px 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 640px;
+  table-layout: fixed;
+}
+th, td {
+  padding: 14px 12px;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+th:first-child, td:first-child { text-align: left; width: 44%; padding-left: 18px; word-wrap: break-word; }
+th:not(:first-child), td:not(:first-child) { width: calc(56% / 4); min-width: 88px; word-wrap: break-word; }
+
+/* Sticky first column — feature names stay in view while the user
+   scrolls horizontally through tier columns. */
+th:first-child, td:first-child {
+  position: sticky;
+  left: 0;
+  background: rgba(30,42,58,.95);
+  z-index: 1;
+}
+th:first-child { background: rgba(0,209,193,.1); }
+
+th {
+  color: var(--text);
+  background: rgba(0,209,193,.08);
+  font-weight: 700;
+}
+td { color: var(--text-muted); }
+tr:last-child td { border: 0; }
+.yes { color: var(--accent); font-weight: 800; }
+.no  { color: var(--text-quiet); }
+
+/* Compare table — table-wide text selection cleanup. Previously
+   selecting a row showed broken-looking underlines from inherited
+   anchor styles. */
+.table-wrap table ::selection {
+  background: rgba(0,209,193,.3);
+  color: var(--text);
+}
+
+/* --- Mobile Compare: per-tier accordion stack ---------------------
+   Shown instead of the matrix table at narrow viewports (<620px). JS
+   populates both layouts from the same matrix data, CSS swaps which
+   is visible via the media queries below. Default: desktop table on,
+   stack off; mobile breakpoint flips it. */
+.tier-stack { display: none; flex-direction: column; gap: 12px; }
+.tier-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(30, 42, 58, 0.85);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+.tier-card.featured {
+  border-color: rgba(0, 209, 193, 0.6);
+  background: linear-gradient(170deg, rgba(15, 106, 102, 0.3), rgba(30, 42, 58, 0.9) 55%);
+}
+.tier-card summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+}
+.tier-card summary::-webkit-details-marker { display: none; }
+.tier-card summary::after {
+  content: "+";
+  font-size: 22px;
+  color: var(--accent);
+  width: 24px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.tier-card[open] summary::after { content: "−"; }
+.tier-card .tier-name {
+  font-size: 16px;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tier-card .tier-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 50px;
+  border: 1px solid rgba(0, 209, 193, 0.4);
+  margin-left: 8px;
+}
+.tier-card .tier-features {
+  list-style: none;
+  padding: 0 18px 16px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tier-card .tier-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.tier-card .tier-features .included { color: var(--accent); font-weight: 800; }
+.tier-card .tier-features .excluded { color: var(--text-quiet); }
+.tier-card .tier-features .excluded .included { color: var(--text-quiet); }
+
+/* --- Honest-claim trust panel --- */
+.trust-panel {
+  border: 1px solid rgba(0,209,193,.35);
+  border-radius: 24px;
+  padding: 36px;
+  background: linear-gradient(105deg, rgba(15,106,102,.3), rgba(30,42,58,.85));
+  backdrop-filter: blur(14px);
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+}
+.trust-panel > div:first-child { max-width: 630px; }
+.trust-panel p {
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+.pill-list {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+.pill-list span {
+  padding: 12px 17px;
+  border: 1px solid rgba(0,209,193,.35);
+  border-radius: 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+/* --- FAQ --- */
+.faq {
+  max-width: 880px;
+  margin: auto;
+  padding-bottom: 85px;
+}
+.faq details {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+.faq summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+.faq details p {
+  line-height: 1.8;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* --- Footer --- */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 35px 32px 55px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+footer p { margin: 12px 0 20px; }
+.foot-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+footer small {
+  font-size: 11px;
+  color: var(--text-quiet);
+}
+
+/* --- Persistent "Get OnlyTrusted" install CTA ---
+   Always-visible floating button that deep-links to the Play Store on
+   Android, App Store on iOS, Play Store (default) on desktop. See
+   setupCta() in app.js for platform detection + href/copy swap. */
+.get-cta {
+  position: fixed;
+  z-index: 25;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 24px;
+  padding: 14px 22px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 50px;
+  font: 800 15px 'Manrope', sans-serif;
+  letter-spacing: -0.2px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  box-shadow: 0 10px 32px rgba(0,209,193,.45), 0 0 0 1px rgba(0,209,193,.6);
+  transition: transform .2s, box-shadow .2s;
+  animation: ctaPulse 2.6s ease-in-out infinite;
+}
+.get-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(0,209,193,.6), 0 0 0 2px rgba(0,209,193,.8);
+}
+.get-cta .store-icon {
+  flex-shrink: 0;
+  color: var(--bg);
+}
+
+/* Subtle pulsing glow — persistent install prompt without being
+   obnoxiously animated. Matches the Dashboard Protection card's
+   two-layer cyan shadow treatment. */
+@keyframes ctaPulse {
+  0%, 100% {
+    box-shadow: 0 10px 32px rgba(0,209,193,.45), 0 0 0 1px rgba(0,209,193,.6);
+  }
+  50% {
+    box-shadow: 0 12px 44px rgba(0,209,193,.65), 0 0 0 2px rgba(0,209,193,.8),
+                0 0 60px rgba(0,209,193,.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .get-cta { animation: none; }
+}
+
+/* Mobile — full-width bottom bar for maximum tap-target.
+   Respects iOS safe-area-inset-bottom so it clears the home indicator. */
+@media (max-width: 620px) {
+  .get-cta {
+    left: 15px;
+    right: 15px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    justify-content: center;
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+  /* Push the footer up slightly so the CTA doesn't overlap the
+     copyright line / app-store links. */
+  footer { padding-bottom: 100px; }
+}
+
+/* --- Toast --- */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(92vw, 530px);
+  background: var(--bg-elevated);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 18px;
+  color: var(--text);
+  display: none;
+  z-index: 10;
+  text-align: center;
+  box-shadow: 0 10px 50px rgba(0,0,0,.6);
+}
+.toast.show { display: block; }
+
+/* --- Responsive --- */
+@media (max-width: 1050px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .plan { min-height: 0; }
+}
+@media (max-width: 620px) {
+  .nav { padding: 19px 18px; }
+  .brand { font-size: 18px; }
+  .logo { width: 38px; height: 38px; }
+  .manage { font-size: 11px; padding: 9px 10px; }
+  .hero { padding: 57px 20px 46px; }
+  .lede { font-size: 15px; }
+  .pricing, .compare, .trust, .faq { padding: 24px 15px; }
+  .cards { grid-template-columns: 1fr; }
+  .controls { width: 100%; }
+  .seg { flex: 1; justify-content: center; }
+  .seg button { padding: 10px; }
+  .plan { padding: 24px; }
+  .heading-row { align-items: start; }
+  .trust-panel { flex-direction: column; padding: 26px; }
+  .pill-list span { white-space: normal; }
+  .amount { font-size: 37px; }
+  .sticky-controls {
+    padding: 10px 12px;
+    margin: 0 -15px 16px;
+    gap: 8px;
+  }
+  .starting-at {
+    width: 100%;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    padding: 4px 0 6px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    margin-right: 0;
+    min-width: 0;
+  }
+  .starting-label { font-size: 11px; }
+  .starting-price { font-size: 18px; margin-top: 0; }
+
+  /* Hide the horizontal matrix on mobile — swap to the per-tier
+     accordion stack so all 4 tiers fit without horizontal scrolling. */
+  .table-wrap { display: none; }
+  .tier-stack { display: flex; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .plan { transition: transform .2s, border-color .2s; }
+  .plan:hover { transform: translateY(-4px); border-color: rgba(0,209,193,.4); }
+}

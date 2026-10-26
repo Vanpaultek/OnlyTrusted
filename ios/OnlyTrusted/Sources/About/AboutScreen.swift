@@ -142,6 +142,26 @@ struct AboutScreen: View {
             value: "View on GitHub",
             action: openSourceRepo
         )
+        NavigationLink { UserGuideScreen() } label: {
+            AboutRowContent(
+                icon: "book.fill",
+                tint: Color.aboutGreen,
+                title: "User Guide",
+                subtitle: "Every feature, how to find it, what it does.",
+                value: nil
+            )
+        }
+        .buttonStyle(.plain)
+        NavigationLink { PricingChartScreen() } label: {
+            AboutRowContent(
+                icon: "tag.fill",
+                tint: Color.aboutOrange,
+                title: "Pricing Chart",
+                subtitle: "All plans and features, side by side.",
+                value: nil
+            )
+        }
+        .buttonStyle(.plain)
         if subscription.isActive {
             NavigationLink { AcknowledgmentsScreen() } label: {
                 AboutRowContent(

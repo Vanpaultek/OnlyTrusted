@@ -55,6 +55,15 @@ targets:
       # source of truth so this can't happen again.
       - path: OnlyTrusted/Resources/Localization/Localizable.xcstrings
       - path: OnlyTrusted/Resources/Localization/countries.json
+      # In-app docs: the User Guide + Pricing Chart ship as static HTML/CSS/JS
+      # bundles so they work 100% offline (matches the zero-cloud ethos).
+      # Added as resource folders so XcodeGen preserves the subfolder structure
+      # — WKWebView loads index.html with allowingReadAccessTo the folder root
+      # so relative paths to assets/, content.json, plans.json all resolve.
+      - path: OnlyTrusted/Resources/guide
+        type: folder
+      - path: OnlyTrusted/Resources/pricing
+        type: folder
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.onlytrusted.app

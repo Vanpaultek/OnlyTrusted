@@ -54,6 +54,7 @@ struct UpgradeToPremiumScreen: View {
                     plansGrid
                     ctaButton
                     restoreButton
+                    pricingChartLink
                 }
                 .padding(.horizontal, 18)
                 .padding(.top, 8)
@@ -295,6 +296,18 @@ struct UpgradeToPremiumScreen: View {
             Text("Restore Purchase")
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundStyle(Color.appBrightCyan)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var pricingChartLink: some View {
+        NavigationLink { PricingChartScreen() } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "tag.fill").font(.system(size: 13))
+                Text("See full pricing chart")
+                    .font(.system(size: 15, weight: .semibold))
+            }
+            .foregroundStyle(Color.appBrightCyan)
         }
         .buttonStyle(.plain)
     }
