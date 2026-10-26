@@ -27,3 +27,6 @@ Images/
 *.jks
 *.keystore
 SECRETS.txt
+
+# Video generator scratch (regenerated per-run)
+tools/video/_frames_*/
