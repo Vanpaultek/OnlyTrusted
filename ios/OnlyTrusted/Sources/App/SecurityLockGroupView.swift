@@ -29,25 +29,10 @@ struct SecurityLockGroupView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // App Lock
-            Toggle(isOn: $appLockToggle) {
-                row(icon: "lock.shield.fill",
-                    title: "App Lock",
-                    subtitle: "Require biometric or passcode to open.")
-            }
-            .tint(Color.appAccent)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .onChange(of: appLockToggle) { _, now in
-                if now && !canUseAuth {
-                    appLockToggle = false
-                    onLockDenied()
-                    return
-                }
-                onAppLockChanged(now)
-            }
-
-            SettingsDivider()
+            // App Lock lives in Settings only — not shown here. The sheet is
+            // scoped to the "lock mic + camera when the device screen locks"
+            // story; app-level lock (require PIN to open OnlyTrusted) is a
+            // different concern and belongs with the general app settings.
 
             // Auto-lock after inactivity
             Toggle(isOn: $autoLockToggle) {
@@ -75,7 +60,10 @@ struct SecurityLockGroupView: View {
                 .buttonStyle(.plain)
             }
 
-            // Mic & Camera Lock — always visible, independent of the two above.
+            // Mic & Camera Lock — on iOS this is informational (Apple's sandbox
+            // forbids a consumer app from globally disabling sensors). The nav
+            // link opens the detail screen that explains the honest limits +
+            // deep-links to iOS Settings → Privacy for per-app revocation.
             SettingsDivider()
             NavigationLink { SensorPrivacyScreen() } label: {
                 SettingsNavRow(icon: "mic.slash.fill", iconTint: Color.appAccent,

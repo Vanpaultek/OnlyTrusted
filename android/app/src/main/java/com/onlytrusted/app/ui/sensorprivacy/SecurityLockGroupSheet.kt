@@ -76,26 +76,9 @@ fun SecurityLockGroupSheet(
 
             Divider(color = SecondaryTextDark.copy(alpha = 0.14f))
 
-            // App Lock
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconChip(Icons.Filled.Lock)
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text("App Lock", color = PrimaryTextDark, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Require biometric or passcode to open.",
-                         color = SecondaryTextDark, fontSize = 12.sp)
-                }
-                Switch(
-                    checked = appLockEnabled,
-                    onCheckedChange = {
-                        appLockEnabled = it
-                        onAppLockChanged(it)
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = BrandCyanDark),
-                )
-            }
-
-            Divider(color = SecondaryTextDark.copy(alpha = 0.08f))
+            // App Lock lives in Settings only — not shown here. This sheet is
+            // scoped to mic + camera lock on device screen state; app-open PIN
+            // / biometric belongs with the general app settings.
 
             // Auto-lock after inactivity
             Row(verticalAlignment = Alignment.CenterVertically) {
