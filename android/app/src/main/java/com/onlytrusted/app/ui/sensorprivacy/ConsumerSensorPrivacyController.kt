@@ -4,6 +4,7 @@ package com.onlytrusted.app.ui.sensorprivacy
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.net.Uri
 import android.provider.Settings
 import kotlinx.coroutines.Dispatchers
@@ -43,23 +44,67 @@ class ConsumerSensorPrivacyController(
         SensorState.UNKNOWN
     }
 
-    override suspend fun enforceLock(): SensorState {
+    override suspend fun enforceLock(): SensorState = withContext(Dispatchers.IO) {
+        // Consumer tier has ONE real lever that doesn't need Device Owner:
+        // AudioManager.setMicrophoneMute(true). This mutes the system mic input
+        // level so apps that acquire mic access still receive silence rather
+        // than meaningful audio. It is not a security-grade sensor cutoff
+        // (apps still see "mic active"), but it is the honest best-effort for
+        // a Play Store install. Logged honestly.
+        val am = context.getSystemService(AudioManager::class.java)
+        var micMuted = false
+        if (am != null) {
+            runCatching {
+                am.isMicrophoneMute = true
+                micMuted = true
+                weMutedMic = true
+                SensorPrivacyLog.append(
+                    context,
+                    kind = SensorPrivacyLog.Kind.SENSOR_PRIVACY_ENFORCED,
+                    detail = "AudioManager.setMicrophoneMute(true) on lock. " +
+                        "Note: not a security-grade cutoff; apps still get a 'mic active' handle.",
+                )
+            }.onFailure {
+                SensorPrivacyLog.append(
+                    context,
+                    kind = SensorPrivacyLog.Kind.SENSOR_PRIVACY_REFUSED,
+                    detail = "AudioManager mic mute refused: ${it.message}",
+                )
+            }
+        }
         SensorPrivacyLog.append(
             context,
             kind = SensorPrivacyLog.Kind.SCREEN_LOCK,
-            detail = "consumer tier — Android limits global sensor control. Logged only.",
+            detail = "consumer tier — AudioManager mic mute attempted (success=$micMuted). " +
+                "Camera disable requires Device Owner (see docs/SENSOR_PRIVACY_ARCHITECTURE.md).",
         )
-        return readState()
+        readState()
     }
 
-    override suspend fun restoreAfterUnlock(): SensorState {
+    override suspend fun restoreAfterUnlock(): SensorState = withContext(Dispatchers.IO) {
+        if (weMutedMic) {
+            runCatching {
+                context.getSystemService(AudioManager::class.java)?.isMicrophoneMute = false
+                SensorPrivacyLog.append(
+                    context,
+                    kind = SensorPrivacyLog.Kind.SENSOR_PRIVACY_RESTORED,
+                    detail = "AudioManager mic un-muted on unlock.",
+                )
+            }
+            weMutedMic = false
+        }
         SensorPrivacyLog.append(
             context,
             kind = SensorPrivacyLog.Kind.SCREEN_UNLOCK,
-            detail = "consumer tier — no sensor state restoration (we did not enforce).",
+            detail = "consumer tier — restoration complete.",
         )
-        return readState()
+        readState()
     }
+
+    /** Tracks whether WE muted the mic (vs. the user doing it) so we only
+     *  un-mute changes we made. See SENSOR_PRIVACY_ARCHITECTURE.md § "Pre-lock
+     *  state preservation" for the rationale. */
+    @Volatile private var weMutedMic = false
 
     // MARK: - Deep links
 

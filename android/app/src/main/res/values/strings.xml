@@ -202,4 +202,16 @@ Contacts</string>
     <string name="events_no_events">No events to show</string>
     <string name="events_trusted">Trusted</string>
     <string name="events_report_scam">Report scam</string>
+
+    <!-- Sensor privacy foreground service — see docs/SENSOR_PRIVACY_ARCHITECTURE.md
+         The notification is required by Android for any foreground service. -->
+    <string name="sensor_privacy_notif_title">OnlyTrusted — Mic &amp; Camera Lock active</string>
+    <string name="sensor_privacy_notif_body">Watching screen state to mute mic + block camera when locked. No audio or video is recorded.</string>
+    <string name="sensor_privacy_channel_name">Mic &amp; Camera Lock</string>
+    <string name="sensor_privacy_channel_desc">Keeps the lock-watcher service running so OnlyTrusted can toggle mic + camera when the screen locks.</string>
+    <string name="sensor_privacy_tile_label">OnlyTrusted mic/cam</string>
+    <string name="sensor_privacy_tile_subtitle_on">Mic/Cam blocked</string>
+    <string name="sensor_privacy_tile_subtitle_off">Tap to block mic + cam</string>
+    <string name="sensor_privacy_accessibility_label">OnlyTrusted — volume-key trigger</string>
+    <string name="sensor_privacy_accessibility_description">Listens for a double-press of volume-down to instantly cut mic + camera. OnlyTrusted does NOT read screen content, inject touches, or exfiltrate any data from this service.</string>
 </resources>

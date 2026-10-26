@@ -126,6 +126,56 @@ onUnlock:
 
 ---
 
+## Consumer-tier auto-lock mechanics (Android)
+
+The Play Store install cannot touch `MANAGE_SENSOR_PRIVACY`, but it can
+still achieve a credible "lock-when-screen-locks" behaviour by combining
+these levers — each honest about what it does and doesn't do:
+
+1. **Foreground service** (`SensorPrivacyForegroundService`) — hosts the
+   dynamic `ACTION_SCREEN_OFF` / `ACTION_USER_PRESENT` receiver. Required
+   because Android does not deliver screen-state broadcasts to manifest-
+   declared receivers. Shows a persistent, user-visible notification per
+   Android law. `foregroundServiceType="specialUse"` with the rationale
+   `Lock-watcher: observe screen state ...` declared in-manifest for Play
+   review.
+
+2. **`AudioManager.setMicrophoneMute(true)` on lock** — the one real
+   consumer-app lever. Mutes the mic input level system-wide so other
+   apps that acquire mic access receive silence. **Not** a security-grade
+   cutoff (apps still see a "mic active" handle), but materially useful.
+   Requires `MODIFY_AUDIO_SETTINGS` (normal permission).
+
+3. **Battery optimisation exemption** (`BatteryOptimizationHelper`) —
+   OEM Android builds (Samsung, Xiaomi, Huawei, OnePlus) aggressively
+   kill background services. The exemption is user-granted via
+   `ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS`. Google Play requires
+   justification; ours is "lock-watcher must stay alive during long
+   screen-off periods to toggle sensor restrictions on unlock."
+
+4. **Quick Settings tile** (`SensorPrivacyTileService`) — one-tap toggle
+   from the system pulldown. Permission `BIND_QUICK_SETTINGS_TILE` ensures
+   only the system can bind the service. User manually adds the tile via
+   the pulldown's edit flow.
+
+5. **Volume-key trigger** (`SensorPrivacyAccessibilityService`) —
+   optional. Observes volume-down double-press via a scoped
+   AccessibilityService (`canRequestFilterKeyEvents=true`, nothing else).
+   Compliance for Play Store's Accessibility Service Policy:
+   - No `canRetrieveWindowContent` — we don't read UI text.
+   - No `canPerformGestures` — we don't inject touches.
+   - `onAccessibilityEvent` is intentionally empty — proof of
+     non-exfiltration during Play review.
+   - User enables it manually in Settings → Accessibility.
+
+**Why NOT register the power button?** Both Android and iOS reserve the
+power button for OS-level actions (shutdown, emergency SOS, lock).
+Third-party apps cannot intercept it, and attempts via Accessibility
+Services violate Play policy. The volume-down double-press is the
+Play-approved alternative trigger.
+
+---
+
 ## Tier 1 — Consumer (iOS + Android)
 
 ### iOS implementation

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AccessibilityService config for the volume-key trigger.
+  Scoped to the minimum capabilities needed:
+    - flagRequestFilterKeyEvents: observe KeyEvent.ACTION_DOWN for volume keys
+    - canRequestFilterKeyEvents=true: enables the above
+    - NO canRetrieveWindowContent, NO canPerformGestures, NO password access
+
+  See docs/SENSOR_PRIVACY_ARCHITECTURE.md for the full Play Policy
+  compliance rationale.
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeNotificationStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault|flagRequestFilterKeyEvents"
+    android:canRequestFilterKeyEvents="true"
+    android:description="@string/sensor_privacy_accessibility_description"
+    android:notificationTimeout="100"
+    android:settingsActivity="com.onlytrusted.app.MainActivity"
+    android:summary="@string/sensor_privacy_accessibility_label" />

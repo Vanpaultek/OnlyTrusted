@@ -30,6 +30,13 @@
          OBSERVES other apps' use via SensorPrivacyManager / registerAudioRecordingCallback
          / registerAvailabilityCallback and doesn't itself hold RECORD_AUDIO / CAMERA. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <!-- Mic & Camera Lock — AudioManager.setMicrophoneMute() needs MODIFY_AUDIO_SETTINGS
+         (normal/non-dangerous level). See docs/SENSOR_PRIVACY_ARCHITECTURE.md. -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Mic & Camera Lock — exempts the lock-watcher foreground service from
+         battery optimisation so it survives long screen-off periods. Google Play
+         policy requires justification; see Honest Claims page in the app. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- Required by Tracker Finder (Pro) on Android 14+ for the continuous background
          BLE scan foreground service type. Only started when the user opts in. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
@@ -245,6 +252,56 @@
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
+
+        <!-- Mic & Camera Lock — foreground service that keeps the dynamically
+             registered ScreenStateReceiver alive while the phone is asleep.
+             foregroundServiceType="specialUse" required by Android 14+.
+             See docs/SENSOR_PRIVACY_ARCHITECTURE.md for the full rationale
+             documented for Google Play review. -->
+        <service
+            android:name=".ui.sensorprivacy.SensorPrivacyForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Lock-watcher: observe ACTION_SCREEN_OFF / ACTION_USER_PRESENT to toggle mic + camera restrictions. No audio or video is recorded. No network use." />
+        </service>
+
+        <!-- Mic & Camera Lock — Quick Settings tile. User manually adds it via
+             the system's "Edit tiles" flow. Permission BIND_QUICK_SETTINGS_TILE
+             restricts binding to the system — only user tap triggers us. -->
+        <service
+            android:name=".ui.sensorprivacy.SensorPrivacyTileService"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/sensor_privacy_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+        </service>
+
+        <!-- Mic & Camera Lock — volume-key trigger (optional, user-enabled).
+             Scoped to key-event observation only; config XML forbids content
+             reading / touch injection. BIND_ACCESSIBILITY_SERVICE enforces that
+             only the system can bind us. See
+             docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Accessibility service"
+             for the Play Policy compliance notes. -->
+        <service
+            android:name=".ui.sensorprivacy.SensorPrivacyAccessibilityService"
+            android:exported="true"
+            android:label="@string/sensor_privacy_accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/sensor_privacy_accessibility" />
+        </service>
 
         <!-- Smart Link Guard (Pro): inspects incoming SMS for URL-shaped substrings and
              runs each through the 100%-on-device rules engine. Fires only when the user
