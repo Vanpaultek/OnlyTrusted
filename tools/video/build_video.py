@@ -46,7 +46,7 @@ if missing). Chapter order matches docs/USER_GUIDE_VIDEO_SCRIPT.md:
 """
 import os, json, subprocess, argparse
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent
 W, H = 1280, 720
@@ -283,16 +283,45 @@ def wrap_text(draw, text: str, font: ImageFont.FreeTypeFont, max_w: int):
     return lines
 
 
+_BACKDROP = None  # populated lazily by _load_backdrop()
+
+
+def _load_backdrop() -> Image.Image:
+    """Dimmed + blurred SplashHero used as the global video canvas so every
+    scene sits inside the same mountain-lake atmosphere as the written user
+    guide, instead of a flat navy card."""
+    src = ROOT / 'assets' / 'splash.png'
+    bg = Image.open(src).convert('RGB')
+    # Cover-fit to canvas (crop any overhang after upscaling to cover).
+    src_ratio = bg.width / bg.height
+    tgt_ratio = W / H
+    if src_ratio > tgt_ratio:
+        new_h, new_w = H, int(H * src_ratio)
+    else:
+        new_w, new_h = W, int(W / src_ratio)
+    bg = bg.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    left = (new_w - W) // 2
+    top = (new_h - H) // 2
+    bg = bg.crop((left, top, left + W, top + H))
+    # Blur hides SplashHero copy ("OnlyTrusted", "Loading…") so it reads as
+    # ambient backdrop, not a duplicate of the device screen next to it.
+    bg = bg.filter(ImageFilter.GaussianBlur(radius=14))
+    # Darken toward brand BG so WHITE title + MUTED subtitle keep contrast.
+    overlay = Image.new('RGB', (W, H), BG)
+    bg = Image.blend(bg, overlay, 0.62)
+    return bg
+
+
 def frame_for_scene(idx: int, lang: str) -> Image.Image:
     """Render a single frame for scene[idx] in [lang]."""
+    global _BACKDROP
     key, _duration, fallback_shot = SCENES[idx]
     title, subtitle = LANG.get(lang, LANG['en'])[idx]
 
-    im = Image.new('RGB', (W, H), BG)
+    if _BACKDROP is None:
+        _BACKDROP = _load_backdrop()
+    im = _BACKDROP.copy()
     d = ImageDraw.Draw(im)
-
-    # Soft brand glow behind the device
-    d.ellipse((-150, -220, 540, 460), fill='#122838')
 
     # Device frame — rounded rect that holds the screenshot
     d.rounded_rectangle((70, 42, 550, 678), radius=36, fill=PANEL, outline=CYAN, width=3)
