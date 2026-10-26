@@ -3,13 +3,17 @@
 #
 # OnlyTrusted — Continuous Integration workflow.
 #
-# Fires on every push to any branch + every pull-request. Does three things:
+# Fires on every push to any branch + every pull-request. Does five things:
 #   1. Builds the Android debug APK and runs lint.
-#   2. Builds the iOS debug app for Simulator (no code signing).
-#   3. Verifies the Offline Threat Intel refresh script still produces a
+#   2. Runs the Android JUnit test suite (SmartLinkGuard, PINRateLimiter,
+#      DeadmanWipe clock-skew — the security regression tests from the
+#      2026-10-25 audit).
+#   3. Builds the iOS debug app for Simulator (no code signing).
+#   4. Runs the iOS XCTest regression suite (mirror of the Android tests).
+#   5. Verifies the Offline Threat Intel refresh script still produces a
 #      well-formed feed (dry run — doesn't commit anything).
 #
-# Keep this fast (< 10 min). Heavier release work lives in release.yml.
+# Keep this fast (< 15 min). Heavier release work lives in release.yml.
 
 name: CI
 
@@ -55,6 +59,20 @@ jobs:
           name: android-lint-report
           path: android/app/build/reports/lint-results-debug.html
           if-no-files-found: ignore
+      # Security regression tests from the 2026-10-25 audit. Covers
+      # SmartLinkGuardRules (homograph / brand-subdomain / embedded creds /
+      # weighted escalation), PINRateLimiter (lockout curve), and the
+      # DeadmanWipeState clock-skew formula. Mirrors ios/OnlyTrustedTests.
+      - name: Unit tests
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+      - name: Upload Android test report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: android-test-report
+          path: android/app/build/reports/tests/testDebugUnitTest/
+          if-no-files-found: ignore
 
   ios:
     name: iOS · simulator build (unsigned)
@@ -85,6 +103,54 @@ jobs:
             build 2>&1 | xcbeautify --quiet || true
           # Pass the real exit code through xcbeautify.
           test -d "build/Build/Products/Debug-iphonesimulator/OnlyTrusted.app"
+      # Security regression tests. Uses a concrete simulator destination
+      # (not `generic/platform=...`) because XCTest needs a device to boot.
+      # macos-26 ships several iPhone 17 / 16 Pro runtimes; pick the first
+      # available iPhone simulator so this doesn't break when Apple ships
+      # the next hardware generation.
+      - name: Pick iOS simulator
+        id: pickdevice
+        run: |
+          UDID=$(xcrun simctl list devices available --json | \
+            python3 -c "import json,sys; d=json.load(sys.stdin); \
+              iphones = [d2 for runtime, ds in d['devices'].items() if 'iOS' in runtime \
+                for d2 in ds if d2.get('isAvailable') and d2['name'].startswith('iPhone')]; \
+              print(iphones[0]['udid'] if iphones else '')")
+          if [ -z "$UDID" ]; then
+            echo "::error::No iOS simulator found" && exit 1
+          fi
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "Picked simulator: $UDID"
+      - name: XCTest (OnlyTrustedTests)
+        working-directory: ios
+        run: |
+          xcodebuild test \
+            -scheme OnlyTrusted \
+            -destination "platform=iOS Simulator,id=${{ steps.pickdevice.outputs.udid }}" \
+            -only-testing:OnlyTrustedTests \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | xcbeautify --quiet || true
+          # xcbeautify may absorb the exit code; verify via the result bundle.
+          RESULT=$(find build/Logs/Test -name "*.xcresult" -type d | head -1)
+          if [ -z "$RESULT" ]; then
+            echo "::error::No .xcresult bundle produced — test run didn't complete"
+            exit 1
+          fi
+          # Parse the result bundle for failure count. xcresulttool JSON output
+          # is stable across Xcode 15+.
+          xcrun xcresulttool get test-results summary --path "$RESULT" \
+            --format json > /tmp/results.json
+          FAILED=$(python3 -c "import json; print(json.load(open('/tmp/results.json')).get('failedTests', 0))")
+          echo "Failed tests: $FAILED"
+          test "$FAILED" = "0"
+      - name: Upload iOS test result bundle
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: ios-test-results
+          path: ios/build/Logs/Test/
+          if-no-files-found: ignore
 
   threat-intel-refresh:
     name: Threat intel refresh (dry-run)

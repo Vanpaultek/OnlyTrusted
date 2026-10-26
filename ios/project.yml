@@ -117,3 +117,49 @@ targets:
         PRODUCT_NAME: "SmartLinkGuardExtension"
         PRODUCT_MODULE_NAME: SmartLinkGuardExtension
         INFOPLIST_KEY_CFBundleDisplayName: "OnlyTrusted Smart Link Guard"
+
+  # --- Unit Tests --------------------------------------------------------------
+  # XCTest regression coverage for the security-critical modules. Mirrors the
+  # Android JUnit coverage under android/app/src/test/. 34 tests across:
+  #   - SmartLinkGuardRules (new patches + no-regression pins)
+  #   - PINRateLimiter (lockout curve)
+  #   - DeadmanWipeState clock-skew formula
+  # Run via `xcodebuild test -scheme OnlyTrusted -only-testing:OnlyTrustedTests`.
+  # Host-app TEST_HOST pattern: tests run in-process with OnlyTrusted.app, which
+  # means the main app's static wiring (e.g. SmartLinkGuardRules.phishingHostLookup)
+  # leaks into test state — our test cases null those out in setUp() to isolate
+  # the rule set from the shipped Threat Intel feed.
+  OnlyTrustedTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: OnlyTrustedTests
+    dependencies:
+      - target: OnlyTrusted
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.onlytrusted.app.OnlyTrustedTests
+        PRODUCT_NAME: OnlyTrustedTests
+        GENERATE_INFOPLIST_FILE: YES
+        TARGETED_DEVICE_FAMILY: "1,2"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/OnlyTrusted.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/OnlyTrusted"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+# Scheme overrides. xcodegen auto-generates one scheme per target, but we need
+# the OnlyTrusted scheme to also build + test OnlyTrustedTests so that
+# `xcodebuild test -scheme OnlyTrusted -only-testing:OnlyTrustedTests` works
+# both in CI and locally without passing the test scheme explicitly.
+schemes:
+  OnlyTrusted:
+    build:
+      targets:
+        OnlyTrusted: all
+        OnlyTrustedTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - OnlyTrustedTests
+    archive:
+      config: Release
