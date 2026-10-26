@@ -2,28 +2,28 @@
   {
     "language": "en",
     "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_en_voiced.mp4",
-    "voice": "Samantha",
+    "voice": "Sandy",
     "seconds": 69.799002,
     "cues": 13
   },
   {
     "language": "es",
     "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_es_voiced.mp4",
-    "voice": "Mónica",
+    "voice": "Sandy",
     "seconds": 80.573016,
     "cues": 13
   },
   {
     "language": "fr",
     "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_fr_voiced.mp4",
-    "voice": "Thomas",
+    "voice": "Sandy",
     "seconds": 76.021995,
     "cues": 13
   },
   {
     "language": "pt",
     "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_pt_voiced.mp4",
-    "voice": "Luciana",
+    "voice": "Sandy",
     "seconds": 83.126984,
     "cues": 13
   },
@@ -44,7 +44,7 @@
   {
     "language": "de",
     "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_de_voiced.mp4",
-    "voice": "Anna",
+    "voice": "Sandy",
     "seconds": 76.625986,
     "cues": 13
   },
