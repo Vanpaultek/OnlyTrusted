@@ -5,16 +5,46 @@ content data. Writes everything to templates/email/.
 Each template is standalone — the sender (SES, SendGrid, Postmark, in-app
 Mail composer) can plug placeholders without needing a template engine.
 
+The brand logo + mountain backdrop are base64-inlined so the templates
+render identically in local preview AND in sent email, with no dependency
+on a hosted CDN. Email size impact ~220 KB per message.
+
 Run: python3 templates/_build.py
 """
+import base64
+import mimetypes
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / 'email'
 
 # ---------------------------------------------------------------------------
-# Shared chrome: header + legal rail + footer rendered the same across every
-# template so the brand reads identically. Only CONTENT varies per email.
+# Inline assets: base64 them once at module load so every template embeds the
+# same bytes.
+# ---------------------------------------------------------------------------
+
+def _datauri(src: Path) -> str:
+    mime = mimetypes.guess_type(str(src))[0] or 'application/octet-stream'
+    b64 = base64.b64encode(src.read_bytes()).decode('ascii')
+    return f'data:{mime};base64,{b64}'
+
+
+# Pre-sized assets live in /tmp during local build; fall back to the
+# full-res docs/guide/assets copies when running without the pre-sized ones.
+HERO_SRC = Path('/tmp/email_hero.jpg')
+LOGO_SRC = Path('/tmp/email_logo.png')
+if not HERO_SRC.exists():
+    HERO_SRC = ROOT.parent / 'docs' / 'guide' / 'assets' / 'app_backdrop.jpg'
+if not LOGO_SRC.exists():
+    LOGO_SRC = ROOT.parent / 'docs' / 'guide' / 'assets' / 'brand_logo.png'
+
+HERO_URI = _datauri(HERO_SRC)
+LOGO_URI = _datauri(LOGO_SRC)
+
+
+# ---------------------------------------------------------------------------
+# Layout mirrors the user guide hero: brand lockup, mountain backdrop, teal
+# eyebrow, big Manrope heading, body card, legal rail, pill row, footer.
 # ---------------------------------------------------------------------------
 
 HEAD = '''<!DOCTYPE html>
@@ -30,23 +60,19 @@ HEAD = '''<!DOCTYPE html>
   <title>{title}</title>
 </head>
 <body style="margin:0; padding:0; background:#0B1F2D; font-family:'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color:#F4FAFC; -webkit-font-smoothing:antialiased;">
-  <!-- Mountain-lake backdrop. JPG for max client compatibility (Gmail / Outlook
-       Web / iOS Mail all render JPG; WebP is spotty). If an image blocker strips
-       it, the dark gradient still looks correct over a flat #0B1F2D background. -->
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0B1F2D; background-image:linear-gradient(180deg, rgba(11,31,45,.72) 0%, rgba(11,31,45,.88) 60%, rgba(11,31,45,.96) 100%), url('https://onlytrusted.app/guide/assets/app_backdrop.jpg'); background-size:cover; background-position:center;">
-    <tr><td align="center" style="padding:40px 16px;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px; width:100%; background:rgba(30,42,58,0.68); border:1px solid rgba(0,209,193,0.18); border-radius:18px; overflow:hidden;">
-        <tr><td style="padding:28px 32px 20px 32px;">
-          <!-- Brand lockup: 44×44 app icon + "OnlyTrusted" wordmark on the left,
-               zero-cloud eyebrow on the right. Mirrors the .brand selector in
-               docs/guide/styles.css so the website and the email share one
-               identity. The <img> alt text degrades to text if images are blocked. -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0B1F2D" style="background:#0B1F2D;">
+    <tr><td align="center" style="padding:36px 16px;">
+      <!-- Email card, 640 wide, matches the user guide's content column. -->
+      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px; width:100%; background:#0F2436; border:1px solid rgba(0,209,193,0.18); border-radius:20px; overflow:hidden;">
+
+        <!-- Brand bar: 44x44 logo + wordmark on the left, zero-cloud eyebrow on the right.
+             Logo is inlined base64 so it renders in previews + sent email alike. -->
+        <tr><td style="padding:22px 28px 18px 28px; background:#0F2436;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td align="left" valign="middle">
               <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-                <td valign="middle" style="padding-right:12px;">
-                  <img src="https://onlytrusted.app/guide/assets/brand_logo.png"
-                       width="44" height="44" alt="OnlyTrusted"
+                <td valign="middle" style="padding-right:14px;">
+                  <img src="{logo_uri}" width="44" height="44" alt="OnlyTrusted"
                        style="display:block; width:44px; height:44px; border-radius:10px; box-shadow:0 4px 20px rgba(0,209,193,0.25);">
                 </td>
                 <td valign="middle" style="font-family:'Manrope', sans-serif; font-weight:800; font-size:22px; letter-spacing:-0.4px; color:#F4FAFC;">
@@ -54,14 +80,30 @@ HEAD = '''<!DOCTYPE html>
                 </td>
               </tr></table>
             </td>
-            <td align="right" valign="middle" style="font-family:'DM Sans', sans-serif; font-size:11px; color:#8FA5B2; letter-spacing:1.5px; text-transform:uppercase;">Zero cloud · Zero account</td>
+            <td align="right" valign="middle" style="font-family:'DM Sans', sans-serif; font-size:11px; color:#8FA5B2; letter-spacing:1.5px; text-transform:uppercase;">
+              Zero cloud · Zero account
+            </td>
           </tr></table>
-          <div style="height:1px; background:rgba(0,209,193,0.28); margin-top:18px;"></div>
+        </td></tr>
+
+        <!-- Hero: mountain-lake backdrop image, 640x320. Rendered as a regular
+             <img> rather than a background-image so Outlook / Yahoo / older
+             clients that strip CSS backgrounds still show it. The dark card
+             sits directly below with no overlap so there's no fragile layering. -->
+        <tr><td style="padding:0; line-height:0; font-size:0;">
+          <img src="{hero_uri}" width="640" alt="OnlyTrusted" style="display:block; width:100%; max-width:640px; height:auto;">
+        </td></tr>
+
+        <!-- Hero text block — eyebrow + big heading, matches the user guide's
+             .eyebrow + h1 pair exactly. -->
+        <tr><td style="padding:28px 32px 8px 32px; background:#0F2436;">
+          <div style="font-size:11px; letter-spacing:2px; font-weight:800; color:#00D1C1; text-transform:uppercase; margin-bottom:12px;">{eyebrow}</div>
+          <h1 style="font-family:'Manrope', sans-serif; font-weight:800; font-size:32px; letter-spacing:-1px; color:#F4FAFC; margin:0 0 4px 0; line-height:1.15;">{heading}</h1>
         </td></tr>
 '''
 
-CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px;">
-          <div style="background:rgba(11,31,45,0.6); border:1px solid rgba(182,201,210,0.14); border-radius:14px; padding:18px 20px;">
+CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px; background:#0F2436;">
+          <div style="background:rgba(11,31,45,0.65); border:1px solid rgba(182,201,210,0.14); border-radius:14px; padding:18px 20px;">
             <div style="font-family:'Manrope', sans-serif; font-weight:800; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:#8FA5B2; margin-bottom:10px;">Under all conditions</div>
             <p style="margin:0 0 10px 0; font-family:'DM Sans', sans-serif; font-size:13px; color:#B6C9D2; line-height:1.55;">
               OnlyTrusted stores all app data on your device. There is no cloud backup, no account recovery server, no profile. Losing the device loses the data unless you have exported it. This email is the only remote channel we use, and it is sent only in response to actions you took in the app.
@@ -72,7 +114,7 @@ CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px;">
           </div>
         </td></tr>
 
-        <tr><td style="padding:0 32px 24px 32px;" align="center">
+        <tr><td style="padding:0 32px 24px 32px; background:#0F2436;" align="center">
           <table role="presentation" cellpadding="0" cellspacing="0" border="0">
             <tr>
               <td style="padding:4px 6px;"><a href="https://onlytrusted.app/legal/privacy" style="display:inline-block; padding:8px 14px; border:1px solid rgba(182,201,210,0.14); border-radius:50px; background:rgba(30,42,58,0.5); font-family:'DM Sans', sans-serif; font-size:12px; color:#B6C9D2; text-decoration:none;">Privacy Policy</a></td>
@@ -88,7 +130,7 @@ CONDITIONS = '''        <tr><td style="padding:0 32px 20px 32px;">
         </td></tr>
 '''
 
-FOOT_TEMPLATE = '''        <tr><td style="padding:20px 32px 28px 32px; background:rgba(11,31,45,0.75); border-top:1px solid rgba(182,201,210,0.08);">
+FOOT_TEMPLATE = '''        <tr><td style="padding:20px 32px 28px 32px; background:#0B1F2D; border-top:1px solid rgba(182,201,210,0.08);">
           <p style="margin:0 0 8px 0; font-family:'DM Sans', sans-serif; font-size:12px; color:#8FA5B2; line-height:1.5;">
             {footer_reason}
           </p>
@@ -109,9 +151,9 @@ FOOT_TEMPLATE = '''        <tr><td style="padding:20px 32px 28px 32px; backgroun
 '''
 
 
-def content_block(eyebrow: str, heading: str, body_html: str,
-                  cta_label: str, cta_url: str, note: str = '') -> str:
-    """Render the per-template content card."""
+def content_block(body_html: str, cta_label: str, cta_url: str, note: str = '') -> str:
+    """Render the per-template content card (body paragraphs + optional CTA + note).
+    The eyebrow + heading render in HEAD; this is what sits below them."""
     note_html = (
         f'<p style="margin:16px 0 0 0; font-size:13px; color:#8FA5B2;">{note}</p>'
         if note else ''
@@ -126,9 +168,7 @@ def content_block(eyebrow: str, heading: str, body_html: str,
           </tr></table>'''
         if cta_label else ''
     )
-    return f'''        <tr><td style="padding:8px 32px 32px 32px; font-family:'DM Sans', sans-serif; color:#B6C9D2; font-size:15px; line-height:1.6;">
-          <div style="font-size:11px; letter-spacing:2px; font-weight:800; color:#00D1C1; text-transform:uppercase; margin-bottom:10px;">{eyebrow}</div>
-          <h1 style="font-family:'Manrope', sans-serif; font-weight:800; font-size:30px; letter-spacing:-1px; color:#F4FAFC; margin:0 0 18px 0; line-height:1.2;">{heading}</h1>
+    return f'''        <tr><td style="padding:12px 32px 28px 32px; background:#0F2436; font-family:'DM Sans', sans-serif; color:#B6C9D2; font-size:15px; line-height:1.6;">
           {body_html}
           {cta_html}
           {note_html}
@@ -137,8 +177,7 @@ def content_block(eyebrow: str, heading: str, body_html: str,
 
 
 # ---------------------------------------------------------------------------
-# Per-template content. Keep each tight — the content block is the only part
-# that varies across emails.
+# Per-template content.
 # ---------------------------------------------------------------------------
 
 TEMPLATES = {
@@ -329,11 +368,17 @@ TEMPLATES = {
 def build():
     OUT.mkdir(parents=True, exist_ok=True)
     for name, data in TEMPLATES.items():
-        head = HEAD.format(name=name, trigger=data['trigger'],
-                           placeholders=data['placeholders'], title=data['title'])
-        content = content_block(
+        head = HEAD.format(
+            name=name,
+            trigger=data['trigger'],
+            placeholders=data['placeholders'],
+            title=data['title'],
+            logo_uri=LOGO_URI,
+            hero_uri=HERO_URI,
             eyebrow=data['eyebrow'],
             heading=data['heading'],
+        )
+        content = content_block(
             body_html=data['body'],
             cta_label=data['cta_label'],
             cta_url=data['cta_url'],
@@ -345,7 +390,7 @@ def build():
         )
         html = head + content + CONDITIONS + foot
         (OUT / f'{name}.html').write_text(html, encoding='utf-8')
-        print(f'  wrote email/{name}.html ({len(html)} bytes)')
+        print(f'  wrote email/{name}.html ({len(html)/1024:.1f} KB)')
 
 
 if __name__ == '__main__':
