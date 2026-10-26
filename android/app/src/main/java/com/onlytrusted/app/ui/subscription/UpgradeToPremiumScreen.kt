@@ -186,6 +186,16 @@ fun UpgradeToPremiumScreen(onBack: () -> Unit = {}) {
     var selectedPlan by remember { mutableStateOf(Plan.PremiumIndividual) }
     var showPurchaseConfirmation by remember { mutableStateOf(false) }
     var restoreNotice by remember { mutableStateOf<String?>(null) }
+    var showPricingChart by remember { mutableStateOf(false) }
+
+    if (showPricingChart) {
+        com.onlytrusted.app.ui.docs.BundledDocScreen(
+            folder = "pricing",
+            title = "Pricing Chart",
+            onBack = { showPricingChart = false }
+        )
+        return
+    }
 
     Scaffold(containerColor = Color.Transparent) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -243,6 +253,7 @@ fun UpgradeToPremiumScreen(onBack: () -> Unit = {}) {
                     }
                 }
             )
+            PricingChartLink(onClick = { showPricingChart = true })
             }
             }
         }
@@ -781,6 +792,24 @@ private fun RestoreButton(onClick: () -> Unit) {
         ) {
             Text(
                 "Restore Purchase",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = BrandCyanDark,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PricingChartLink(onClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Surface(onClick = onClick, color = Color.Transparent) {
+            Text(
+                "See full pricing chart",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = BrandCyanDark,

@@ -1,0 +1,174 @@
+{
+  "tiers": {
+    "Free": {
+      "monthly": 0,
+      "yearly": 0,
+      "detail": "Everyday safety essentials, free forever.",
+      "features": [
+        "Trusted contacts allowlist",
+        "Call blocking + SMS block list",
+        "Blocking & Unknown screen",
+        "Data Removal visibility scan (50+ sites)",
+        "Unlimited local private alias generation",
+        "Breach Watch for 1 email",
+        "Contact Safety Scan (bundled scam feed)",
+        "Android scam SMS scan",
+        "App Lock, pocket-dial & screenshot controls",
+        "Panic Lock and JSON/CSV data export",
+        "Emergency contact & distress options",
+        "Honest platform-limit notices"
+      ]
+    },
+    "Premium": {
+      "monthly": 0.99,
+      "yearly": 4.99,
+      "familyMonthly": 1.99,
+      "familyYearly": 9.99,
+      "detail": "A stronger privacy routine with audits and reminders.",
+      "features": [
+        "Everything in Free",
+        "Privacy Shield alerts for OnlyTrusted-owned capture",
+        "Breach Watch for up to 5 emails",
+        "Private Aliases CSV backup",
+        "Identity Protection and yearly renewal reminders",
+        "Data Removal 90-day recheck reminders",
+        "Weekly PDF digest",
+        "Quiet hours and area-code allowlist"
+      ]
+    },
+    "Pro": {
+      "monthly": 2.99,
+      "yearly": 19.99,
+      "familyMonthly": 4.99,
+      "familyYearly": 29.99,
+      "detail": "Advanced protection for communication and personal safety.",
+      "features": [
+        "Everything in Premium",
+        "Duress Mode and decoy vault",
+        "SIM-Swap Alarm and Wangiri protection",
+        "App Permission Watchdog",
+        "Tracker Finder (supported BLE detection)",
+        "Smart Link Guard: SMS, QR and shared links",
+        "Safety Check-In"
+      ]
+    },
+    "Elite": {
+      "monthly": 3.99,
+      "yearly": 29.99,
+      "familyMonthly": 7.99,
+      "familyYearly": 49.99,
+      "detail": "The complete OnlyTrusted personal security suite.",
+      "features": [
+        "Everything in Pro",
+        "App Shield (platform-specific restrictions)",
+        "Border Mode preset and Panic Lockdown",
+        "Hardware security key and signed audit log",
+        "Encrypted vault backup, Shamir Split, Trusted Witness",
+        "Dead-Man Wipe and geo-fence Auto-Lock",
+        "Face-Change Lock and voice biometrics",
+        "Steganographic vault, rogue-network scan and offline threat intelligence"
+      ]
+    }
+  },
+  "appleProductIds": {
+    "Premium": {
+      "individual": {
+        "monthly": "com.onlytrusted.app.premium.monthly",
+        "yearly": "com.onlytrusted.app.premium.yearly"
+      },
+      "family": {
+        "monthly": "com.onlytrusted.app.family.monthly",
+        "yearly": "com.onlytrusted.app.family.yearly"
+      }
+    },
+    "Pro": {
+      "individual": {
+        "monthly": "com.onlytrusted.app.pro.monthly",
+        "yearly": "com.onlytrusted.app.pro.yearly"
+      },
+      "family": {
+        "monthly": "com.onlytrusted.app.pro_family.monthly",
+        "yearly": "com.onlytrusted.app.pro_family.yearly"
+      }
+    },
+    "Elite": {
+      "individual": {
+        "monthly": "com.onlytrusted.app.elite.monthly",
+        "yearly": "com.onlytrusted.app.elite.yearly"
+      },
+      "family": {
+        "monthly": "com.onlytrusted.app.elite_family.monthly",
+        "yearly": "com.onlytrusted.app.elite_family.yearly"
+      }
+    }
+  },
+  "googlePlayMapping": {
+    "Premium": {
+      "individual": {
+        "monthly": [
+          "premium",
+          "premium_monthly"
+        ],
+        "yearly": [
+          "premium",
+          "premium_yearly"
+        ]
+      },
+      "family": {
+        "monthly": [
+          "premium_family",
+          "family_monthly"
+        ],
+        "yearly": [
+          "premium_family",
+          "family_yearly"
+        ]
+      }
+    },
+    "Pro": {
+      "individual": {
+        "monthly": [
+          "pro",
+          "pro_monthly"
+        ],
+        "yearly": [
+          "pro",
+          "pro_yearly"
+        ]
+      },
+      "family": {
+        "monthly": [
+          "pro_family",
+          "pro_family_monthly"
+        ],
+        "yearly": [
+          "pro_family",
+          "pro_family_yearly"
+        ]
+      }
+    },
+    "Elite": {
+      "individual": {
+        "monthly": [
+          "elite",
+          "elite_monthly"
+        ],
+        "yearly": [
+          "elite",
+          "elite_yearly"
+        ]
+      },
+      "family": {
+        "monthly": [
+          "elite_family",
+          "elite_family_monthly"
+        ],
+        "yearly": [
+          "elite_family",
+          "elite_family_yearly"
+        ]
+      }
+    }
+  },
+  "notes": "Product IDs and base-plan IDs are proposed from user-provided pricing matrix. Google Play subscription product IDs must be configured and confirmed in Play Console; family sharing is not automatic. Prices must be loaded from stores in production."
+}

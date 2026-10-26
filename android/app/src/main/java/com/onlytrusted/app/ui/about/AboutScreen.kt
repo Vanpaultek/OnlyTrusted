@@ -35,7 +35,9 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.EmojiEvents
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.GridView
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.Icon
@@ -65,6 +67,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.onlytrusted.app.BuildConfig
 import com.onlytrusted.app.R
+import com.onlytrusted.app.ui.docs.BundledDocScreen
 import com.onlytrusted.app.ui.subscription.SubscriptionState
 import com.onlytrusted.app.ui.theme.BrandCyanDark
 import com.onlytrusted.app.ui.theme.MidnightBackground
@@ -89,7 +92,7 @@ private val AboutGreen = Color(0xFF22C55E)
 private val AboutOrange = Color(0xFFF59E0B)
 private val AboutPink = Color(0xFFEC4899)
 
-private enum class AboutSubScreen { None, Acknowledgments, ThirdParty, AppIcons }
+private enum class AboutSubScreen { None, Acknowledgments, ThirdParty, AppIcons, UserGuide, PricingChart }
 
 @Composable
 fun AboutScreen() {
@@ -104,6 +107,12 @@ fun AboutScreen() {
             ThirdPartyLibrariesScreen(onBack = { subScreen = AboutSubScreen.None })
         AboutSubScreen.AppIcons ->
             AppIconsAttributionScreen(onBack = { subScreen = AboutSubScreen.None })
+        AboutSubScreen.UserGuide ->
+            BundledDocScreen(folder = "guide", title = "User Guide",
+                             onBack = { subScreen = AboutSubScreen.None })
+        AboutSubScreen.PricingChart ->
+            BundledDocScreen(folder = "pricing", title = "Pricing Chart",
+                             onBack = { subScreen = AboutSubScreen.None })
         AboutSubScreen.None -> {
             Box(
                 modifier = Modifier
@@ -173,6 +182,22 @@ fun AboutScreen() {
                                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 runCatching { context.startActivity(intent) }
                             }
+                        )
+                        AboutRow(
+                            icon = Icons.AutoMirrored.Filled.MenuBook,
+                            tint = AboutGreen,
+                            title = "User Guide",
+                            subtitle = "Every feature, how to find it, what it does.",
+                            value = null,
+                            onClick = { subScreen = AboutSubScreen.UserGuide }
+                        )
+                        AboutRow(
+                            icon = Icons.Filled.LocalOffer,
+                            tint = AboutOrange,
+                            title = "Pricing Chart",
+                            subtitle = "All plans and features, side by side.",
+                            value = null,
+                            onClick = { subScreen = AboutSubScreen.PricingChart }
                         )
                         if (SubscriptionState.isActive(context)) {
                             AboutRow(
