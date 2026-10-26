@@ -1,0 +1,65 @@
+[
+  {
+    "language": "en",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_en_voiced.mp4",
+    "voice": "Samantha",
+    "seconds": 69.799002,
+    "cues": 13
+  },
+  {
+    "language": "es",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_es_voiced.mp4",
+    "voice": "Mónica",
+    "seconds": 80.573016,
+    "cues": 13
+  },
+  {
+    "language": "fr",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_fr_voiced.mp4",
+    "voice": "Thomas",
+    "seconds": 76.021995,
+    "cues": 13
+  },
+  {
+    "language": "pt",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_pt_voiced.mp4",
+    "voice": "Luciana",
+    "seconds": 83.126984,
+    "cues": 13
+  },
+  {
+    "language": "hi",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_hi_voiced.mp4",
+    "voice": "Lekha",
+    "seconds": 75.976009,
+    "cues": 13
+  },
+  {
+    "language": "ar",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_ar_voiced.mp4",
+    "voice": "Majed",
+    "seconds": 103.932018,
+    "cues": 13
+  },
+  {
+    "language": "de",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_de_voiced.mp4",
+    "voice": "Anna",
+    "seconds": 76.625986,
+    "cues": 13
+  },
+  {
+    "language": "id",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_id_voiced.mp4",
+    "voice": "Damayanti",
+    "seconds": 85.356009,
+    "cues": 13
+  },
+  {
+    "language": "te",
+    "video": "/Users/vinreddy/Documents/Projects/MobileSecurity/tools/video/output/narrated/OnlyTrusted_Real_UI_te_voiced.mp4",
+    "voice": "Geeta",
+    "seconds": 82.199002,
+    "cues": 13
+  }
+]
