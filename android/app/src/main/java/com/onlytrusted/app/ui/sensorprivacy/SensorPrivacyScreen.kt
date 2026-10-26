@@ -15,7 +15,10 @@ import androidx.compose.material.icons.filled.MicNone
 import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.VolumeDown
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -57,6 +60,8 @@ fun SensorPrivacyScreen(onBack: () -> Unit) {
 
     var serviceEnabled by remember { mutableStateOf(isServiceRunning(context)) }
     var batteryExempt by remember { mutableStateOf(BatteryOptimizationHelper.isExempted(context)) }
+    var deviceAdminActive by remember { mutableStateOf(DeviceAdminSensorPrivacyController.isActive(context)) }
+    var pauseRemaining by remember { mutableStateOf(SafetyOverride.remainingMinutes(context)) }
 
     LaunchedEffect(Unit) {
         state = controller.readState()
@@ -88,6 +93,31 @@ fun SensorPrivacyScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             StatusCard(state, controller.tierLabel, controller.canEnforceGlobally)
+            SafetyOverrideCard(
+                remainingMinutes = pauseRemaining,
+                onPause = { window ->
+                    SafetyOverride.pause(context, window)
+                    pauseRemaining = SafetyOverride.remainingMinutes(context)
+                },
+                onResume = {
+                    SafetyOverride.resume(context)
+                    pauseRemaining = 0
+                },
+            )
+            DeviceAdminCard(
+                active = deviceAdminActive,
+                onRequest = {
+                    val intent = DeviceAdminSensorPrivacyController.buildActivationIntent(
+                        context,
+                        "OnlyTrusted needs Device Admin to globally disable the camera when the screen locks. You can revoke this anytime in Settings → Security → Device admin apps.",
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(intent) }
+                },
+                onRevoke = {
+                    DeviceAdminSensorPrivacyController.removeActiveAdmin(context)
+                    deviceAdminActive = false
+                },
+            )
             AutoLockCard(
                 serviceEnabled = serviceEnabled,
                 batteryExempt = batteryExempt,
@@ -280,13 +310,17 @@ private fun Bullet(text: String) {
     }
 }
 
-/** Picks the strongest controller available on this install. */
+/** Picks the strongest controller available on this install.
+ *  Priority: Privileged > Device Owner > Device Admin > Consumer. */
 private fun pickController(context: android.content.Context): SensorPrivacyController {
     if (PrivilegedSensorPrivacyController.isActive(context)) {
         return PrivilegedSensorPrivacyController(context)
     }
     if (DeviceOwnerSensorPrivacyController.isActive(context)) {
         return DeviceOwnerSensorPrivacyController(context)
+    }
+    if (DeviceAdminSensorPrivacyController.isActive(context)) {
+        return DeviceAdminSensorPrivacyController(context)
     }
     return ConsumerSensorPrivacyController(context)
 }
@@ -298,6 +332,110 @@ private fun isServiceRunning(context: android.content.Context): Boolean {
     @Suppress("DEPRECATION")
     val running = runCatching { am.getRunningServices(Int.MAX_VALUE) }.getOrDefault(emptyList())
     return running.any { it.service.className == SensorPrivacyForegroundService::class.java.name }
+}
+
+@Composable
+private fun SafetyOverrideCard(
+    remainingMinutes: Int,
+    onPause: (SafetyOverride.Window) -> Unit,
+    onResume: () -> Unit,
+) {
+    Card {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Eyebrow("SAFETY OVERRIDE")
+            Text(
+                "Need the camera urgently? Pause auto-enforcement for a bounded window. " +
+                    "Enforcement resumes automatically — no permanent off switch (that would silently defeat the feature).",
+                color = SecondaryTextDark, fontSize = 13.sp,
+            )
+            if (remainingMinutes > 0) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Pause, null, tint = Color(0xFFF59E0B), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Paused — $remainingMinutes min remaining",
+                             color = PrimaryTextDark, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Enforcement will resume automatically.",
+                             color = SecondaryTextDark, fontSize = 12.sp)
+                    }
+                    Row(
+                        modifier = Modifier.clickable(onClick = onResume).padding(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.PlayArrow, null, tint = BrandCyanDark, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Resume now", color = BrandCyanDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SafetyOverride.Window.values().forEach { w ->
+                        PauseChip(label = w.label, onClick = { onPause(w) }, modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PauseChip(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(Color(0xFF152636), RoundedCornerShape(20.dp))
+            .border(1.dp, SecondaryTextDark.copy(alpha = 0.14f), RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Filled.Pause, null, tint = BrandCyanDark, modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(label, color = PrimaryTextDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun DeviceAdminCard(active: Boolean, onRequest: () -> Unit, onRevoke: () -> Unit) {
+    Card {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Eyebrow("UPGRADE: DEVICE ADMIN (OPTIONAL)")
+            Text(
+                "Device Admin lets OnlyTrusted actually CUT the camera at the hardware level when the screen locks — not just mute the mic. The user grants it via a one-tap system dialog; revoke anytime from Android Settings → Security.",
+                color = SecondaryTextDark, fontSize = 13.sp,
+            )
+            if (active) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Security, null, tint = Color(0xFF22C55E), modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Device Admin active", color = PrimaryTextDark, fontSize = 14.sp,
+                             fontWeight = FontWeight.SemiBold)
+                        Text("Camera will be disabled via setCameraDisabled() on every screen lock.",
+                             color = SecondaryTextDark, fontSize = 12.sp)
+                    }
+                    Text("Revoke", color = Color(0xFFF59E0B), fontSize = 12.sp,
+                         fontWeight = FontWeight.SemiBold,
+                         modifier = Modifier.clickable(onClick = onRevoke).padding(8.dp))
+                }
+            } else {
+                Row(
+                    modifier = Modifier.clickable(onClick = onRequest).padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Security, null, tint = BrandCyanDark, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("Enable Device Admin", color = PrimaryTextDark, fontSize = 14.sp,
+                             fontWeight = FontWeight.SemiBold)
+                        Text("Opens the system dialog where you grant OnlyTrusted camera-disable permission.",
+                             color = SecondaryTextDark, fontSize = 12.sp)
+                    }
+                    Icon(Icons.Filled.OpenInNew, null, tint = BrandCyanDark, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+    }
 }
 
 @Composable

@@ -142,12 +142,16 @@ class SensorPrivacyForegroundService : Service() {
             context.stopService(Intent(context, SensorPrivacyForegroundService::class.java))
         }
 
-        /** Picks the strongest available controller tier for the receiver. */
+        /** Picks the strongest available controller tier for the receiver.
+         *  Priority: Privileged (OEM) > Device Owner (reset flow) >
+         *  Device Admin (user dialog) > Consumer. */
         internal fun pickController(context: Context): SensorPrivacyController = when {
             PrivilegedSensorPrivacyController.isActive(context) ->
                 PrivilegedSensorPrivacyController(context)
             DeviceOwnerSensorPrivacyController.isActive(context) ->
                 DeviceOwnerSensorPrivacyController(context)
+            DeviceAdminSensorPrivacyController.isActive(context) ->
+                DeviceAdminSensorPrivacyController(context)
             else ->
                 ConsumerSensorPrivacyController(context)
         }

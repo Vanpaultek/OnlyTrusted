@@ -28,7 +28,19 @@ class ScreenStateReceiver private constructor(
 
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            Intent.ACTION_SCREEN_OFF -> scope.launch { controller.enforceLock() }
+            Intent.ACTION_SCREEN_OFF -> {
+                if (SafetyOverride.isActive(context)) {
+                    SensorPrivacyLog.append(
+                        context,
+                        kind = SensorPrivacyLog.Kind.SCREEN_LOCK,
+                        detail = "screen locked, but safety override active " +
+                            "(${SafetyOverride.remainingMinutes(context)} min remaining). " +
+                            "enforceLock() skipped.",
+                    )
+                    return
+                }
+                scope.launch { controller.enforceLock() }
+            }
             Intent.ACTION_SCREEN_ON -> scope.launch { controller.restoreAfterUnlock() }
         }
     }
