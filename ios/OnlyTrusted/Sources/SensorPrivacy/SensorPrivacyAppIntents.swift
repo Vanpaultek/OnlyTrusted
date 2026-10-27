@@ -75,6 +75,49 @@ struct OpenCameraSettingsAppIntent: AppIntent {
     }
 }
 
+/// "Shield apps on lock" — fires the Family-Controls shield on the user's
+/// selected app list. Designed to be the action of a Shortcuts Automation
+/// triggered by "When iPhone is Locked" so the shield auto-applies on lock.
+///
+/// Requires:
+///   - `com.apple.developer.family-controls` entitlement (declared in
+///     ios/Entitlements/OnlyTrusted.entitlements)
+///   - User has granted Family Controls authorization in-app
+///   - User has selected apps via FamilyActivityPicker in AppShieldSetup
+///
+/// Does nothing silently if any precondition is missing — safer than
+/// crashing in the Shortcuts runtime.
+@available(iOS 16.0, *)
+struct ShieldAppsOnLockIntent: AppIntent {
+    static let title: LocalizedStringResource = "Shield apps on lock"
+    static let description = IntentDescription(
+        "Blocks the apps you've picked in OnlyTrusted → App Shield from opening. Pair with a Shortcuts Automation 'When iPhone is Locked' so the shield auto-applies when you lock the phone."
+    )
+    static let openAppWhenRun: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        _ = await MainActor.run { AppShieldManager.applyShield() }
+        return .result()
+    }
+}
+
+/// Inverse of [ShieldAppsOnLockIntent] — removes the shield so the apps can
+/// open again. Pair with Shortcuts "When iPhone is Unlocked" so it fires
+/// automatically on unlock.
+@available(iOS 16.0, *)
+struct UnshieldAppsOnUnlockIntent: AppIntent {
+    static let title: LocalizedStringResource = "Unshield apps on unlock"
+    static let description = IntentDescription(
+        "Removes OnlyTrusted's App Shield so the selected apps can open again. Pair with a Shortcuts Automation 'When iPhone is Unlocked'."
+    )
+    static let openAppWhenRun: Bool = false
+
+    func perform() async throws -> some IntentResult {
+        await MainActor.run { AppShieldManager.clearShield() }
+        return .result()
+    }
+}
+
 /// Groups the four intents under the OnlyTrusted umbrella in Shortcuts.
 /// The user can drag any of these into their own Automation (e.g.
 /// Shortcuts → Automation → Create → When iPhone is Locked → add
@@ -111,6 +154,24 @@ struct OnlyTrustedAppShortcutsProvider: AppShortcutsProvider {
             phrases: ["Open camera settings via \(.applicationName)"],
             shortTitle: "iOS Camera Settings",
             systemImageName: "camera.circle",
+        )
+        AppShortcut(
+            intent: ShieldAppsOnLockIntent(),
+            phrases: [
+                "Shield my apps with \(.applicationName)",
+                "\(.applicationName) shield on",
+            ],
+            shortTitle: "Shield apps",
+            systemImageName: "lock.app.dashed",
+        )
+        AppShortcut(
+            intent: UnshieldAppsOnUnlockIntent(),
+            phrases: [
+                "Unshield my apps with \(.applicationName)",
+                "\(.applicationName) shield off",
+            ],
+            shortTitle: "Unshield apps",
+            systemImageName: "lock.open",
         )
     }
 }

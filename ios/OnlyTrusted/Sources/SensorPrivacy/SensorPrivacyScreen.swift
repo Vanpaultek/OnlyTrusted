@@ -33,6 +33,7 @@ struct SensorPrivacyScreen: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
                 statusCard
+                shieldOnLockCard
                 restrictedCard
                 learnMoreDisclosure
                 reviewCard
@@ -160,6 +161,100 @@ struct SensorPrivacyScreen: View {
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Shield on lock (FamilyControls + Shortcuts combo)
+
+    /// The closest iOS lets us get to Android's auto-mute-on-lock: shield
+    /// (= block from opening) the user-picked apps using the Family Controls
+    /// framework, triggered by a user-created Shortcuts Automation.
+    ///
+    /// Opens the existing AppShieldSetupScreen for the app picker + authorization,
+    /// then provides a step-by-step guide to wire up the "When iPhone is Locked"
+    /// Automation that calls our ShieldAppsOnLockIntent.
+    private var shieldOnLockCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("SHIELD APPS ON LOCK").eyebrow()
+                Spacer()
+                Text("Pro").miniTierChip()
+            }
+            Text("The closest iOS allows to Android's auto-mute-on-lock. Shielded apps are blocked from opening (and from using mic/cam) while the shield is active.")
+                .cardBodyMuted()
+            NavigationLink { AppShieldSetupScreen() } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "lock.app.dashed")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.appAccent)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Pick apps + grant Family Controls")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(Color.appPrimaryText)
+                        Text("Opens App Shield setup — authorize + choose the apps to shield.")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Color.appSecondaryText)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+                .padding(10)
+                .background(Color.appScreenBackground.opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            .buttonStyle(.plain)
+
+            // Shortcuts automation guide.
+            VStack(alignment: .leading, spacing: 6) {
+                Text("STEP 2 — SHORTCUTS AUTOMATION")
+                    .font(.system(size: 9, weight: .heavy))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.appSecondaryText)
+                shortcutStep(num: "1", text: "Open iOS Shortcuts app → Automation tab")
+                shortcutStep(num: "2", text: "+ → Create Personal Automation → When iPhone is Locked → Next")
+                shortcutStep(num: "3", text: "Add Action → search \"OnlyTrusted\" → tap Shield apps")
+                shortcutStep(num: "4", text: "Toggle OFF \"Ask Before Running\" → Done")
+                shortcutStep(num: "5", text: "Create a second Automation: When iPhone is Unlocked → OnlyTrusted → Unshield apps")
+                Button {
+                    if let url = URL(string: "shortcuts://create-workflow") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "arrow.up.right.square").font(.system(size: 11))
+                        Text("Open Shortcuts app").font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(Color.appAccent)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 4)
+            }
+            .padding(10)
+            .background(Color.appScreenBackground.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Text("Caveats: Apple must approve the Family Controls entitlement for this build. Shielded apps also miss notifications while shielded (not just mic/cam). Not identical to the Android behaviour but as close as iOS gets.")
+                .font(.system(size: 10))
+                .foregroundStyle(Color.appSecondaryText.opacity(0.75))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .card()
+    }
+
+    private func shortcutStep(num: String, text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(num)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundStyle(Color.appAccent)
+                .frame(width: 14, height: 14)
+                .background(Circle().fill(Color.appAccent.opacity(0.18)))
+            Text(text)
+                .font(.system(size: 11))
+                .foregroundStyle(Color.appPrimaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     // MARK: - Always Restricted (compact)
@@ -698,6 +793,13 @@ private extension Text {
     func miniHeading() -> some View {
         self.font(.system(size: 13, weight: .semibold))
             .foregroundStyle(Color.appPrimaryText)
+    }
+    func miniTierChip() -> some View {
+        self.font(.system(size: 9, weight: .heavy))
+            .foregroundStyle(Color.subGold)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().stroke(Color.subGold, lineWidth: 1))
     }
 }
 
