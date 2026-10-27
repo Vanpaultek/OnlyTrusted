@@ -23,9 +23,9 @@ struct SensorPrivacyScreen: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
                 statusCard
-                reviewCard
                 restrictedCard
                 learnMoreDisclosure
+                reviewCard
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 20)
