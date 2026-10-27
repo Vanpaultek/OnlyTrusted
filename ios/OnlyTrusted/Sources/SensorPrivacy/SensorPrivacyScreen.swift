@@ -3,49 +3,27 @@
 import SwiftUI
 import UIKit
 
-/// iPhone Sensor Privacy Center — the honest version of what the Mic & Camera
-/// Lock story can look like inside a consumer App Store install.
+/// iPhone Sensor Privacy Center — honest permission-review hub.
 ///
-/// iOS forbids any third-party app from reading or modifying other apps'
-/// microphone / camera access. This screen explicitly does NOT claim to:
-///   - enumerate every app on the phone with mic / camera access
-///   - verify whether an app's permission is actually revoked
-///   - block any other app's recording after the screen locks
+/// Rewritten for density: fewer cards on first paint, denser information
+/// grouped together, education + legal moved behind a "Learn more"
+/// disclosure. Core actions (Review iOS Settings, Always Restricted
+/// checklist) are above the fold.
 ///
-/// What it DOES, honestly:
-///   1. Shows OnlyTrusted's own mic + camera authorization.
-///   2. Deep-links to iOS Settings → Privacy → Microphone / Camera where
-///      the user can review every app's state (Apple's authoritative source).
-///   3. Lets the user maintain a personal "Always Restricted" checklist —
-///      a notepad of apps the user has deliberately denied, labelled
-///      "self-reported" so no OS verification is implied.
-///   4. Explains Apple's orange / green indicator dots so the user knows
-///      what to look for.
-///   5. Points at the iOS Shortcuts automation + the Apple Feedback form
-///      for people who want to push for a native lock-screen mic/cam toggle.
-///   6. Confirms OnlyTrusted's own captures (voice bio, face lock, QR
-///      scanning) stop immediately when the screen locks.
-///
-/// See docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Tier 1 Consumer (iOS)" for
-/// the full honest-claims rationale.
+/// See docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Tier 1 Consumer (iOS)".
 struct SensorPrivacyScreen: View {
     @StateObject private var controller = ConsumerSensorPrivacyController.shared
     @StateObject private var restricted = AlwaysRestrictedAppsStore.shared
-    @State private var newAppName: String = ""
-    @State private var newEntryMic: Bool = true
-    @State private var newEntryCamera: Bool = true
+    @State private var showAddSheet = false
+    @State private var showLearnMore = false
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 20) {
-                heroCard
+            VStack(spacing: 16) {
                 statusCard
-                permissionReviewCards
-                restrictedChecklistCard
-                indicatorEducationCard
-                captureProtectionCard
-                requestAppleCard
-                honestLimitsCard
+                reviewCard
+                restrictedCard
+                learnMoreDisclosure
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 20)
@@ -54,360 +32,325 @@ struct SensorPrivacyScreen: View {
         .navigationTitle("Mic & Camera Lock")
         .navigationBarTitleDisplayMode(.inline)
         .task { _ = await controller.readState() }
-    }
-
-    // MARK: - Hero
-
-    private var heroCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("IPHONE SENSOR PRIVACY CENTER")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            Text("The honest version")
-                .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundStyle(Color.appPrimaryText)
-            Text("iOS forbids any app from touching another app's mic or camera. OnlyTrusted does not pretend otherwise. What this screen does: help you lock other apps down yourself, remind you how iOS already warns you, and keep our own recordings honest.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+        .sheet(isPresented: $showAddSheet) {
+            AddRestrictedAppSheet(onAdd: { name, mic, cam in
+                restricted.add(name: name, micRestricted: mic, cameraRestricted: cam)
+                showAddSheet = false
+            }, onCancel: { showAddSheet = false })
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appAccent.opacity(0.22), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    // MARK: - Status (OnlyTrusted's own permissions)
+    // MARK: - Status
 
     private var statusCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("ONLYTRUSTED'S OWN PERMISSIONS")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            HStack(spacing: 14) {
-                sensorChip(name: "Microphone",
-                           symbol: "mic.slash.fill",
+                .eyebrow()
+            HStack(spacing: 10) {
+                sensorChip(name: "Microphone", symbol: "mic.fill",
                            blocked: controller.currentState.microphoneBlocked)
-                sensorChip(name: "Camera",
-                           symbol: "video.slash.fill",
+                sensorChip(name: "Camera", symbol: "video.fill",
                            blocked: controller.currentState.cameraBlocked)
             }
-            Text("Status refers only to what YOU have granted OnlyTrusted. iOS does not share other apps' permission state with us — see the next cards for how to review those yourself.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+            Text("iOS does not reveal other apps' permission state to third-party apps.")
+                .cardBodyMuted()
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(14)
+        .card()
     }
 
     private func sensorChip(name: String, symbol: String, blocked: Bool?) -> some View {
         let tint: Color = blocked == true ? .green : (blocked == false ? .orange : Color.appSecondaryText)
         let state: String = blocked == true ? "Blocked" : (blocked == false ? "Allowed" : "Unknown")
-        return VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: symbol)
-                .font(.system(size: 20))
-                .foregroundStyle(tint)
-            Text(name).font(.system(size: 13, weight: .semibold)).foregroundStyle(Color.appPrimaryText)
-            Text(state).font(.system(size: 12)).foregroundStyle(tint)
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: symbol).font(.system(size: 13)).foregroundStyle(tint)
+                Text(name).font(.system(size: 12, weight: .semibold)).foregroundStyle(Color.appPrimaryText)
+            }
+            Text(state).font(.system(size: 11, weight: .semibold)).foregroundStyle(tint)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
+        .padding(10)
         .background(Color.appScreenBackground.opacity(0.55))
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
-    // MARK: - Permission review (Apple-authoritative deep links)
+    // MARK: - Review (merged mic + camera)
 
-    private var permissionReviewCards: some View {
-        VStack(spacing: 12) {
-            reviewCard(
-                icon: "mic.fill",
-                title: "Mic Permission Review",
-                body: "Open iOS Settings → Privacy & Security → Microphone to see every app that has asked for microphone access and revoke anything you don't want listening.",
-                buttonLabel: "Open Microphone Settings",
-                action: ConsumerSensorPrivacyController.openMicrophoneSettings,
-            )
-            reviewCard(
-                icon: "video.fill",
-                title: "Camera Permission Review",
-                body: "Open iOS Settings → Privacy & Security → Camera and audit the full list. Revoke anything that doesn't need video.",
-                buttonLabel: "Open Camera Settings",
-                action: ConsumerSensorPrivacyController.openCameraSettings,
-            )
-        }
-    }
-
-    private func reviewCard(icon: String, title: String, body: String,
-                            buttonLabel: String, action: @escaping () -> Void) -> some View {
+    private var reviewCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.appAccent)
-                Text(title).font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.appPrimaryText)
+            Text("REVIEW IN IOS SETTINGS")
+                .eyebrow()
+            Text("iOS owns the per-app list. Tap below to open it directly.")
+                .cardBodyMuted()
+            VStack(spacing: 8) {
+                reviewRow(symbol: "mic.fill", label: "Microphone — all apps",
+                          action: ConsumerSensorPrivacyController.openMicrophoneSettings)
+                reviewRow(symbol: "video.fill", label: "Camera — all apps",
+                          action: ConsumerSensorPrivacyController.openCameraSettings)
             }
-            Text(body).font(.system(size: 13)).foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-            Button(action: action) {
-                HStack {
-                    Text(buttonLabel).font(.system(size: 14, weight: .semibold))
-                    Image(systemName: "arrow.up.right.square").font(.system(size: 13))
-                }
-                .foregroundStyle(Color.appAccent)
-            }
-            .buttonStyle(.plain)
         }
         .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .card()
     }
 
-    // MARK: - Always-restricted checklist (self-reported)
-
-    private var restrictedChecklistCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("ALWAYS RESTRICTED — YOUR CHECKLIST")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            Text("A personal notepad of apps you've denied mic / camera access. This list is **self-reported** — OnlyTrusted does not verify iOS state. Use it as a memory aid for your own audits.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-
-            // Add row
-            HStack(spacing: 8) {
-                TextField("App name (e.g. Instagram)", text: $newAppName)
-                    .textFieldStyle(.roundedBorder)
+    private func reviewRow(symbol: String, label: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Image(systemName: symbol)
                     .font(.system(size: 14))
-                Button {
-                    restricted.add(name: newAppName,
-                                   micRestricted: newEntryMic,
-                                   cameraRestricted: newEntryCamera)
-                    newAppName = ""
-                } label: {
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundStyle(Color.appAccent)
+                    .foregroundStyle(Color.appAccent)
+                    .frame(width: 24)
+                Text(label).font(.system(size: 14)).foregroundStyle(Color.appPrimaryText)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.appAccent)
+            }
+            .padding(10)
+            .background(Color.appScreenBackground.opacity(0.5))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Always Restricted (compact)
+
+    private var restrictedCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("ALWAYS RESTRICTED").eyebrow()
+                Spacer()
+                Button { showAddSheet = true } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "plus")
+                        Text("Add")
+                    }
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Color.appAccent)
                 }
                 .buttonStyle(.plain)
-                .disabled(newAppName.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-            HStack(spacing: 14) {
-                Toggle(isOn: $newEntryMic) {
-                    Label("Mic revoked", systemImage: "mic.slash")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.appSecondaryText)
-                }
-                .tint(Color.appAccent)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-                Toggle(isOn: $newEntryCamera) {
-                    Label("Cam revoked", systemImage: "video.slash")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Color.appSecondaryText)
-                }
-                .tint(Color.appAccent)
-                .toggleStyle(.switch)
-                .controlSize(.mini)
-            }
-
-            Divider().background(Color.appSecondaryText.opacity(0.14))
-
+            Text("Your personal checklist — self-reported, not OS-verified.")
+                .cardBodyMuted()
             if restricted.entries.isEmpty {
-                Text("No apps added yet. Add the apps you deliberately denied mic / cam access so you can audit them later.")
+                Text("No apps yet. Tap Add to log an app you've denied mic / cam access.")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.appSecondaryText)
                     .padding(.vertical, 6)
             } else {
-                ForEach(restricted.entries) { entry in
-                    restrictedRow(entry)
+                VStack(spacing: 6) {
+                    ForEach(restricted.entries) { entry in
+                        restrictedRow(entry)
+                    }
                 }
             }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(14)
+        .card()
     }
 
     private func restrictedRow(_ entry: RestrictedAppEntry) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: "app.badge.checkmark")
-                .font(.system(size: 15))
-                .foregroundStyle(Color.appAccent)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.displayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Color.appPrimaryText)
-                HStack(spacing: 10) {
-                    if entry.micRestricted {
-                        Label("mic", systemImage: "mic.slash.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.green)
-                    }
-                    if entry.cameraRestricted {
-                        Label("cam", systemImage: "video.slash.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(.green)
-                    }
-                    if !entry.micRestricted && !entry.cameraRestricted {
-                        Text("neither restricted")
-                            .font(.system(size: 11))
-                            .foregroundStyle(Color.appSecondaryText)
-                    }
-                }
-            }
+            Text(entry.displayName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.appPrimaryText)
             Spacer()
-            Button {
-                restricted.remove(id: entry.id)
-            } label: {
+            if entry.micRestricted {
+                Image(systemName: "mic.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+            }
+            if entry.cameraRestricted {
+                Image(systemName: "video.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+            }
+            Button { restricted.remove(id: entry.id) } label: {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
+                    .font(.system(size: 14))
                     .foregroundStyle(Color.appSecondaryText.opacity(0.6))
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .background(Color.appScreenBackground.opacity(0.4))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Indicator education
+    // MARK: - Learn more disclosure
 
-    private var indicatorEducationCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("WATCH FOR APPLE'S INDICATORS")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            indicatorRow(color: .orange, label: "Orange dot = mic in use")
-            indicatorRow(color: .green, label: "Green dot = camera in use")
-            Text("If you see these when you aren't using a known mic / camera app, swipe down for Control Center — iOS names the app at the top. These dots are Apple's authoritative signal, not OnlyTrusted's.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+    private var learnMoreDisclosure: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { showLearnMore.toggle() }
+            } label: {
+                HStack {
+                    Text("Learn more about iOS limits")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.appAccent)
+                    Spacer()
+                    Image(systemName: showLearnMore ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.appAccent)
+                }
+            }
+            .buttonStyle(.plain)
+
+            if showLearnMore {
+                VStack(spacing: 12) {
+                    indicatorMiniCard
+                    captureProtectionMiniCard
+                    requestAppleMiniCard
+                    honestLimitsMiniCard
+                }
+            }
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(14)
+        .card()
     }
 
-    private func indicatorRow(color: Color, label: String) -> some View {
-        HStack(spacing: 10) {
-            Circle().fill(color).frame(width: 10, height: 10)
-            Text(label).font(.system(size: 13)).foregroundStyle(Color.appPrimaryText)
-        }
-    }
-
-    // MARK: - OnlyTrusted's own capture protection
-
-    private var captureProtectionCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("ONLYTRUSTED'S OWN CAPTURES")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
+    private var indicatorMiniCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Apple's indicator dots").miniHeading()
             HStack(spacing: 10) {
-                Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.green)
-                Text("Active")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Color.appPrimaryText)
+                Circle().fill(.orange).frame(width: 8, height: 8)
+                Text("Orange = mic in use").font(.system(size: 12)).foregroundStyle(Color.appPrimaryText)
+                Spacer()
+                Circle().fill(.green).frame(width: 8, height: 8)
+                Text("Green = camera in use").font(.system(size: 12)).foregroundStyle(Color.appPrimaryText)
             }
-            Text("When OnlyTrusted is itself using the mic or camera (Voice Biometric enrollment, Face-Change Lock watcher, QR scanning), we immediately stop the recording the moment the screen locks or the app goes to the background.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
-            if let last = controller.lastLockEventAt {
-                Text("Last screen-lock seen: \(formatted(last))")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Color.appSecondaryText)
-            }
+            Text("Swipe down for Control Center — iOS names the app at the top.")
+                .cardBodyMuted()
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(12)
+        .miniCard()
     }
 
-    // MARK: - Request Apple
+    private var captureProtectionMiniCard: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark.shield.fill")
+                .font(.system(size: 16)).foregroundStyle(.green)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Our own captures: Active").miniHeading()
+                Text("Voice bio, face lock, QR scanning all stop on screen lock.")
+                    .cardBodyMuted()
+            }
+        }
+        .padding(12)
+        .miniCard()
+    }
 
-    private var requestAppleCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("ASK APPLE TO BUILD IT NATIVELY")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            Text("The only way to get a true \"lock = all apps lose mic + camera\" behaviour on iPhone is for Apple to add it to iOS itself. Submit a Feedback request supporting the feature.")
-                .font(.system(size: 13))
-                .foregroundStyle(Color.appSecondaryText)
-                .fixedSize(horizontal: false, vertical: true)
+    private var requestAppleMiniCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Ask Apple to build it natively").miniHeading()
+            Text("A true \"lock = all apps lose mic/cam\" needs iOS itself. Submit feedback.")
+                .cardBodyMuted()
             Button {
                 if let url = URL(string: "https://feedbackassistant.apple.com") {
                     UIApplication.shared.open(url)
                 }
             } label: {
-                HStack {
-                    Text("Open Feedback Assistant").font(.system(size: 14, weight: .semibold))
-                    Image(systemName: "arrow.up.right.square").font(.system(size: 13))
+                HStack(spacing: 4) {
+                    Text("Open Feedback Assistant").font(.system(size: 12, weight: .semibold))
+                    Image(systemName: "arrow.up.right.square").font(.system(size: 11))
                 }
                 .foregroundStyle(Color.appAccent)
             }
             .buttonStyle(.plain)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(12)
+        .miniCard()
     }
 
-    // MARK: - Honest limits
-
-    private var honestLimitsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("HONEST LIMITS")
-                .font(.system(size: 11, weight: .heavy))
-                .tracking(2)
-                .foregroundStyle(Color.appAccent)
-            bullet("OnlyTrusted cannot read other apps' microphone or camera authorization status — iOS does not expose it.")
-            bullet("OnlyTrusted cannot block another app's recording after the screen locks. No consumer App Store app can.")
-            bullet("Microphone gain tricks, blank camera overlays, and silent audio sessions do NOT produce real system-wide protection — we deliberately avoid them.")
-            bullet("The \"Always Restricted\" checklist is a personal notepad. OnlyTrusted does not verify what iOS actually enforces — only Apple's Settings → Privacy pages do.")
-            bullet("MDM-enrolled (supervised) devices have stronger controls via Apple Configuration profiles. That's an enterprise path, not a consumer App Store feature.")
+    private var honestLimitsMiniCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Honest limits").miniHeading()
+            miniBullet("Can't read other apps' mic/cam permissions.")
+            miniBullet("Can't stop other apps' recordings when the phone locks.")
+            miniBullet("No gain tricks, overlays, or private APIs — we deliberately avoid them.")
+            miniBullet("MDM-supervised devices have stronger controls (enterprise only).")
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appCardBackground)
-        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .padding(12)
+        .miniCard()
     }
 
-    private func bullet(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            Circle().fill(Color.appAccent).frame(width: 5, height: 5).padding(.top, 7)
-            Text(text).font(.system(size: 13)).foregroundStyle(Color.appSecondaryText)
+    private func miniBullet(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Circle().fill(Color.appAccent).frame(width: 4, height: 4).padding(.top, 6)
+            Text(text).font(.system(size: 12)).foregroundStyle(Color.appSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
+}
 
-    private func formatted(_ date: Date) -> String {
-        let f = DateFormatter()
-        f.dateStyle = .short
-        f.timeStyle = .medium
-        return f.string(from: date)
+// MARK: - Add-restricted sheet
+
+private struct AddRestrictedAppSheet: View {
+    let onAdd: (String, Bool, Bool) -> Void
+    let onCancel: () -> Void
+    @State private var name: String = ""
+    @State private var mic: Bool = true
+    @State private var cam: Bool = true
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("App name (e.g. Instagram)", text: $name)
+                    Toggle(isOn: $mic) {
+                        Label("Mic revoked", systemImage: "mic.slash")
+                    }
+                    Toggle(isOn: $cam) {
+                        Label("Camera revoked", systemImage: "video.slash")
+                    }
+                } footer: {
+                    Text("Tracked locally only. OnlyTrusted does not verify what iOS actually enforces for this app — review in iOS Settings.")
+                }
+            }
+            .navigationTitle("Add restricted app")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: onCancel)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add") {
+                        onAdd(name, mic, cam)
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Styling helpers
+
+private extension Text {
+    func eyebrow() -> some View {
+        self.font(.system(size: 10, weight: .heavy))
+            .tracking(1.8)
+            .foregroundStyle(Color.appAccent)
+    }
+    func cardBodyMuted() -> some View {
+        self.font(.system(size: 12))
+            .foregroundStyle(Color.appSecondaryText)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+    func miniHeading() -> some View {
+        self.font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(Color.appPrimaryText)
+    }
+}
+
+private extension View {
+    func card() -> some View {
+        self.frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.appCardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Color.appSecondaryText.opacity(0.14), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+    func miniCard() -> some View {
+        self.frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.appScreenBackground.opacity(0.4))
+            .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }
