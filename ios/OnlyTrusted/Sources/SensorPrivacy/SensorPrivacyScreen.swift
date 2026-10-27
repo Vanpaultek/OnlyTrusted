@@ -25,6 +25,7 @@ struct SensorPrivacyScreen: View {
     @State private var pendingReturnSensor: ReturnSensor?
     @State private var pendingReturnAt: Date?
     @State private var showPostReturnPrompt = false
+    @State private var showBrowseSheet = false
 
     fileprivate enum ReturnSensor { case mic, cam }
 
@@ -57,6 +58,14 @@ struct SensorPrivacyScreen: View {
                                    micRestricted: pendingReturnSensor == .mic,
                                    cameraRestricted: pendingReturnSensor == .cam)
                 },
+            )
+        }
+        .sheet(isPresented: $showBrowseSheet) {
+            SuggestedAppsBrowseSheet(
+                allApps: SuggestedApps.commonMicCamApps,
+                restricted: restricted,
+                defaultMic: newEntryMic,
+                defaultCam: newEntryCam,
             )
         }
     }
@@ -204,48 +213,53 @@ struct SensorPrivacyScreen: View {
                 .controlSize(.mini)
             }
 
-            // Suggested apps — vertical list with checkboxes. iOS does not
-            // let OnlyTrusted enumerate what's actually installed (Apple
-            // blocks app enumeration for third-party apps), so this is a
-            // curated list of common mic/cam apps. "Select all" works
-            // against the suggested set only — doesn't touch custom entries.
-            HStack {
-                Text("Suggested — tap to add")
-                    .font(.system(size: 10, weight: .semibold))
-                    .tracking(1.2)
-                    .foregroundStyle(Color.appSecondaryText)
-                Spacer()
-                Button {
-                    toggleAllSuggested()
-                } label: {
-                    Text(allSuggestedSelected ? "Deselect all" : "Select all")
+            // Browse suggestions — opens a searchable sheet. iOS does not let
+            // OnlyTrusted enumerate what's actually installed (Apple blocks
+            // app enumeration), so this is a curated list of ~50 common
+            // mic/cam apps.
+            Button {
+                showBrowseSheet = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Color.appAccent)
+                    Text("Browse suggested apps")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Spacer()
+                    let picked = restricted.entries.filter { entry in
+                        SuggestedApps.commonMicCamApps.contains {
+                            $0.caseInsensitiveCompare(entry.displayName) == .orderedSame
+                        }
+                    }.count
+                    Text("\(picked) / \(SuggestedApps.commonMicCamApps.count)")
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(Color.appAccent)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.appSecondaryText)
                 }
-                .buttonStyle(.plain)
+                .padding(10)
+                .background(Color.appScreenBackground.opacity(0.5))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
-            .padding(.top, 2)
+            .buttonStyle(.plain)
 
-            VStack(spacing: 2) {
-                ForEach(SuggestedApps.commonMicCamApps, id: \.self) { name in
-                    suggestedRow(name)
-                }
-            }
-
-            // Custom entries (added via the TextField, not in Suggested).
-            let customEntries = restricted.entries.filter { entry in
-                !SuggestedApps.commonMicCamApps.contains { suggested in
-                    suggested.caseInsensitiveCompare(entry.displayName) == .orderedSame
-                }
-            }
-            if !customEntries.isEmpty {
+            // Currently restricted apps — compact combined view (suggested + custom).
+            if restricted.entries.isEmpty {
+                Text("No apps yet. Tap Browse above or type a name.")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Color.appSecondaryText)
+                    .padding(.vertical, 4)
+            } else {
                 Divider().background(Color.appSecondaryText.opacity(0.14))
-                Text("Your own additions")
+                Text("Your checklist (\(restricted.entries.count))")
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(1.2)
                     .foregroundStyle(Color.appSecondaryText)
                 VStack(spacing: 2) {
-                    ForEach(customEntries) { entry in
+                    ForEach(restricted.entries) { entry in
                         customEntryRow(entry)
                     }
                 }
@@ -255,51 +269,8 @@ struct SensorPrivacyScreen: View {
         .card()
     }
 
-    /// Row for a suggested app — checkbox-driven. Checking adds it; unchecking
-    /// finds the existing entry and removes it.
-    private func suggestedRow(_ name: String) -> some View {
-        let entryID = restricted.entries.first {
-            $0.displayName.caseInsensitiveCompare(name) == .orderedSame
-        }?.id
-        let selected = entryID != nil
-        return Button {
-            if let id = entryID {
-                restricted.remove(id: id)
-            } else {
-                restricted.add(name: name,
-                               micRestricted: newEntryMic,
-                               cameraRestricted: newEntryCam)
-            }
-        } label: {
-            HStack(spacing: 10) {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 16))
-                    .foregroundStyle(selected ? Color.appAccent : Color.appSecondaryText)
-                Text(name)
-                    .font(.system(size: 13, weight: selected ? .semibold : .regular))
-                    .foregroundStyle(Color.appPrimaryText)
-                Spacer()
-                if selected, let e = restricted.entries.first(where: { $0.id == entryID }) {
-                    if e.micRestricted {
-                        Image(systemName: "mic.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
-                    }
-                    if e.cameraRestricted {
-                        Image(systemName: "video.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
-                    }
-                }
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
-            .background(selected
-                        ? Color.appAccent.opacity(0.1)
-                        : Color.appScreenBackground.opacity(0.3))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-        .buttonStyle(.plain)
-    }
-
-    /// Row for a user-added custom entry (not in the suggested list). Shows
-    /// an X remove button since there's no suggestion to "uncheck".
+    /// Row for a checklist entry (suggested or custom). Always has an X
+    /// remove button since the sheet-based browse flow handles add/toggle.
     private func customEntryRow(_ entry: RestrictedAppEntry) -> some View {
         HStack(spacing: 10) {
             Image(systemName: "checkmark.circle.fill")
@@ -328,32 +299,6 @@ struct SensorPrivacyScreen: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
-    // MARK: - Select-all helpers
-
-    private var allSuggestedSelected: Bool {
-        let addedLower = Set(restricted.entries.map { $0.displayName.lowercased() })
-        return SuggestedApps.commonMicCamApps.allSatisfy { addedLower.contains($0.lowercased()) }
-    }
-
-    private func toggleAllSuggested() {
-        if allSuggestedSelected {
-            // Deselect: remove every suggested that's currently in the list.
-            let suggestedLower = Set(SuggestedApps.commonMicCamApps.map { $0.lowercased() })
-            restricted.entries
-                .filter { suggestedLower.contains($0.displayName.lowercased()) }
-                .forEach { restricted.remove(id: $0.id) }
-        } else {
-            // Select: add any suggested that's not already in the list.
-            let addedLower = Set(restricted.entries.map { $0.displayName.lowercased() })
-            SuggestedApps.commonMicCamApps
-                .filter { !addedLower.contains($0.lowercased()) }
-                .forEach {
-                    restricted.add(name: $0,
-                                   micRestricted: newEntryMic,
-                                   cameraRestricted: newEntryCam)
-                }
-        }
-    }
 
     // MARK: - Learn more disclosure
 
@@ -567,20 +512,173 @@ private struct PostReturnPromptSheet: View {
     }
 }
 
-// MARK: - Suggested apps + chips
+// MARK: - Browse suggestions sheet
+
+/// Searchable, scrollable sheet with the full curated suggestion list.
+/// Checkbox rows sync bidirectionally with the restricted store — tap
+/// adds, tap again removes. Select All / Deselect All work on the
+/// visible (filtered) subset so searching + bulk-toggle work together.
+private struct SuggestedAppsBrowseSheet: View {
+    let allApps: [String]
+    @ObservedObject var restricted: AlwaysRestrictedAppsStore
+    let defaultMic: Bool
+    let defaultCam: Bool
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var query: String = ""
+
+    private var filtered: [String] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard !q.isEmpty else { return allApps }
+        return allApps.filter { $0.lowercased().contains(q) }
+    }
+
+    private var addedLower: Set<String> {
+        Set(restricted.entries.map { $0.displayName.lowercased() })
+    }
+
+    private var allVisibleSelected: Bool {
+        filtered.allSatisfy { addedLower.contains($0.lowercased()) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                headerBar
+                List {
+                    ForEach(filtered, id: \.self) { name in
+                        row(name)
+                            .listRowBackground(Color.appCardBackground)
+                            .listRowSeparatorTint(Color.appSecondaryText.opacity(0.14))
+                    }
+                }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .background(Color.appScreenBackground.ignoresSafeArea())
+            }
+            .background(Color.appScreenBackground.ignoresSafeArea())
+            .navigationTitle("Suggested apps")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $query, prompt: "Search \(allApps.count) suggested apps")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(allVisibleSelected ? "Deselect all" : "Select all") {
+                        toggleVisible()
+                    }
+                    .font(.system(size: 13))
+                }
+            }
+        }
+    }
+
+    private var headerBar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Tap any app to add it to your Always Restricted checklist. Tap again to remove.")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.appSecondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+            Text("iOS does not reveal what's actually installed. This is an editorial list, not a scan.")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.appSecondaryText.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.vertical, 12)
+        .background(Color.appScreenBackground)
+    }
+
+    private func row(_ name: String) -> some View {
+        let entryID = restricted.entries.first {
+            $0.displayName.caseInsensitiveCompare(name) == .orderedSame
+        }?.id
+        let selected = entryID != nil
+        return Button {
+            if let id = entryID {
+                restricted.remove(id: id)
+            } else {
+                restricted.add(name: name,
+                               micRestricted: defaultMic,
+                               cameraRestricted: defaultCam)
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 18))
+                    .foregroundStyle(selected ? Color.appAccent : Color.appSecondaryText)
+                Text(name)
+                    .font(.system(size: 15, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(Color.appPrimaryText)
+                Spacer()
+                if selected, let e = restricted.entries.first(where: { $0.id == entryID }) {
+                    if e.micRestricted {
+                        Image(systemName: "mic.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+                    }
+                    if e.cameraRestricted {
+                        Image(systemName: "video.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func toggleVisible() {
+        if allVisibleSelected {
+            // Remove every currently-visible-selected entry from the store.
+            let visibleLower = Set(filtered.map { $0.lowercased() })
+            restricted.entries
+                .filter { visibleLower.contains($0.displayName.lowercased()) }
+                .forEach { restricted.remove(id: $0.id) }
+        } else {
+            // Add any visible app that isn't already in the store.
+            filtered
+                .filter { !addedLower.contains($0.lowercased()) }
+                .forEach {
+                    restricted.add(name: $0,
+                                   micRestricted: defaultMic,
+                                   cameraRestricted: defaultCam)
+                }
+        }
+    }
+}
+
+// MARK: - Suggested apps catalog
 
 /// Curated list of apps that commonly request microphone or camera access.
-/// Shown as tap-to-add suggestions in the Always Restricted card.
 ///
-/// Not a list of what the user has installed — iOS does not expose that to
-/// third-party apps. This list is editorial and should stay neutral: well-
-/// known apps that routinely use mic / cam, in roughly popularity order.
+/// NOT a list of what the user has installed — iOS does not expose that to
+/// third-party apps. This list is editorial. Users browse + check-off from
+/// here as a reminder of what they've revoked in iOS Settings.
 private enum SuggestedApps {
+    /// Curated list of apps that commonly request microphone or camera access.
+    /// Grouped roughly by category then alphabetical within. Not a scan of
+    /// what's installed — iOS forbids app enumeration for third-party apps.
     static let commonMicCamApps: [String] = [
-        "WhatsApp", "Instagram", "Facebook", "Messenger",
-        "TikTok", "Snapchat", "Zoom", "Google Meet",
-        "Microsoft Teams", "Signal", "Telegram", "Discord",
-        "Skype", "Webex", "Clubhouse", "YouTube",
+        // Messaging + calls
+        "WhatsApp", "Signal", "Telegram", "Messenger", "iMessage",
+        "Discord", "Slack", "Skype", "WeChat", "Line", "KakaoTalk", "Viber",
+        // Video conferencing
+        "Zoom", "Google Meet", "Microsoft Teams", "Webex", "GoTo Meeting",
+        "BlueJeans", "FaceTime",
+        // Social + photo
+        "Instagram", "Facebook", "TikTok", "Snapchat", "YouTube",
+        "Twitter / X", "Threads", "BeReal", "Pinterest", "Reddit",
+        // Dating
+        "Tinder", "Bumble", "Hinge", "OkCupid", "Grindr",
+        // Streaming + voice
+        "Clubhouse", "Twitch", "Spotify", "YouTube Music", "SoundCloud",
+        // Dictation + voice assistants
+        "Google", "Google Assistant", "Alexa", "ChatGPT", "Perplexity",
+        // Ride-sharing + delivery (camera for QR/profile)
+        "Uber", "Lyft", "DoorDash", "Instacart",
+        // Banking + ID (camera for check deposit / KYC)
+        "Chase", "Bank of America", "Venmo", "PayPal", "Cash App",
     ]
 }
 
