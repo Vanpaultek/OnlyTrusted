@@ -14,6 +14,7 @@ import UIKit
 struct SensorPrivacyScreen: View {
     @StateObject private var controller = ConsumerSensorPrivacyController.shared
     @StateObject private var restricted = AlwaysRestrictedAppsStore.shared
+    @StateObject private var appShield = AppShieldState.shared
     @State private var newAppName: String = ""
     @State private var newEntryMic: Bool = true
     @State private var newEntryCam: Bool = true
@@ -181,6 +182,11 @@ struct SensorPrivacyScreen: View {
             }
             Text("The closest iOS allows to Android's auto-mute-on-lock. Shielded apps are blocked from opening (and from using mic/cam) while the shield is active.")
                 .cardBodyMuted()
+
+            // Live status row — shows authorization + selection + shield state so
+            // the user knows exactly where they are in the setup.
+            shieldStatusRow
+
             NavigationLink { AppShieldSetupScreen() } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "lock.app.dashed")
@@ -234,13 +240,70 @@ struct SensorPrivacyScreen: View {
             .background(Color.appScreenBackground.opacity(0.4))
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
-            Text("Caveats: Apple must approve the Family Controls entitlement for this build. Shielded apps also miss notifications while shielded (not just mic/cam). Not identical to the Android behaviour but as close as iOS gets.")
-                .font(.system(size: 10))
-                .foregroundStyle(Color.appSecondaryText.opacity(0.75))
-                .fixedSize(horizontal: false, vertical: true)
+            legalDisclosureBanner
         }
         .padding(14)
         .card()
+    }
+
+    /// Live status row: shows auth state + how many apps selected + whether
+    /// the shield is currently active. Updates reactively via AppShieldState.
+    private var shieldStatusRow: some View {
+        let authLabel: String
+        let authTint: Color
+        switch appShield.authorization {
+        case .approved:      authLabel = "Family Controls authorized"; authTint = .green
+        case .notDetermined: authLabel = "Family Controls not requested yet"; authTint = Color.appSecondaryText
+        case .denied:        authLabel = "Family Controls denied"; authTint = .orange
+        }
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Circle().fill(authTint).frame(width: 6, height: 6)
+                Text(authLabel)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.appPrimaryText)
+            }
+            HStack(spacing: 6) {
+                Image(systemName: appShield.shieldedCount > 0 ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 10))
+                    .foregroundStyle(appShield.shieldedCount > 0 ? .green : Color.appSecondaryText)
+                Text("\(appShield.shieldedCount) app\(appShield.shieldedCount == 1 ? "" : "s") selected to shield")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.appPrimaryText)
+            }
+            HStack(spacing: 6) {
+                Image(systemName: appShield.enabled ? "lock.fill" : "lock.open")
+                    .font(.system(size: 10))
+                    .foregroundStyle(appShield.enabled ? .green : Color.appSecondaryText)
+                Text(appShield.enabled ? "Shield currently ACTIVE (apps blocked)" : "Shield currently OFF (apps unblocked)")
+                    .font(.system(size: 11))
+                    .foregroundStyle(Color.appPrimaryText)
+            }
+        }
+        .padding(10)
+        .background(Color.appScreenBackground.opacity(0.4))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// Legal / transparency banner — the "what Family Controls actually
+    /// means" copy that Apple's App Review team expects to see visible to
+    /// users (not buried in a Privacy Policy PDF).
+    private var legalDisclosureBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("WHAT FAMILY CONTROLS DOES")
+                .font(.system(size: 9, weight: .heavy))
+                .tracking(1.2)
+                .foregroundStyle(Color.subGold)
+            miniBullet("OnlyTrusted asks iOS to shield apps YOU pick. We never see which apps you picked — Apple gives us opaque tokens only.")
+            miniBullet("Shielded apps are blocked from opening entirely while the shield is active. They cannot deliver notifications, mic/cam access, or any other activity.")
+            miniBullet("Family Controls authorization also exposes aggregate Screen Time data to OnlyTrusted. OnlyTrusted does NOT read, store, or transmit it — code path proof is on GitHub (AGPL-3.0).")
+            miniBullet("Requires Apple to approve the \"com.apple.developer.family-controls\" entitlement on our developer team. If it isn't approved yet, this card shows the setup UI but applying the shield silently fails.")
+            miniBullet("Revoke anytime: iOS Settings \u{2192} Screen Time \u{2192} See All App & Website Activity \u{2192} App Limits (or just remove OnlyTrusted's Family Controls authorization).")
+        }
+        .padding(10)
+        .background(Color.subGold.opacity(0.08))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.subGold.opacity(0.3), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func shortcutStep(num: String, text: String) -> some View {

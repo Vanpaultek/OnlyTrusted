@@ -91,13 +91,25 @@ struct OpenCameraSettingsAppIntent: AppIntent {
 struct ShieldAppsOnLockIntent: AppIntent {
     static let title: LocalizedStringResource = "Shield apps on lock"
     static let description = IntentDescription(
-        "Blocks the apps you've picked in OnlyTrusted → App Shield from opening. Pair with a Shortcuts Automation 'When iPhone is Locked' so the shield auto-applies when you lock the phone."
+        "Blocks the apps you've picked in OnlyTrusted \u{2192} App Shield from opening. Pair with a Shortcuts Automation 'When iPhone is Locked' so the shield auto-applies when you lock the phone."
     )
     static let openAppWhenRun: Bool = false
 
-    func perform() async throws -> some IntentResult {
-        _ = await MainActor.run { AppShieldManager.applyShield() }
-        return .result()
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let applied = await MainActor.run { AppShieldManager.applyShield() }
+        let count = await MainActor.run { AppShieldState.shared.selection.applicationTokens.count }
+        if applied {
+            return .result(dialog: "Shield applied to \(count) app\(count == 1 ? "" : "s").")
+        }
+        // Honest, specific failure messages so Shortcuts shows the real reason.
+        let authorized = await MainActor.run { AppShieldState.shared.authorization == .approved }
+        if !authorized {
+            return .result(dialog: "Could not apply shield: OnlyTrusted does not have Family Controls authorization. Open OnlyTrusted \u{2192} Mic & Camera Lock \u{2192} Shield apps on lock to grant it.")
+        }
+        if count == 0 {
+            return .result(dialog: "Could not apply shield: no apps are selected. Open OnlyTrusted \u{2192} App Shield to pick which apps to shield.")
+        }
+        return .result(dialog: "Could not apply shield. This may be the iOS Simulator, or the Family Controls entitlement is not yet approved for this build.")
     }
 }
 
@@ -112,9 +124,9 @@ struct UnshieldAppsOnUnlockIntent: AppIntent {
     )
     static let openAppWhenRun: Bool = false
 
-    func perform() async throws -> some IntentResult {
+    func perform() async throws -> some IntentResult & ProvidesDialog {
         await MainActor.run { AppShieldManager.clearShield() }
-        return .result()
+        return .result(dialog: "Shield removed. Your selected apps can open again.")
     }
 }
 
