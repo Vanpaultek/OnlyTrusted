@@ -832,8 +832,9 @@ private fun WeeklyDigestBanner(
             .clip(RoundedCornerShape(16.dp))
             .background(MidnightElevated)
             .border(1.dp, BrandCyanDark.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+            .heightIn(min = 92.dp)
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
@@ -885,8 +886,9 @@ private fun HonestLimitsRefresherBanner(
             .clip(RoundedCornerShape(16.dp))
             .background(WarningDark.copy(alpha = 0.08f))
             .border(1.dp, WarningDark.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
+            .heightIn(min = 92.dp)
             .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
