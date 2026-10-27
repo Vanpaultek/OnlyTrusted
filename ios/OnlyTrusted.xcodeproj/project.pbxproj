@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0034481A9605ED9C285F4370 /* SIMSwapAlarmSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59019A8700E877B65C589CF9 /* SIMSwapAlarmSheet.swift */; };
 		019BA1AEDF30127167B6D111 /* TrackerFinderScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 717BCF03CA3B26910A355618 /* TrackerFinderScanner.swift */; };
+		0274FDACBA4F9BBDB7561CF6 /* AlwaysRestrictedAppsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A201154C4277B19825DC6D4D /* AlwaysRestrictedAppsStore.swift */; };
 		02D0D358918D9FC0B5994FE3 /* PINRateLimiter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57D23121887B3FCAB8EDCBE5 /* PINRateLimiter.swift */; };
 		02DF6BB8286CD18B89E73ACB /* guide in Resources */ = {isa = PBXBuildFile; fileRef = 011C69656B970FBECF8F2BAF /* guide */; };
 		02F54BAE6260F6C6D3EF5DB3 /* CSVExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BA4D28EB9A8DA24BCA4B8C3 /* CSVExporter.swift */; };
@@ -346,6 +347,7 @@
 		9FAC142BAAE5B06BD22D276A /* SmartLinkGuardRulesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartLinkGuardRulesTests.swift; sourceTree = "<group>"; };
 		A17D8B6259C1EA39AC85C7EA /* SmartLinkGuardState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartLinkGuardState.swift; sourceTree = "<group>"; };
 		A19451BB26BC249BF36BD090 /* EncryptedBackupScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedBackupScreen.swift; sourceTree = "<group>"; };
+		A201154C4277B19825DC6D4D /* AlwaysRestrictedAppsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlwaysRestrictedAppsStore.swift; sourceTree = "<group>"; };
 		A322615CAB3BF4B117D1EEB4 /* CheckInState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckInState.swift; sourceTree = "<group>"; };
 		A4ACA3B8993837396A06DC6D /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
 		A651F201558860B72E2B18EA /* PhoneUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneUtils.swift; sourceTree = "<group>"; };
@@ -933,6 +935,7 @@
 		D0936202CF16693B5F2D2E38 /* SensorPrivacy */ = {
 			isa = PBXGroup;
 			children = (
+				A201154C4277B19825DC6D4D /* AlwaysRestrictedAppsStore.swift */,
 				F899A7B489518F799F7F99EC /* ConsumerSensorPrivacyController.swift */,
 				F27C3E69F87C1097263A413C /* SensorPrivacyAppIntents.swift */,
 				D9B8CC9C150262B971CD2203 /* SensorPrivacyController.swift */,
@@ -1221,6 +1224,7 @@
 				6BDA34EC0BD8A7AFCC97A5BF /* AdvancedBlockingScreen.swift in Sources */,
 				A267C6DB9BEA2222E0673FD5 /* AliasStore.swift in Sources */,
 				6A993A61736317DC193099BC /* AliasesScreen.swift in Sources */,
+				0274FDACBA4F9BBDB7561CF6 /* AlwaysRestrictedAppsStore.swift in Sources */,
 				4C091E1465E0117CF62999EA /* AppBackdrop.swift in Sources */,
 				F3FC4BEA9BF8AF5BB6F1EE26 /* AppGate.swift in Sources */,
 				9E181F631CFCFA6B86F2BE23 /* AppLockGate.swift in Sources */,
