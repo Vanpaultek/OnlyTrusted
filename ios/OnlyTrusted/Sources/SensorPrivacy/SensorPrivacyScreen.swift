@@ -161,34 +161,49 @@ struct SensorPrivacyScreen: View {
                 .controlSize(.mini)
             }
 
-            // Suggested apps — tap-to-add. iOS does not let OnlyTrusted
-            // enumerate what's actually installed on the device (Apple blocks
-            // app enumeration for third-party apps), so this is a curated
-            // list of common apps that typically request mic / cam. Honest
-            // label — not "your installed apps".
-            Text("Suggested")
-                .font(.system(size: 10, weight: .semibold))
-                .tracking(1.2)
-                .foregroundStyle(Color.appSecondaryText)
-                .padding(.top, 2)
-            FlowChips(labels: SuggestedApps.commonMicCamApps,
-                      alreadyAdded: Set(restricted.entries.map { $0.displayName.lowercased() })) { name in
-                restricted.add(name: name,
-                               micRestricted: newEntryMic,
-                               cameraRestricted: newEntryCam)
+            // Suggested apps — vertical list with checkboxes. iOS does not
+            // let OnlyTrusted enumerate what's actually installed (Apple
+            // blocks app enumeration for third-party apps), so this is a
+            // curated list of common mic/cam apps. "Select all" works
+            // against the suggested set only — doesn't touch custom entries.
+            HStack {
+                Text("Suggested — tap to add")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(Color.appSecondaryText)
+                Spacer()
+                Button {
+                    toggleAllSuggested()
+                } label: {
+                    Text(allSuggestedSelected ? "Deselect all" : "Select all")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Color.appAccent)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.top, 2)
+
+            VStack(spacing: 2) {
+                ForEach(SuggestedApps.commonMicCamApps, id: \.self) { name in
+                    suggestedRow(name)
+                }
             }
 
-            Divider().background(Color.appSecondaryText.opacity(0.14))
-
-            if restricted.entries.isEmpty {
-                Text("No apps yet. Tap a suggestion above or type a name.")
-                    .font(.system(size: 12))
+            // Custom entries (added via the TextField, not in Suggested).
+            let customEntries = restricted.entries.filter { entry in
+                !SuggestedApps.commonMicCamApps.contains { suggested in
+                    suggested.caseInsensitiveCompare(entry.displayName) == .orderedSame
+                }
+            }
+            if !customEntries.isEmpty {
+                Divider().background(Color.appSecondaryText.opacity(0.14))
+                Text("Your own additions")
+                    .font(.system(size: 10, weight: .semibold))
+                    .tracking(1.2)
                     .foregroundStyle(Color.appSecondaryText)
-                    .padding(.vertical, 4)
-            } else {
-                VStack(spacing: 6) {
-                    ForEach(restricted.entries) { entry in
-                        restrictedRow(entry)
+                VStack(spacing: 2) {
+                    ForEach(customEntries) { entry in
+                        customEntryRow(entry)
                     }
                 }
             }
@@ -197,17 +212,65 @@ struct SensorPrivacyScreen: View {
         .card()
     }
 
-    private func restrictedRow(_ entry: RestrictedAppEntry) -> some View {
+    /// Row for a suggested app — checkbox-driven. Checking adds it; unchecking
+    /// finds the existing entry and removes it.
+    private func suggestedRow(_ name: String) -> some View {
+        let entryID = restricted.entries.first {
+            $0.displayName.caseInsensitiveCompare(name) == .orderedSame
+        }?.id
+        let selected = entryID != nil
+        return Button {
+            if let id = entryID {
+                restricted.remove(id: id)
+            } else {
+                restricted.add(name: name,
+                               micRestricted: newEntryMic,
+                               cameraRestricted: newEntryCam)
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(selected ? Color.appAccent : Color.appSecondaryText)
+                Text(name)
+                    .font(.system(size: 13, weight: selected ? .semibold : .regular))
+                    .foregroundStyle(Color.appPrimaryText)
+                Spacer()
+                if selected, let e = restricted.entries.first(where: { $0.id == entryID }) {
+                    if e.micRestricted {
+                        Image(systemName: "mic.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
+                    }
+                    if e.cameraRestricted {
+                        Image(systemName: "video.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
+                    }
+                }
+            }
+            .padding(.vertical, 6)
+            .padding(.horizontal, 8)
+            .background(selected
+                        ? Color.appAccent.opacity(0.1)
+                        : Color.appScreenBackground.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Row for a user-added custom entry (not in the suggested list). Shows
+    /// an X remove button since there's no suggestion to "uncheck".
+    private func customEntryRow(_ entry: RestrictedAppEntry) -> some View {
         HStack(spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 16))
+                .foregroundStyle(Color.appAccent)
             Text(entry.displayName)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(Color.appPrimaryText)
             Spacer()
             if entry.micRestricted {
-                Image(systemName: "mic.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+                Image(systemName: "mic.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
             }
             if entry.cameraRestricted {
-                Image(systemName: "video.slash.fill").font(.system(size: 12)).foregroundStyle(.green)
+                Image(systemName: "video.slash.fill").font(.system(size: 11)).foregroundStyle(.green)
             }
             Button { restricted.remove(id: entry.id) } label: {
                 Image(systemName: "xmark.circle.fill")
@@ -216,10 +279,37 @@ struct SensorPrivacyScreen: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
         .padding(.horizontal, 8)
-        .background(Color.appScreenBackground.opacity(0.4))
+        .background(Color.appAccent.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+
+    // MARK: - Select-all helpers
+
+    private var allSuggestedSelected: Bool {
+        let addedLower = Set(restricted.entries.map { $0.displayName.lowercased() })
+        return SuggestedApps.commonMicCamApps.allSatisfy { addedLower.contains($0.lowercased()) }
+    }
+
+    private func toggleAllSuggested() {
+        if allSuggestedSelected {
+            // Deselect: remove every suggested that's currently in the list.
+            let suggestedLower = Set(SuggestedApps.commonMicCamApps.map { $0.lowercased() })
+            restricted.entries
+                .filter { suggestedLower.contains($0.displayName.lowercased()) }
+                .forEach { restricted.remove(id: $0.id) }
+        } else {
+            // Select: add any suggested that's not already in the list.
+            let addedLower = Set(restricted.entries.map { $0.displayName.lowercased() })
+            SuggestedApps.commonMicCamApps
+                .filter { !addedLower.contains($0.lowercased()) }
+                .forEach {
+                    restricted.add(name: $0,
+                                   micRestricted: newEntryMic,
+                                   cameraRestricted: newEntryCam)
+                }
+        }
     }
 
     // MARK: - Learn more disclosure
@@ -343,59 +433,6 @@ private enum SuggestedApps {
         "Microsoft Teams", "Signal", "Telegram", "Discord",
         "Skype", "Webex", "Clubhouse", "YouTube",
     ]
-}
-
-/// Compact wrapping chip row. SwiftUI's FlowLayout isn't available pre-iOS 16,
-/// so this does a manual wrap by splitting into rows of max 3 chips.
-private struct FlowChips: View {
-    let labels: [String]
-    let alreadyAdded: Set<String>
-    let onTap: (String) -> Void
-
-    private var rows: [[String]] {
-        stride(from: 0, to: labels.count, by: 3).map {
-            Array(labels[$0..<min($0 + 3, labels.count)])
-        }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(0..<rows.count, id: \.self) { i in
-                HStack(spacing: 6) {
-                    ForEach(rows[i], id: \.self) { label in
-                        chip(label)
-                    }
-                    Spacer(minLength: 0)
-                }
-            }
-        }
-    }
-
-    private func chip(_ label: String) -> some View {
-        let added = alreadyAdded.contains(label.lowercased())
-        return Button {
-            if !added { onTap(label) }
-        } label: {
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(added ? Color.appSecondaryText : Color.appPrimaryText)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule().fill(added
-                        ? Color.appScreenBackground.opacity(0.3)
-                        : Color.appAccent.opacity(0.14))
-                )
-                .overlay(
-                    Capsule().stroke(added
-                        ? Color.appSecondaryText.opacity(0.2)
-                        : Color.appAccent.opacity(0.4),
-                        lineWidth: 0.5)
-                )
-        }
-        .buttonStyle(.plain)
-        .disabled(added)
-    }
 }
 
 // MARK: - Styling helpers
