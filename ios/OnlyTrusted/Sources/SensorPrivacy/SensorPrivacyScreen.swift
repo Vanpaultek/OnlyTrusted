@@ -14,7 +14,9 @@ import UIKit
 struct SensorPrivacyScreen: View {
     @StateObject private var controller = ConsumerSensorPrivacyController.shared
     @StateObject private var restricted = AlwaysRestrictedAppsStore.shared
-    @State private var showAddSheet = false
+    @State private var newAppName: String = ""
+    @State private var newEntryMic: Bool = true
+    @State private var newEntryCam: Bool = true
     @State private var showLearnMore = false
 
     var body: some View {
@@ -32,11 +34,6 @@ struct SensorPrivacyScreen: View {
         .navigationTitle("Mic & Camera Lock")
         .navigationBarTitleDisplayMode(.inline)
         .task { _ = await controller.readState() }
-        .sheet(isPresented: $showAddSheet) {
-            AddRestrictedAppSheet { name, mic, cam in
-                restricted.add(name: name, micRestricted: mic, cameraRestricted: cam)
-            }
-        }
     }
 
     // MARK: - Status
@@ -117,26 +114,60 @@ struct SensorPrivacyScreen: View {
 
     private var restrictedCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("ALWAYS RESTRICTED").eyebrow()
-                Spacer()
-                Button { showAddSheet = true } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "plus")
-                        Text("Add")
-                    }
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.appAccent)
+            Text("ALWAYS RESTRICTED — YOUR CHECKLIST").eyebrow()
+            Text("Your personal notepad — self-reported, not OS-verified.")
+                .cardBodyMuted()
+
+            // Inline add form.
+            HStack(spacing: 8) {
+                TextField("App name (e.g. Instagram)", text: $newAppName)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.system(size: 13))
+                Button {
+                    restricted.add(name: newAppName,
+                                   micRestricted: newEntryMic,
+                                   cameraRestricted: newEntryCam)
+                    newAppName = ""
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(newAppName.trimmingCharacters(in: .whitespaces).isEmpty
+                                         ? Color.appSecondaryText.opacity(0.4)
+                                         : Color.appAccent)
                 }
                 .buttonStyle(.plain)
+                .disabled(newAppName.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-            Text("Your personal checklist — self-reported, not OS-verified.")
-                .cardBodyMuted()
+            HStack(spacing: 14) {
+                Toggle(isOn: $newEntryMic) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "mic.slash").font(.system(size: 11))
+                        Text("Mic revoked").font(.system(size: 11))
+                    }
+                    .foregroundStyle(Color.appSecondaryText)
+                }
+                .tint(Color.appAccent)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                Toggle(isOn: $newEntryCam) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "video.slash").font(.system(size: 11))
+                        Text("Cam revoked").font(.system(size: 11))
+                    }
+                    .foregroundStyle(Color.appSecondaryText)
+                }
+                .tint(Color.appAccent)
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+            }
+
+            Divider().background(Color.appSecondaryText.opacity(0.14))
+
             if restricted.entries.isEmpty {
-                Text("No apps yet. Tap Add to log an app you've denied mic / cam access.")
+                Text("No apps yet. Type a name above + tap +.")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.appSecondaryText)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 4)
             } else {
                 VStack(spacing: 6) {
                     ForEach(restricted.entries) { entry in
@@ -276,49 +307,6 @@ struct SensorPrivacyScreen: View {
             Circle().fill(Color.appAccent).frame(width: 4, height: 4).padding(.top, 6)
             Text(text).font(.system(size: 12)).foregroundStyle(Color.appSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-// MARK: - Add-restricted sheet
-
-private struct AddRestrictedAppSheet: View {
-    let onAdd: (String, Bool, Bool) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var name: String = ""
-    @State private var mic: Bool = true
-    @State private var cam: Bool = true
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField("App name (e.g. Instagram)", text: $name)
-                    Toggle(isOn: $mic) {
-                        Label("Mic revoked", systemImage: "mic.slash")
-                    }
-                    Toggle(isOn: $cam) {
-                        Label("Camera revoked", systemImage: "video.slash")
-                    }
-                } footer: {
-                    Text("Tracked locally only. OnlyTrusted does not verify what iOS actually enforces for this app — review in iOS Settings.")
-                }
-            }
-            .navigationTitle("Add restricted app")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") {
-                        onAdd(name, mic, cam)
-                        dismiss()
-                    }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
-                }
-            }
         }
     }
 }
