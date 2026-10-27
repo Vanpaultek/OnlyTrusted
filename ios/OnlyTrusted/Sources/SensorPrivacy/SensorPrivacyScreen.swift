@@ -33,10 +33,9 @@ struct SensorPrivacyScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { _ = await controller.readState() }
         .sheet(isPresented: $showAddSheet) {
-            AddRestrictedAppSheet(onAdd: { name, mic, cam in
+            AddRestrictedAppSheet { name, mic, cam in
                 restricted.add(name: name, micRestricted: mic, cameraRestricted: cam)
-                showAddSheet = false
-            }, onCancel: { showAddSheet = false })
+            }
         }
     }
 
@@ -285,7 +284,8 @@ struct SensorPrivacyScreen: View {
 
 private struct AddRestrictedAppSheet: View {
     let onAdd: (String, Bool, Bool) -> Void
-    let onCancel: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
     @State private var name: String = ""
     @State private var mic: Bool = true
     @State private var cam: Bool = true
@@ -308,12 +308,13 @@ private struct AddRestrictedAppSheet: View {
             .navigationTitle("Add restricted app")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel", action: onCancel)
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
                         onAdd(name, mic, cam)
+                        dismiss()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
