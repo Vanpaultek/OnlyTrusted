@@ -832,23 +832,23 @@ private fun WeeklyDigestBanner(
             .clip(RoundedCornerShape(16.dp))
             .background(MidnightElevated)
             .border(1.dp, BrandCyanDark.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(44.dp)
-                .background(BrandCyanDark.copy(alpha = 0.18f), RoundedCornerShape(11.dp))
+                .size(36.dp)
+                .background(BrandCyanDark.copy(alpha = 0.18f), RoundedCornerShape(9.dp))
         ) {
-            Icon(Icons.Filled.BarChart, contentDescription = null, tint = BrandCyanDark, modifier = Modifier.size(20.dp))
+            Icon(Icons.Filled.BarChart, contentDescription = null, tint = BrandCyanDark, modifier = Modifier.size(16.dp))
         }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 stringResource(R.string.dash_week_title),
                 color = PrimaryTextDark,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
@@ -857,7 +857,8 @@ private fun WeeklyDigestBanner(
                 else
                     stringResource(R.string.dash_week_fmt, callCount, textCount),
                 color = SecondaryTextDark,
-                fontSize = 13.sp
+                fontSize = 12.sp,
+                lineHeight = 16.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextButton(onClick = onSeeReport, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
@@ -884,29 +885,30 @@ private fun HonestLimitsRefresherBanner(
             .clip(RoundedCornerShape(16.dp))
             .background(WarningDark.copy(alpha = 0.08f))
             .border(1.dp, WarningDark.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-            .padding(14.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(44.dp)
-                .background(WarningDark.copy(alpha = 0.18f), RoundedCornerShape(11.dp))
+                .size(36.dp)
+                .background(WarningDark.copy(alpha = 0.18f), RoundedCornerShape(9.dp))
         ) {
-            Icon(Icons.Filled.Info, contentDescription = null, tint = WarningDark, modifier = Modifier.size(20.dp))
+            Icon(Icons.Filled.Info, contentDescription = null, tint = WarningDark, modifier = Modifier.size(16.dp))
         }
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 stringResource(R.string.dash_monthly_reminder),
                 color = PrimaryTextDark,
-                fontSize = 15.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 stringResourceReviewed(R.string.dash_cannot_monitor_other_apps),
                 color = SecondaryTextDark,
-                fontSize = 13.sp
+                fontSize = 12.sp,
+                lineHeight = 16.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextButton(onClick = onLearnMore, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
