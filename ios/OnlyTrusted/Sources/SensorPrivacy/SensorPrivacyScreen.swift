@@ -178,7 +178,7 @@ struct SensorPrivacyScreen: View {
             HStack {
                 Text("SHIELD APPS ON LOCK").eyebrow()
                 Spacer()
-                Text("Pro").miniTierChip()
+                Text("Elite").miniTierChip()
             }
             Text("The closest iOS allows to Android's auto-mute-on-lock. Shielded apps are blocked from opening (and from using mic/cam) while the shield is active.")
                 .cardBodyMuted()

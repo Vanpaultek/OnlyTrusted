@@ -318,6 +318,157 @@ Consumer iOS App Store installs cannot access any of this.
 
 ---
 
+## iOS Honest-UX Sensor Privacy Center
+
+Because iOS forbids every consumer-tier auto-enforcement path Android
+has, the iOS build takes the opposite philosophy: **show the user
+exactly what they can and cannot control, deep-link into Apple's
+authoritative Settings, and never pretend to block when the OS won't
+let us.** Core components:
+
+### `ConsumerSensorPrivacyController.swift`
+
+- Reads *this app's own* mic + camera authorization via
+  `AVCaptureDevice.authorizationStatus(for:)`. Returns `nil` for
+  cross-app state because iOS does not expose it.
+- Observes `UIApplication.willResignActiveNotification` (lock proxy) +
+  `.willEnterForegroundNotification` (unlock proxy).
+- On lock: shuts down any OnlyTrusted-owned `AVCaptureSession` /
+  `AVAudioEngine`. Logs `screenLock` to EventStore.
+- On unlock: logs `screenUnlock`. Does **not** restart captures the
+  user had running — leaves that to the owning feature's own policy.
+- `canEnforceGlobally` returns `false` always. The UI uses this flag
+  to render the honest "iOS limits apply" badge rather than fake-controls.
+
+### `AlwaysRestrictedAppsStore.swift`
+
+- User-maintained personal checklist of apps the user has deliberately
+  denied mic / camera access to in iOS Settings.
+- **Self-reported** — OnlyTrusted does not verify what iOS actually
+  enforces. The UI explicitly labels this as "self-reported, not
+  OS-verified" so there's no implied enforcement.
+- Backed by `UserDefaults` (JSON-encoded `[RestrictedAppEntry]`),
+  on-device only, never synced.
+
+### `SensorPrivacyScreen.swift` — the iPhone Sensor Privacy Center
+
+Four cards + a collapsible disclosure, in this order:
+
+1. **Status** — OnlyTrusted's own mic/camera authorization chips.
+2. **Shield apps on lock** (Pro) — FamilyControls path, see next section.
+3. **Always Restricted** — self-reported checklist with:
+   - Browseable sheet (~50 curated suggested apps, searchable, select-all)
+   - Custom TextField entry for anything not in the suggestions
+   - Toggle defaults for mic / cam revoked state
+4. **Learn more about iOS limits** (collapsible) — Apple indicator-dot
+   education, "Our own captures" status, Feedback Assistant link,
+   explicit honest-limits bullets.
+5. **Review in iOS Settings** — one-tap deep links to:
+   - `App-prefs:Privacy&path=MICROPHONE`
+   - `App-prefs:Privacy&path=CAMERA`
+   On return (observed via `willEnterForegroundNotification` within
+   5 min of tap), shows a **PostReturnPromptSheet** asking the user
+   to tap-add any apps they just revoked — still honest ("iOS doesn't
+   tell us what you changed, so this is self-reported").
+
+Why no "fake block" buttons: a toggle labelled "Block mic for
+Instagram" that silently fails because iOS forbids cross-app sensor
+control would be lying to the user. The checklist model stores an
+audit; it does not claim to enforce.
+
+---
+
+## iOS "Shield apps on lock" — FamilyControls + Shortcuts (Pro)
+
+The one path on iOS that gets credibly close to the Android
+auto-enforcement behaviour. Combines three Apple frameworks + a
+user-created iOS Shortcuts Automation.
+
+### Prerequisites
+
+- `com.apple.developer.family-controls` entitlement — declared in
+  `ios/Entitlements/OnlyTrusted.entitlements`. **Apple reviews and
+  grants this entitlement individually per developer team** via
+  <https://developer.apple.com/contact/request/family-controls-distribution/>.
+  Simulator builds work; real-device builds fail code-signing until
+  the request is approved on the real team ID.
+- User grants Family Controls authorization in-app via
+  `AuthorizationCenter.shared.requestAuthorization(for: .individual)`.
+- User picks apps via Apple's `FamilyActivityPicker` (we never see the
+  names — only opaque `ApplicationToken` instances).
+
+### Runtime stack
+
+| File | Role |
+|---|---|
+| `ios/.../AppShield/AppShieldState.swift` | ObservableObject holding `authorization`, `selection: FamilyActivitySelection`, `enabled`, `shieldedCount`. Persists selection to `UserDefaults` as JSON. |
+| `ios/.../AppShield/AppShieldManager.swift` | `requestAuthorization()` / `refreshAuthorization()` / `applyShield()` / `clearShield()` / `rehydrate()`. Wraps `ManagedSettingsStore` with a scoped namespace. Called at launch from `OnlyTrustedApp` to re-apply the shield if it was active before a device restart. |
+| `ios/.../AppShield/AppShieldSetupScreen.swift` | SwiftUI setup flow — auth request, `FamilyActivityPicker` embed, enable/disable toggle. |
+| `ios/.../SensorPrivacy/SensorPrivacyAppIntents.swift` | `ShieldAppsOnLockIntent` + `UnshieldAppsOnUnlockIntent`. Returns `ProvidesDialog` with specific status strings for Shortcuts / Siri. |
+
+### Shortcuts automation setup
+
+OnlyTrusted cannot programmatically create a Shortcuts Automation —
+Apple intentionally restricts that API. The user wires it themselves,
+following the 5-step guide rendered in-app:
+
+1. iOS Shortcuts → Automation tab.
+2. **+** → Create Personal Automation → **When iPhone is Locked** → Next.
+3. Add Action → search "OnlyTrusted" → tap **Shield apps**.
+4. Toggle **Ask Before Running** OFF → Done.
+5. Repeat with trigger **When iPhone is Unlocked** → action **Unshield apps**.
+
+Once set up, the system fires the two intents automatically on screen
+state transitions.
+
+### Enforcement model
+
+- `applyShield()` sets
+  `ManagedSettingsStore(named: "OnlyTrustedAppShield").shield.applications`
+  to the user's selection. iOS blocks every token in that set from
+  opening — the user sees a system shield screen instead.
+- `clearShield()` sets the field back to `nil`.
+- Scoped `ManagedSettingsStore` namespace isolates us from any other
+  app that might use the framework. Clearing our store doesn't clear
+  theirs.
+- `applyShield()` returns `false` and triggers `clearShield()` when
+  selection is empty, so the UI doesn't claim coverage falsely.
+- On launch, `rehydrate()` re-applies the shield if the user had it
+  active before the device restart. If authorization was revoked
+  meanwhile, we silently clear the "enabled" bit.
+
+### Honest trade-offs documented in-app
+
+- Shielded apps are blocked **entirely**, not just mic/cam —
+  notifications, calls, foreground UI all stop. The "What Family
+  Controls does" legal transparency banner on the shield card calls
+  this out explicitly before the user enables.
+- The suggested-apps list uses opaque `ApplicationToken`s from Apple's
+  `FamilyActivityPicker`. OnlyTrusted never sees which apps the user
+  picked — not even to log. This is Apple's design, not ours.
+- Family Controls authorization also exposes aggregate Screen Time
+  signals. OnlyTrusted's AGPL-3.0 source is cited as code-path proof
+  that we don't read, store, or transmit any of it.
+
+### App Intents + Siri phrases
+
+Registered via `OnlyTrustedAppShortcutsProvider`:
+
+| Intent | Siri phrases |
+|---|---|
+| `LockMicAppIntent` | "Lock mic in OnlyTrusted" / "OnlyTrusted mic off" |
+| `RestoreMicAppIntent` | "Restore mic in OnlyTrusted" / "OnlyTrusted mic on" |
+| `OpenMicrophoneSettingsAppIntent` | "Open mic settings via OnlyTrusted" |
+| `OpenCameraSettingsAppIntent` | "Open camera settings via OnlyTrusted" |
+| `ShieldAppsOnLockIntent` | "Shield my apps with OnlyTrusted" / "OnlyTrusted shield on" |
+| `UnshieldAppsOnUnlockIntent` | "Unshield my apps with OnlyTrusted" / "OnlyTrusted shield off" |
+
+Each intent returns a `ProvidesDialog` result so Shortcuts shows the
+actual outcome ("Shield applied to 7 apps" / "Not authorized — grant
+Family Controls first") rather than a silent success/failure.
+
+---
+
 ## Event log integration
 
 Every tier logs the following events to the on-device Events log, same
@@ -339,21 +490,55 @@ The user can audit these in Settings → Events, filter by `security`.
 
 ```
 docs/
-  SENSOR_PRIVACY_ARCHITECTURE.md       (this file)
+  SENSOR_PRIVACY_ARCHITECTURE.md         (this file)
 
 ios/OnlyTrusted/Sources/SensorPrivacy/
-  SensorPrivacyController.swift        (protocol + SensorState)
-  ConsumerSensorPrivacyController.swift (iOS consumer impl)
-  SensorPrivacyScreen.swift            (SwiftUI UI)
+  SensorPrivacyController.swift          (protocol + SensorState)
+  ConsumerSensorPrivacyController.swift  (consumer impl — read + log + stop
+                                          OnlyTrusted-owned captures on lock)
+  AlwaysRestrictedAppsStore.swift        (self-reported checklist store)
+  SensorPrivacyScreen.swift              (iPhone Sensor Privacy Center UI)
+  SensorPrivacyAppIntents.swift          (6 App Intents + AppShortcutsProvider
+                                          — Lock Mic, Restore Mic, Open Mic/Cam
+                                          Settings, Shield Apps On Lock,
+                                          Unshield Apps On Unlock)
+
+ios/OnlyTrusted/Sources/AppShield/
+  AppShieldState.swift                   (@MainActor ObservableObject;
+                                          authorization + selection +
+                                          enabled + shieldedCount; JSON
+                                          persistence via UserDefaults)
+  AppShieldManager.swift                 (requestAuthorization / applyShield /
+                                          clearShield / rehydrate; wraps
+                                          ManagedSettingsStore)
+  AppShieldSetupScreen.swift             (auth prompt + FamilyActivityPicker
+                                          embed + enable/disable toggle)
+  AppShieldUpsellSheet.swift             (Pro-tier gate for non-subscribers)
+
+ios/Entitlements/
+  OnlyTrusted.entitlements               (declares
+                                          com.apple.developer.family-controls —
+                                          requires Apple approval per team ID)
 
 android/app/src/main/java/com/onlytrusted/app/ui/sensorprivacy/
-  SensorPrivacyController.kt           (interface + SensorState)
-  ConsumerSensorPrivacyController.kt   (Android consumer impl)
-  DeviceOwnerSensorPrivacyController.kt (Device Owner impl + provisioning helper)
-  PrivilegedSensorPrivacyController.kt (OEM-only skeleton)
-  OTDeviceAdminReceiver.kt             (DeviceAdminReceiver for Device Owner)
-  SensorPrivacyScreen.kt               (Compose UI)
-  ScreenStateReceiver.kt               (BroadcastReceiver for lock/unlock)
+  SensorPrivacyController.kt             (interface + SensorState)
+  ConsumerSensorPrivacyController.kt     (consumer impl — AudioManager mic
+                                          mute on lock)
+  DeviceAdminSensorPrivacyController.kt  (user-dialog Device Admin tier)
+  DeviceOwnerSensorPrivacyController.kt  (ADB-provisioned Device Owner tier)
+  PrivilegedSensorPrivacyController.kt   (OEM-only skeleton)
+  OTDeviceAdminReceiver.kt               (DeviceAdminReceiver)
+  SensorPrivacyScreen.kt                 (Compose UI)
+  SensorPrivacyForegroundService.kt      (specialUse FGS hosting the receiver)
+  ScreenStateReceiver.kt                 (dynamic SCREEN_OFF / USER_PRESENT)
+  SensorPrivacyLog.kt                    (EncryptedSharedPreferences log)
+  SensorPrivacyTileService.kt            (Quick Settings tile)
+  SensorPrivacyAccessibilityService.kt   (volume-down double-press trigger)
+  BatteryOptimizationHelper.kt           (ignore-battery-optimisation prompt)
+  SafetyOverride.kt                      (5/15/60-min bounded pause)
+  AudioRecordingWatcher.kt               (reactive mic-usage alerts)
+  AudioRecordingWatcherState.kt          (opt-in gate for the watcher)
+  LockAndMuteActivity.kt                 (launcher-shortcut target)
 ```
 
 ---

@@ -972,22 +972,56 @@ handling sensitive matters, security researchers themselves).
 
 ### App Shield
 
-**Where:** Settings → **App Shield**.
+**Where:** Settings → **App Shield** · Dashboard → **Security Lock** sheet → *Mic & Camera Lock* → *Shield apps on lock* (iOS, Elite).
 
-**What it does:** Phase 2 of Privacy Shield. Walks you through
-configuring iOS Screen Time (Family Controls API) or Android Digital
-Wellbeing to **lock specific apps behind biometric unlock** every
-time they're opened.
+**What it does:** iOS-only (Elite) feature that uses Apple's Family
+Controls + ManagedSettings frameworks to **block a user-picked list
+of apps from opening** while a shield is active. Pair with iOS
+Shortcuts automation "**When iPhone is Locked → Shield apps**" /
+"**When iPhone is Unlocked → Unshield apps**" to get the shield to
+apply/clear automatically on every lock/unlock cycle — the closest
+iOS allows a third-party app to the Android auto-mute-on-lock
+behaviour.
 
-Pick which apps need biometric to open — social media, banking,
-dating apps, work tools, etc. From then on, every launch requires a
-Face ID / fingerprint tap.
+**Setup (iOS Elite):**
+1. Open Mic & Camera Lock → tap **Shield apps on lock** card.
+2. Grant Family Controls authorization (one-time system prompt).
+3. Tap **Pick apps + grant Family Controls** → Apple's
+   `FamilyActivityPicker` opens. Choose any apps you want shielded
+   (WhatsApp, Instagram, Zoom, your bank, etc.). OnlyTrusted never
+   sees which apps you picked — Apple hands us opaque tokens only.
+4. Follow the in-app Shortcuts automation guide (5 steps) to wire up
+   the two Automations. Needs the iOS Shortcuts app.
+5. Done. Lock your phone → shielded apps blocked. Unlock → shield
+   removed.
+
+**Android equivalent:** the dedicated **Mic & Camera Lock** screen
+(Settings → Mic & Camera Lock) already does hardware-level
+mic + camera auto-cutoff on screen lock via DevicePolicyManager +
+AudioManager. No Shortcuts automation needed — Android fires it
+directly from the lock-watcher foreground service.
+
+**Honest limits to understand before enabling:**
+- Shielded apps are blocked **entirely** while the shield is active —
+  they also miss notifications, calls, background refresh. If
+  WhatsApp is shielded and someone calls, you won't see the call
+  until you unlock.
+- Requires Apple to approve the `com.apple.developer.family-controls`
+  entitlement on the OnlyTrusted developer team. On simulator or
+  unapproved real devices the shield silently fails.
+- Family Controls authorization also exposes aggregate Screen Time
+  signals. OnlyTrusted does not read, store, or transmit them — the
+  AGPL-3.0 source is the proof.
+- You can revoke anytime from iOS Settings → Screen Time → remove
+  OnlyTrusted's Family Controls authorization. The shield lifts
+  immediately.
 
 **Why not just use OS App Lock?** Both platforms' built-in app lock
 is clunky (iOS has it only via Screen Time with lots of edge cases;
 Android varies wildly by manufacturer). OnlyTrusted gives you one
 consistent interface + Honest Limits callouts for what the OS can
-and can't deliver.
+and can't deliver, plus the Shortcuts automation that none of them
+expose directly.
 
 ### Border Mode
 

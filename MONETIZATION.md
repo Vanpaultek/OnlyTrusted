@@ -76,7 +76,7 @@ Everything in Premium, plus:
 
 ### Elite — $29.99/yr Individual · $49.99/yr Family
 Everything in Pro, plus:
-- App Shield (block any app behind biometric)
+- App Shield (block any app behind biometric; iOS adds Family Controls + Shortcuts "Shield apps on lock" automation)
 - Border Mode preset + Panic Lockdown
 - Hardware Security Key + Signed Audit Log
 - Encrypted vault backup + Shamir Split + Trusted Witness

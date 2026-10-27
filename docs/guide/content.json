@@ -503,20 +503,39 @@
       "honest": "iOS: Apple's native 'unknown accessory' detection is more thorough + runs system-wide. OnlyTrusted supplements. Range: 10–30m indoors."
     },
     {
+      "id": "mic-camera-lock",
+      "name": "Mic & Camera Lock",
+      "tier": "free",
+      "platform": "both",
+      "icon": "mic.slash",
+      "where": "Settings → Mic & Camera Lock · Dashboard → Security Lock sheet",
+      "what": "Device-wide sensor privacy hub. On Android: hardware auto-cutoff of mic (AudioManager) + camera (DevicePolicyManager with Device Admin or Device Owner) when the screen locks, restored on successful unlock (ACTION_USER_PRESENT, NOT just ACTION_SCREEN_ON, so sensors stay off while someone looks at the lock screen). On iOS: iPhone Sensor Privacy Center — honest consumer-tier UX that stops OnlyTrusted-owned captures on lock, deep-links to iOS Settings → Privacy for per-app review, maintains a self-reported Always Restricted checklist (~50 browseable suggested apps), and offers the Pro Shield-apps-on-lock flow via Family Controls + Shortcuts.",
+      "how": [
+        "Android: Settings → Mic & Camera Lock → Lock-watcher service switch ON",
+        "Android (optional): grant Device Admin for hardware camera cutoff; grant battery exemption so the service survives Doze",
+        "Android (optional): enable the volume-down double-press trigger or add the Quick Settings tile for manual control",
+        "Android (optional): home-screen shortcut \"Lock + Mute Now\" for one-tap enforcement without the FGS",
+        "iOS: Settings → Mic & Camera Lock → review OnlyTrusted's own mic/cam auth, maintain Always Restricted checklist, use Review in iOS Settings deep links",
+        "iOS (Pro): Shield apps on lock card → Family Controls + Shortcuts automation (see App Shield entry)"
+      ],
+      "honest": "Android: AudioManager mic mute is not a security-grade cutoff (apps still see a 'mic active' handle, just receive silence). Hardware-grade mic/cam lockout requires Device Owner (one-time ADB provisioning on a reset device). iOS: Apple's sandbox forbids any consumer app from touching other apps' mic/camera. The iOS build is honest about this — no fake blocking toggles. The Shield apps on lock flow (iOS Pro) is the closest Apple allows and requires both the Family Controls entitlement approval + a user-created Shortcuts Automation."
+    },
+    {
       "id": "app-shield",
       "name": "App Shield",
       "tier": "elite",
       "platform": "both",
       "icon": "lock.app.dashed",
-      "where": "Settings → App Shield",
-      "what": "Walks you through iOS Screen Time (FamilyControls) or Android Digital Wellbeing to lock specific apps behind biometric unlock. Pick apps that need biometric to open — social media, banking, etc.",
+      "where": "Settings → App Shield · Dashboard → Security Lock → Mic & Camera Lock → Shield apps on lock (iOS)",
+      "what": "Blocks a user-picked list of apps from opening while a shield is active. On iPhone (Elite) uses Apple's Family Controls + ManagedSettings + a user-created Shortcuts Automation (\"When iPhone is Locked → Shield apps\") so the shield applies/clears automatically on every lock/unlock cycle. On Android the dedicated Mic & Camera Lock screen already does hardware-level mic + camera auto-cutoff on screen lock via DevicePolicyManager + AudioManager — no Shortcuts needed.",
       "how": [
-        "Settings → App Shield → Setup",
-        "Grant ScreenTime / Digital Wellbeing API access",
-        "Pick apps to lock",
-        "Each future launch requires Face ID / fingerprint"
+        "iOS: Mic & Camera Lock → Shield apps on lock → grant Family Controls auth",
+        "iOS: Pick apps via Apple's FamilyActivityPicker (OnlyTrusted never sees names — opaque tokens)",
+        "iOS: Follow the 5-step Shortcuts guide to wire up two Automations (Lock → Shield, Unlock → Unshield)",
+        "Android: Settings → Mic & Camera Lock → Lock-watcher service switch ON → optional Device Admin grant for hardware camera cutoff",
+        "Lock the phone → shielded apps blocked, unlock → shield removed"
       ],
-      "honest": "Uses the OS-provided locking mechanism — not a parallel OnlyTrusted engine. OS consistency makes this reliable; limitations vary by Android OEM."
+      "honest": "iOS shielded apps are blocked ENTIRELY (notifications + calls too, not just mic/cam) while active. Requires Apple to approve the com.apple.developer.family-controls entitlement on the OnlyTrusted team. OnlyTrusted never reads what apps you picked — Apple hands us opaque tokens. Family Controls auth also exposes aggregate Screen Time data; our AGPL-3.0 source is proof we don't read it. Revoke anytime from iOS Settings → Screen Time."
     },
     {
       "id": "border-mode",
