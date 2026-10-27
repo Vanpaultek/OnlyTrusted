@@ -7,6 +7,7 @@ import android.content.Intent
 import android.media.AudioManager
 import android.net.Uri
 import android.provider.Settings
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -56,12 +57,14 @@ class ConsumerSensorPrivacyController(
         if (am != null) {
             runCatching {
                 am.isMicrophoneMute = true
-                micMuted = true
+                micMuted = am.isMicrophoneMute
                 weMutedMic = true
+                Log.i("OTSensorPrivacy",
+                    "enforceLock: AudioManager.setMicrophoneMute(true), readback=$micMuted")
                 SensorPrivacyLog.append(
                     context,
                     kind = SensorPrivacyLog.Kind.SENSOR_PRIVACY_ENFORCED,
-                    detail = "AudioManager.setMicrophoneMute(true) on lock. " +
+                    detail = "AudioManager.setMicrophoneMute(true) on lock, readback=$micMuted. " +
                         "Note: not a security-grade cutoff; apps still get a 'mic active' handle.",
                 )
             }.onFailure {

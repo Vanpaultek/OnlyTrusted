@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +37,7 @@ class ScreenStateReceiver private constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     override fun onReceive(context: Context, intent: Intent) {
+        Log.i("OTSensorPrivacy", "ScreenStateReceiver.onReceive action=${intent.action}")
         when (intent.action) {
             Intent.ACTION_SCREEN_OFF -> {
                 if (SafetyOverride.isActive(context)) {
@@ -69,7 +71,16 @@ class ScreenStateReceiver private constructor(
                 addAction(Intent.ACTION_SCREEN_OFF)
                 addAction(Intent.ACTION_USER_PRESENT)
             }
-            context.applicationContext.registerReceiver(receiver, filter)
+            // Android 14+ requires an explicit export flag on dynamic receivers.
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                context.applicationContext.registerReceiver(
+                    receiver, filter, Context.RECEIVER_NOT_EXPORTED,
+                )
+            } else {
+                context.applicationContext.registerReceiver(receiver, filter)
+            }
+            Log.i("OTSensorPrivacy", "ScreenStateReceiver registered for " +
+                "ACTION_SCREEN_OFF + ACTION_USER_PRESENT (tier=${controller.tierLabel})")
             active = receiver
         }
 

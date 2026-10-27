@@ -62,6 +62,7 @@ fun SensorPrivacyScreen(onBack: () -> Unit) {
     var batteryExempt by remember { mutableStateOf(BatteryOptimizationHelper.isExempted(context)) }
     var deviceAdminActive by remember { mutableStateOf(DeviceAdminSensorPrivacyController.isActive(context)) }
     var pauseRemaining by remember { mutableStateOf(SafetyOverride.remainingMinutes(context)) }
+    var micWatcherEnabled by remember { mutableStateOf(AudioRecordingWatcherState.isEnabled(context)) }
 
     LaunchedEffect(Unit) {
         state = controller.readState()
@@ -116,6 +117,14 @@ fun SensorPrivacyScreen(onBack: () -> Unit) {
                 onRevoke = {
                     DeviceAdminSensorPrivacyController.removeActiveAdmin(context)
                     deviceAdminActive = false
+                },
+            )
+            MicWatcherCard(
+                enabled = micWatcherEnabled,
+                serviceRunning = serviceEnabled,
+                onToggle = { want ->
+                    AudioRecordingWatcherState.setEnabled(context, want)
+                    micWatcherEnabled = want
                 },
             )
             AutoLockCard(
@@ -434,6 +443,46 @@ private fun DeviceAdminCard(active: Boolean, onRequest: () -> Unit, onRevoke: ()
                     Icon(Icons.Filled.OpenInNew, null, tint = BrandCyanDark, modifier = Modifier.size(16.dp))
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MicWatcherCard(enabled: Boolean, serviceRunning: Boolean, onToggle: (Boolean) -> Unit) {
+    Card {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Eyebrow("REACTIVE MIC ALERTS")
+            Text(
+                "Posts a notification the moment any other app starts using the microphone — " +
+                    "even when the screen is unlocked. Different from the lock-based auto-mute: " +
+                    "this one fires on actual recording activity.",
+                color = SecondaryTextDark, fontSize = 13.sp,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.MicNone, null, tint = if (enabled) BrandCyanDark else SecondaryTextDark, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text("Mic activity watcher", color = PrimaryTextDark, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        when {
+                            enabled && serviceRunning -> "Running — you'll be notified when apps record audio."
+                            enabled && !serviceRunning -> "Enabled but idle — turn on the lock-watcher below so this can run."
+                            else -> "Off — no mic activity notifications."
+                        },
+                        color = SecondaryTextDark, fontSize = 12.sp,
+                    )
+                }
+                Switch(
+                    checked = enabled,
+                    onCheckedChange = onToggle,
+                    colors = SwitchDefaults.colors(checkedThumbColor = BrandCyanDark),
+                )
+            }
+            Text(
+                "Notification debounces per app (max 1 per 60s). Dialer, Assistant, and " +
+                    "system packages are whitelisted so legitimate mic use doesn't spam you.",
+                color = TertiaryTextDark, fontSize = 11.sp,
+            )
         }
     }
 }

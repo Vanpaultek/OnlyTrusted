@@ -143,6 +143,7 @@
 		BEE9E9AD0641E22105682022 /* AdvancedBlocking.swift in Sources */ = {isa = PBXBuildFile; fileRef = F51D3C3CB54CD9FAD5A08A0B /* AdvancedBlocking.swift */; };
 		C17DF555649579E8DF08C98A /* CyberBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4916E2EF293691F7203D197D /* CyberBackground.swift */; };
 		C197D554F53AF82C133FC154 /* PhoneUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = A651F201558860B72E2B18EA /* PhoneUtils.swift */; };
+		C3DD936A557E0422C6325CBF /* SensorPrivacyAppIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = F27C3E69F87C1097263A413C /* SensorPrivacyAppIntents.swift */; };
 		C5A5C3540B6EDA43A8BA8A50 /* StegoVaultManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209FD6AF84DBA79B1E98294F /* StegoVaultManager.swift */; };
 		C5F5DA2B7303B145F29A0463 /* BackupPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20D6B7365CC1BA9B45116B88 /* BackupPayload.swift */; };
 		C6C5E32A9387780BB9EDE39C /* StegoCrypto.swift in Sources */ = {isa = PBXBuildFile; fileRef = E507EE9F9B1878725946FCCB /* StegoCrypto.swift */; };
@@ -398,6 +399,7 @@
 		F0393312C797275B88012608 /* AboutScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutScreen.swift; sourceTree = "<group>"; };
 		F05C5EC8158DDDBCF77B3257 /* VoiceBioState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceBioState.swift; sourceTree = "<group>"; };
 		F1728B07C771A9794B257D74 /* SafetyFeatures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafetyFeatures.swift; sourceTree = "<group>"; };
+		F27C3E69F87C1097263A413C /* SensorPrivacyAppIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SensorPrivacyAppIntents.swift; sourceTree = "<group>"; };
 		F409661393923747F1B7FC48 /* DataRemovalReminders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataRemovalReminders.swift; sourceTree = "<group>"; };
 		F480A58BA7997B50F73F81F6 /* LanguageRegionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguageRegionScreen.swift; sourceTree = "<group>"; };
 		F4E7C544A79123DD3E8F7D11 /* SmartLinkGuardRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartLinkGuardRules.swift; sourceTree = "<group>"; };
@@ -932,6 +934,7 @@
 			isa = PBXGroup;
 			children = (
 				F899A7B489518F799F7F99EC /* ConsumerSensorPrivacyController.swift */,
+				F27C3E69F87C1097263A413C /* SensorPrivacyAppIntents.swift */,
 				D9B8CC9C150262B971CD2203 /* SensorPrivacyController.swift */,
 				5B5A669D110A1B328E7C0557 /* SensorPrivacyScreen.swift */,
 			);
@@ -1325,6 +1328,7 @@
 				E21E9DF964E0A7F510A78D7C /* SafetyCheckInScreen.swift in Sources */,
 				6BF24298F1FCC081CE0F460B /* SafetyFeatures.swift in Sources */,
 				04A85A181C37485686A3F25E /* SecurityLockGroupView.swift in Sources */,
+				C3DD936A557E0422C6325CBF /* SensorPrivacyAppIntents.swift in Sources */,
 				07C89D89782964D1D7C6BFA9 /* SensorPrivacyController.swift in Sources */,
 				9060FFF54E35E0325269E8E8 /* SensorPrivacyScreen.swift in Sources */,
 				9E3FC5A389094A3AF0331964 /* SettingsScreen.swift in Sources */,

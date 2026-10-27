@@ -214,4 +214,15 @@ Contacts</string>
     <string name="sensor_privacy_tile_subtitle_off">Tap to block mic + cam</string>
     <string name="sensor_privacy_accessibility_label">OnlyTrusted — volume-key trigger</string>
     <string name="sensor_privacy_accessibility_description">Listens for a double-press of volume-down to instantly cut mic + camera. OnlyTrusted does NOT read screen content, inject touches, or exfiltrate any data from this service.</string>
+
+    <!-- Launcher shortcut labels — shown on long-press of the app icon. -->
+    <string name="shortcut_lock_mute_short">Lock + Mute</string>
+    <string name="shortcut_lock_mute_long">Lock + Mute Now (mic / camera)</string>
+
+    <!-- Reactive mic-recording watcher notification. -->
+    <string name="mic_watcher_channel_name">Mic activity alerts</string>
+    <string name="mic_watcher_channel_desc">Notifies you when another app starts using the microphone.</string>
+    <string name="mic_watcher_title">%1$s is using your mic</string>
+    <string name="mic_watcher_body">Tap to mute, or dismiss if this was expected.</string>
+    <string name="mic_watcher_action_mute">Mute mic</string>
 </resources>

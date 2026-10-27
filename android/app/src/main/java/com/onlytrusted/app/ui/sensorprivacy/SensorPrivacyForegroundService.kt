@@ -52,6 +52,10 @@ class SensorPrivacyForegroundService : Service() {
         // the strongest available tier (Privileged > DeviceOwner > Consumer).
         val controller = pickController(this)
         ScreenStateReceiver.register(this, controller)
+        // Reactive mic-recording watcher — only runs if the user opted in from
+        // the sensor-privacy screen. Share one lifecycle with the FGS so it
+        // dies cleanly when the user turns the whole feature off.
+        AudioRecordingWatcherState.startIfEnabled(this)
         SensorPrivacyLog.append(
             this,
             kind = "SERVICE_STARTED",
@@ -69,6 +73,7 @@ class SensorPrivacyForegroundService : Service() {
 
     override fun onDestroy() {
         ScreenStateReceiver.unregister(this)
+        AudioRecordingWatcherState.stop()
         SensorPrivacyLog.append(
             this,
             kind = "SERVICE_STOPPED",

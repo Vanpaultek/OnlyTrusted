@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Static launcher shortcuts for OnlyTrusted. Users long-press the app icon
+  on the launcher to see these, or drag any one to the home screen for a
+  dedicated one-tap entry point.
+
+  See docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Launcher shortcut".
+-->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="lock_and_mute"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/shortcut_lock_mute_short"
+        android:shortcutLongLabel="@string/shortcut_lock_mute_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.onlytrusted.app"
+            android:targetClass="com.onlytrusted.app.ui.sensorprivacy.LockAndMuteActivity" />
+        <categories android:name="android.shortcut.conversation" />
+    </shortcut>
+</shortcuts>

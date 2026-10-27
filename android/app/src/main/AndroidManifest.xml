@@ -127,6 +127,28 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Static launcher shortcuts (long-press app icon → Lock + Mute Now).
+                 Config lives in res/xml/shortcuts.xml. -->
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/shortcuts" />
+        </activity>
+
+        <!-- Lock + Mute Now trigger. Transparent no-UI activity — runs
+             enforceLock() on the strongest active sensor-privacy controller
+             tier + optionally lockNow() if Device Admin is granted, then
+             finishes within ~100ms. Launched from the static shortcut
+             declared above. -->
+        <activity
+            android:name=".ui.sensorprivacy.LockAndMuteActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <activity
