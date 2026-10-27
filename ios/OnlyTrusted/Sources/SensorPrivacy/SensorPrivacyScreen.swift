@@ -161,10 +161,27 @@ struct SensorPrivacyScreen: View {
                 .controlSize(.mini)
             }
 
+            // Suggested apps — tap-to-add. iOS does not let OnlyTrusted
+            // enumerate what's actually installed on the device (Apple blocks
+            // app enumeration for third-party apps), so this is a curated
+            // list of common apps that typically request mic / cam. Honest
+            // label — not "your installed apps".
+            Text("Suggested")
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(1.2)
+                .foregroundStyle(Color.appSecondaryText)
+                .padding(.top, 2)
+            FlowChips(labels: SuggestedApps.commonMicCamApps,
+                      alreadyAdded: Set(restricted.entries.map { $0.displayName.lowercased() })) { name in
+                restricted.add(name: name,
+                               micRestricted: newEntryMic,
+                               cameraRestricted: newEntryCam)
+            }
+
             Divider().background(Color.appSecondaryText.opacity(0.14))
 
             if restricted.entries.isEmpty {
-                Text("No apps yet. Type a name above + tap +.")
+                Text("No apps yet. Tap a suggestion above or type a name.")
                     .font(.system(size: 12))
                     .foregroundStyle(Color.appSecondaryText)
                     .padding(.vertical, 4)
@@ -308,6 +325,76 @@ struct SensorPrivacyScreen: View {
             Text(text).font(.system(size: 12)).foregroundStyle(Color.appSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+// MARK: - Suggested apps + chips
+
+/// Curated list of apps that commonly request microphone or camera access.
+/// Shown as tap-to-add suggestions in the Always Restricted card.
+///
+/// Not a list of what the user has installed — iOS does not expose that to
+/// third-party apps. This list is editorial and should stay neutral: well-
+/// known apps that routinely use mic / cam, in roughly popularity order.
+private enum SuggestedApps {
+    static let commonMicCamApps: [String] = [
+        "WhatsApp", "Instagram", "Facebook", "Messenger",
+        "TikTok", "Snapchat", "Zoom", "Google Meet",
+        "Microsoft Teams", "Signal", "Telegram", "Discord",
+        "Skype", "Webex", "Clubhouse", "YouTube",
+    ]
+}
+
+/// Compact wrapping chip row. SwiftUI's FlowLayout isn't available pre-iOS 16,
+/// so this does a manual wrap by splitting into rows of max 3 chips.
+private struct FlowChips: View {
+    let labels: [String]
+    let alreadyAdded: Set<String>
+    let onTap: (String) -> Void
+
+    private var rows: [[String]] {
+        stride(from: 0, to: labels.count, by: 3).map {
+            Array(labels[$0..<min($0 + 3, labels.count)])
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(0..<rows.count, id: \.self) { i in
+                HStack(spacing: 6) {
+                    ForEach(rows[i], id: \.self) { label in
+                        chip(label)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+
+    private func chip(_ label: String) -> some View {
+        let added = alreadyAdded.contains(label.lowercased())
+        return Button {
+            if !added { onTap(label) }
+        } label: {
+            Text(label)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(added ? Color.appSecondaryText : Color.appPrimaryText)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    Capsule().fill(added
+                        ? Color.appScreenBackground.opacity(0.3)
+                        : Color.appAccent.opacity(0.14))
+                )
+                .overlay(
+                    Capsule().stroke(added
+                        ? Color.appSecondaryText.opacity(0.2)
+                        : Color.appAccent.opacity(0.4),
+                        lineWidth: 0.5)
+                )
+        }
+        .buttonStyle(.plain)
+        .disabled(added)
     }
 }
 
