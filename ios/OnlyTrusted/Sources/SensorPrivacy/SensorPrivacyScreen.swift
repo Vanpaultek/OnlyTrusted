@@ -19,6 +19,15 @@ struct SensorPrivacyScreen: View {
     @State private var newEntryCam: Bool = true
     @State private var showLearnMore = false
 
+    // Post-return prompt — fires when the user comes back to OnlyTrusted
+    // after tapping a "Review in iOS Settings" button. See
+    // docs/SENSOR_PRIVACY_ARCHITECTURE.md § "Tier 1 Consumer (iOS)".
+    @State private var pendingReturnSensor: ReturnSensor?
+    @State private var pendingReturnAt: Date?
+    @State private var showPostReturnPrompt = false
+
+    fileprivate enum ReturnSensor { case mic, cam }
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 16) {
@@ -34,6 +43,34 @@ struct SensorPrivacyScreen: View {
         .navigationTitle("Mic & Camera Lock")
         .navigationBarTitleDisplayMode(.inline)
         .task { _ = await controller.readState() }
+        .onReceive(NotificationCenter.default.publisher(
+            for: UIApplication.willEnterForegroundNotification)
+        ) { _ in
+            maybeShowPostReturnPrompt()
+        }
+        .sheet(isPresented: $showPostReturnPrompt) {
+            PostReturnPromptSheet(
+                sensor: pendingReturnSensor ?? .mic,
+                existingLower: Set(restricted.entries.map { $0.displayName.lowercased() }),
+                onPick: { name in
+                    restricted.add(name: name,
+                                   micRestricted: pendingReturnSensor == .mic,
+                                   cameraRestricted: pendingReturnSensor == .cam)
+                },
+            )
+        }
+    }
+
+    private func maybeShowPostReturnPrompt() {
+        guard pendingReturnSensor != nil,
+              let openedAt = pendingReturnAt,
+              Date().timeIntervalSince(openedAt) < 5 * 60
+        else {
+            pendingReturnSensor = nil
+            pendingReturnAt = nil
+            return
+        }
+        showPostReturnPrompt = true
     }
 
     // MARK: - Status
@@ -80,10 +117,16 @@ struct SensorPrivacyScreen: View {
             Text("iOS owns the per-app list. Tap below to open it directly.")
                 .cardBodyMuted()
             VStack(spacing: 8) {
-                reviewRow(symbol: "mic.fill", label: "Microphone — all apps",
-                          action: ConsumerSensorPrivacyController.openMicrophoneSettings)
-                reviewRow(symbol: "video.fill", label: "Camera — all apps",
-                          action: ConsumerSensorPrivacyController.openCameraSettings)
+                reviewRow(symbol: "mic.fill", label: "Microphone — all apps") {
+                    pendingReturnSensor = .mic
+                    pendingReturnAt = Date()
+                    ConsumerSensorPrivacyController.openMicrophoneSettings()
+                }
+                reviewRow(symbol: "video.fill", label: "Camera — all apps") {
+                    pendingReturnSensor = .cam
+                    pendingReturnAt = Date()
+                    ConsumerSensorPrivacyController.openCameraSettings()
+                }
             }
         }
         .padding(14)
@@ -415,6 +458,112 @@ struct SensorPrivacyScreen: View {
             Text(text).font(.system(size: 12)).foregroundStyle(Color.appSecondaryText)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+}
+
+// MARK: - Post-return prompt
+
+/// Shown as a sheet after the user comes back to OnlyTrusted from an
+/// iOS Settings deep link (within 5 min). Tap-to-add common apps that
+/// were likely the subject of the Settings visit. Pre-filters out
+/// anything already in the checklist. Honest: we can't verify what the
+/// user did in iOS Settings — this is prompted-recall, not detection.
+private struct PostReturnPromptSheet: View {
+    let sensor: SensorPrivacyScreen.ReturnSensor
+    let existingLower: Set<String>
+    let onPick: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    private var sensorWord: String { sensor == .mic ? "mic" : "camera" }
+    private var sensorIcon: String { sensor == .mic ? "mic.fill" : "video.fill" }
+
+    private var candidates: [String] {
+        SuggestedApps.commonMicCamApps.filter { !existingLower.contains($0.lowercased()) }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 16) {
+                    header
+                    chipGrid
+                    footerNote
+                }
+                .padding(18)
+            }
+            .background(Color.appScreenBackground.ignoresSafeArea())
+            .navigationTitle("Welcome back")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: sensorIcon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Color.appAccent)
+                Text("Just revoked \(sensorWord) access?")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Color.appPrimaryText)
+            }
+            Text("Tap any apps you turned off in iOS Settings — they'll be added to your Always Restricted checklist so you can audit later. iOS doesn't tell us what you changed, so this is self-reported.")
+                .font(.system(size: 13))
+                .foregroundStyle(Color.appSecondaryText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var chipGrid: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 2)
+        return LazyVGrid(columns: columns, spacing: 8) {
+            if candidates.isEmpty {
+                Text("Everything in the suggested list is already in your checklist. Add custom apps via the main screen.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Color.appSecondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 10)
+            } else {
+                ForEach(candidates, id: \.self) { name in
+                    Button {
+                        onPick(name)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Color.appAccent)
+                            Text(name)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Color.appPrimaryText)
+                                .lineLimit(1)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 9)
+                        .background(Color.appCardBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.appAccent.opacity(0.3), lineWidth: 0.5)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var footerNote: some View {
+        Text("The chips you tap are added with \(sensorWord) marked as revoked. Edit the mic/cam flags later from the Always Restricted card.")
+            .font(.system(size: 11))
+            .foregroundStyle(Color.appSecondaryText.opacity(0.8))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 
