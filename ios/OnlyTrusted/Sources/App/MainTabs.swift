@@ -609,6 +609,17 @@ private struct CinematicHeader: View {
     let name: String?
     let onSettings: () -> Void
 
+    /// Top safe-area inset in points for the active window scene — accounts
+    /// for status bar + Dynamic Island / notch so the top row content clears
+    /// those regions. ~59pt on Dynamic Island phones, ~47pt on notch, ~20pt
+    /// on classic bars.
+    private var topSafeInset: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?
+            .keyWindow?.safeAreaInsets.top ?? 44
+    }
+
     private var timeOfDay: String {
         let h = Calendar.current.component(.hour, from: Date())
         let key: String
@@ -648,10 +659,14 @@ private struct CinematicHeader: View {
                         )
                     }
             }
-            .frame(height: 240)
+            .frame(height: 240 + topSafeInset)
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
 
-            // Top row: wordmark + settings gear
+            // Top row: wordmark + settings gear. Pad down from the top safe
+            // inset so the content clears the Dynamic Island / notch / status
+            // bar on every device size (previously used a fixed 14pt which
+            // overlapped the Dynamic Island on iPhone 14 Pro / 15 Pro / 16 Pro
+            // / 17 Pro).
             HStack(alignment: .top) {
                 HStack(spacing: 0) {
                     Text("Only").foregroundStyle(.white)
@@ -676,7 +691,7 @@ private struct CinematicHeader: View {
                 .accessibilityLabel("Settings")
             }
             .padding(.horizontal, 16)
-            .padding(.top, 14)
+            .padding(.top, topSafeInset + 10)
 
             // Greeting block anchored to bottom-left of the header area
             VStack(alignment: .leading, spacing: 2) {
