@@ -37,7 +37,6 @@ import com.onlytrusted.app.ui.lock.AppLockGate
 import com.onlytrusted.app.ui.navigation.AppNavigation
 import com.onlytrusted.app.ui.onboarding.ConsentScreen
 import com.onlytrusted.app.ui.onboarding.OnboardingScreen
-import com.onlytrusted.app.ui.onboarding.PermissionsOverviewScreen
 import com.onlytrusted.app.ui.onboarding.ProfileSetupScreen
 import com.onlytrusted.app.ui.onboarding.ProfileStore
 import com.onlytrusted.app.ui.settings.SettingsViewModel
@@ -91,24 +90,21 @@ class MainActivity : FragmentActivity() {
                 var initialStateLoaded by remember { mutableStateOf(false) }
                 var onboarded by remember { mutableStateOf(false) }
                 var consented by remember { mutableStateOf(false) }
-                var permissionsReviewed by remember { mutableStateOf(false) }
                 var profileSetup by remember { mutableStateOf(false) }
                 val lifecycleOwner = LocalLifecycleOwner.current
                 var unlocked by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
-                    val ob: Boolean; val cn: Boolean; val pm: Boolean
+                    val ob: Boolean; val cn: Boolean
                     val pr: Boolean; val un: Boolean
                     withContext(Dispatchers.IO) {
                         ob = OnboardingState.hasOnboarded(this@MainActivity)
                         cn = OnboardingState.hasAccepted(this@MainActivity)
-                        pm = OnboardingState.hasReviewedPermissions(this@MainActivity)
                         pr = ProfileStore.isSetupComplete(this@MainActivity)
                         un = !AppLockManager.shouldPrompt(this@MainActivity)
                     }
                     onboarded = ob
                     consented = cn
-                    permissionsReviewed = pm
                     profileSetup = pr
                     unlocked = un
                     initialStateLoaded = true
@@ -145,9 +141,16 @@ class MainActivity : FragmentActivity() {
                     !splashDone || !initialStateLoaded ->
                         SplashScreen(onDone = { splashDone = true })
                     !onboarded -> OnboardingScreen(onContinue = { onboarded = true })
-                    !consented -> ConsentScreen(onConfirmed = { consented = true })
-                    !permissionsReviewed ->
-                        PermissionsOverviewScreen(onContinue = { permissionsReviewed = true })
+                    !consented -> ConsentScreen(onConfirmed = {
+                        consented = true
+                        // Fire the batched Android permission dialogs right
+                        // here — user has just explicitly agreed to use the
+                        // app, so this is the honest moment to ask. If any
+                        // are already granted, Android stays silent for
+                        // those; the user only sees prompts for the ones
+                        // still missing.
+                        requestCorePermissionsIfNeeded()
+                    })
                     !profileSetup -> ProfileSetupScreen(onComplete = { profileSetup = true })
                     !unlocked -> AppLockGate(onUnlocked = {
                         AppLockManager.markUnlocked(this)
@@ -184,15 +187,12 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        // Only auto-fire the batched system permissions prompt on launches
-        // AFTER the user has walked through PermissionsOverviewScreen. On a
-        // fresh install the overview is the first permissions UX they see,
-        // and it drives its own RequestMultiplePermissions call — if we
-        // also fired here, Android would stack two prompt sequences on top
-        // of each other before the user even sees the overview screen.
-        if (OnboardingState.hasReviewedPermissions(this)) {
-            requestCorePermissionsIfNeeded()
-        }
+        // v0.1.9 removed the in-app PermissionsOverviewScreen entirely —
+        // the only "ask" the user sees is Android's own system dialogs,
+        // matching WhatsApp / Signal UX. The batched request is kicked off
+        // from the Consent screen's onConfirmed path (see setContent below)
+        // so it fires after the user has agreed to use the app, not before
+        // Onboarding renders.
     }
 
     override fun onResume() {

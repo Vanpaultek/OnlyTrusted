@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Raw shield bitmap. Wrapped by `ic_launcher_foreground.xml` in an <inset> so the shield
-  sits inside Android's adaptive-icon safe zone.
+  Raw shield bitmap. Wrapped by ic_launcher_foreground.xml in an <inset>.
+  gravity="fill" (not "center") so the bitmap actually SCALES to its inset-reduced
+  container — with gravity="center" the bitmap draws at native size and ignores the
+  inset, which is why earlier launcher icons looked unchanged across inset edits.
 -->
 <bitmap xmlns:android="http://schemas.android.com/apk/res/android"
     android:src="@drawable/ic_launcher_foreground_src"
-    android:gravity="center" />
+    android:gravity="fill" />

@@ -108,7 +108,8 @@ fun DashboardScreen(
     onGoToSettings: () -> Unit = {},
     onGoToBlockList: () -> Unit = {},
     onGoToEvents: () -> Unit = {},
-    onGoToReports: () -> Unit = {}
+    onGoToReports: () -> Unit = {},
+    onGoToContactScan: () -> Unit = {},
 ) {
     val duressActive by com.onlytrusted.app.ui.duress.DuressState.isDuressSession
         .collectAsStateWithLifecycle()
@@ -227,14 +228,40 @@ fun DashboardScreen(
                     awaitingToggle = hasTrustedContacts && !trustedOnlyEnabled
                 )
             }
-            val scamContactsCount = remember {
-                com.onlytrusted.app.ui.contactscan.ContactScanState.matchCount(context)
+            // Live match count — recomposes when the auto-import+scan below
+            // flips the stored value.
+            var scamContactsCount by remember {
+                mutableStateOf(com.onlytrusted.app.ui.contactscan.ContactScanState.matchCount(context))
             }
+
+            // First-time auto-import of device contacts + scam scan. Fires
+            // exactly once per install (gated by TrustedContactsAutoImporter's
+            // own prefs flag), only after READ_CONTACTS has been granted.
+            // Mirrors the WhatsApp first-launch "we found your contacts"
+            // behaviour. All reads + inserts are local — nothing transmitted.
+            LaunchedEffect(Unit) {
+                if (com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.shouldRun(context)) {
+                    runCatching {
+                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.importAll(context)
+                    }
+                    val report = runCatching {
+                        com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
+                    }.getOrNull()
+                    if (report != null) {
+                        com.onlytrusted.app.ui.contactscan.ContactScanState.save(context, report)
+                        scamContactsCount = report.matches.size
+                    }
+                }
+            }
+
             StatsRow(
                 trusted = state.trustedContactCount,
                 blockedToday = state.blockedCalls24h,
                 blockedWeek = state.flaggedSms24h,
-                scamContacts = scamContactsCount
+                scamContacts = scamContactsCount,
+                onTrustedClick = onGoToVault,
+                onBlockedClick = onGoToBlockList,
+                onScamClick = onGoToContactScan,
             )
             QuickActionsSection(
                 onAddContact = onGoToVault,
@@ -559,18 +586,44 @@ private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = fa
 // MARK: - 3 stat tiles
 
 @Composable
-private fun StatsRow(trusted: Int, blockedToday: Int, blockedWeek: Int, scamContacts: Int) {
+private fun StatsRow(
+    trusted: Int,
+    blockedToday: Int,
+    blockedWeek: Int,
+    scamContacts: Int,
+    onTrustedClick: () -> Unit,
+    onBlockedClick: () -> Unit,
+    onScamClick: () -> Unit,
+) {
     // 1x3 row: Trusted Contacts · Blocked (today + week combined) · Scam Contacts.
+    // Each tile is tappable — routes to the matching list screen.
     Row(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
-        StatTile(Modifier.weight(1f), Icons.Filled.Groups, BrandAccentDark, trusted, stringResource(R.string.dash_trusted_contacts))
-        BlockedCombinedTile(Modifier.weight(1f), blockedToday = blockedToday, blockedWeek = blockedWeek)
+        StatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Filled.Groups,
+            tint = BrandAccentDark,
+            value = trusted,
+            label = stringResource(R.string.dash_trusted_contacts),
+            onClick = onTrustedClick,
+        )
+        BlockedCombinedTile(
+            modifier = Modifier.weight(1f),
+            blockedToday = blockedToday,
+            blockedWeek = blockedWeek,
+            onClick = onBlockedClick,
+        )
         // Scam Contacts tile — populated by the last Contact Safety Scan.
-        StatTile(Modifier.weight(1f), Icons.Filled.Warning,
-            if (scamContacts > 0) DangerDark else BrandAccentDark,
-            scamContacts, stringResource(R.string.dash_scam_contacts))
+        StatTile(
+            modifier = Modifier.weight(1f),
+            icon = Icons.Filled.Warning,
+            tint = if (scamContacts > 0) DangerDark else BrandAccentDark,
+            value = scamContacts,
+            label = stringResource(R.string.dash_scam_contacts),
+            onClick = onScamClick,
+        )
     }
 }
 
@@ -580,11 +633,17 @@ private fun StatsRow(trusted: Int, blockedToday: Int, blockedWeek: Int, scamCont
  * the dashboard reads 1x3 instead of 2x2.
  */
 @Composable
-private fun BlockedCombinedTile(modifier: Modifier, blockedToday: Int, blockedWeek: Int) {
+private fun BlockedCombinedTile(
+    modifier: Modifier,
+    blockedToday: Int,
+    blockedWeek: Int,
+    onClick: () -> Unit,
+) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MidnightElevated)
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
@@ -610,11 +669,19 @@ private fun BlockedCombinedTile(modifier: Modifier, blockedToday: Int, blockedWe
 }
 
 @Composable
-private fun StatTile(modifier: Modifier, icon: ImageVector, tint: Color, value: Int, label: String) {
+private fun StatTile(
+    modifier: Modifier,
+    icon: ImageVector,
+    tint: Color,
+    value: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MidnightElevated)
+            .clickable(onClick = onClick)
             .padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {

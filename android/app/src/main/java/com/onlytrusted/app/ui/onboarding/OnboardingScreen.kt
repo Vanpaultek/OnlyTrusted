@@ -129,11 +129,16 @@ fun OnboardingScreen(onContinue: () -> Unit) {
 
 @Composable
 private fun CinematicHero() {
-    val heroHeight = 380.dp
+    // Hero must show the full illustration (shield + family + mountains),
+    // not crop the family silhouette. Content below scrolls, so there's no
+    // layout cost to keeping the hero tall. 8 dp top margin keeps it clear
+    // of the camera cutout.
+    val heroHeight = 420.dp
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier = Modifier
             .fillMaxWidth()
+            .padding(top = 8.dp)
             .height(heroHeight)
             .clip(RoundedCornerShape(22.dp))
             .border(1.dp, BrandCyanDark.copy(alpha = 0.36f), RoundedCornerShape(22.dp))
@@ -206,6 +211,9 @@ private fun BenefitList() {
 
 @Composable
 private fun BenefitTile(icon: ImageVector, title: String, subtitle: String) {
+    // Decorative tile only — no onClick, no chevron. The chevron used to
+    // suggest navigability but there's no deeper content; removing it so
+    // the tiles clearly read as info, not tappable rows.
     Row(
         verticalAlignment = Alignment.Top,
         modifier = Modifier
@@ -237,13 +245,6 @@ private fun BenefitTile(icon: ImageVector, title: String, subtitle: String) {
                 fontSize = 13.sp
             )
         }
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            Icons.Outlined.ChevronRight,
-            contentDescription = null,
-            tint = TertiaryTextDark,
-            modifier = Modifier.size(18.dp)
-        )
     }
 }
 

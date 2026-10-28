@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Adaptive-icon foreground.
-
-  Android masks the adaptive icon to the launcher's current shape (circle, squircle,
-  rounded square, teardrop…) and only guarantees the inner ~66×66 dp of the 108×108 dp
-  foreground canvas is visible — the outer ~21 dp on each edge may be clipped. If the
-  shield artwork fills the full canvas (as the raw 432×432 brand PNG does), the launcher
-  crops the shield edges and shows its own fallback mask behind the gap.
-
-  We wrap the bitmap in an <inset> so the shield sits inside the safe zone and the
-  launcher-shape mask only ever hits the midnight background.
-
-  Inset = 25% on every side → effective artwork area is 50% of the 108dp canvas (54dp
-  circle), matching Google's official adaptive-icon safe-zone recommendation. Prevents
-  cropping on even the most aggressive circular masks (OnePlus / Samsung One UI). Bumped
-  up from 20% after a tester reported the shield edges being clipped on a real device.
+  Asymmetric insets: more top-padding than bottom shifts the shield slightly DOWN
+  inside the 108dp canvas (and inside the launcher's circular mask).
 -->
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:inset="25%"
-    android:drawable="@drawable/ic_launcher_foreground_bitmap" />
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:top="18dp"
+        android:bottom="6dp"
+        android:left="12dp"
+        android:right="12dp">
+        <bitmap
+            android:src="@drawable/ic_launcher_foreground_src"
+            android:gravity="fill" />
+    </item>
+</layer-list>

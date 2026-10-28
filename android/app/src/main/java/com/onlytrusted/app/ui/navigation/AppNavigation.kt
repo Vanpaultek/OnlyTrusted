@@ -218,7 +218,8 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onGoToSettings = { navController.navigate(Destination.Settings.route) },
                     onGoToBlockList = { navController.navigate(Destination.BlockList.route) },
                     onGoToEvents = { navController.navigate(Destination.Events.route) },
-                    onGoToReports = { navController.navigate(Destination.Reports.route) }
+                    onGoToReports = { navController.navigate(Destination.Reports.route) },
+                    onGoToContactScan = { navController.navigate(Destination.ContactScan.route) },
                 )
             }
             composable(Destination.Vault.route) {
