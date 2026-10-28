@@ -24,12 +24,12 @@ android {
         targetSdk = 36
         versionCode = 2
         versionName = "0.1.1"
-        // Include native debug symbols in the AAB so Play Console can
-        // de-obfuscate crashes + ANRs from the bundled .so files
-        // (Kotlin-native deps like SQLCipher ship native code).
-        ndk {
-            debugSymbolLevel = "FULL"
-        }
+        // Note on native debug symbols: our dep .so files (SQLCipher, face
+        // detector, androidx.graphics.path, ML Kit) are shipped stripped by
+        // their publishers. There's nothing for AGP to copy into the AAB,
+        // so Google Play's "no debug symbols" warning is unavoidable without
+        // Firebase Crashlytics or similar. R8 mapping handles our own Kotlin
+        // code symbolication automatically; see docs/RELEASE_GATES.md.
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
