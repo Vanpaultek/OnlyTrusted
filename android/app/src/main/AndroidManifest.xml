@@ -137,19 +137,21 @@
         <!-- Lock + Mute Now trigger. Transparent no-UI activity — runs
              enforceLock() on the strongest active sensor-privacy controller
              tier + optionally lockNow() if Device Admin is granted, then
-             finishes within ~100ms. Launched from the static shortcut
-             declared above. -->
+             finishes within ~100ms. Launched ONLY from the static shortcut
+             declared above (which targets this class explicitly by
+             targetPackage + targetClass in res/xml/shortcuts.xml).
+
+             exported="true" is required so the system launcher process can
+             launch the shortcut. We deliberately do NOT register an
+             intent-filter: the shortcut hits the component by explicit
+             class name, so there's no VIEW implicit action that another
+             app could forge to silently lock the mic/camera. -->
         <activity
             android:name=".ui.sensorprivacy.LockAndMuteActivity"
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
             android:name=".ui.lock.PocketConfirmActivity"

@@ -85,6 +85,16 @@ fun AppLockGate(
 
     LaunchedEffect(Unit) {
         val activity = context as? FragmentActivity ?: return@LaunchedEffect
+        // Defensive guard: if App Lock isn't actually enabled, don't show a
+        // biometric prompt — just pass through. This fixes the "passkey asked
+        // twice" bug where the ProfileSetup biometric step already fired a
+        // prompt, and the user got hit with another one from AppLockGate
+        // right after.
+        if (!lockEnabled || !AppLockManager.shouldPrompt(context)) {
+            AppLockManager.markUnlocked(context)
+            onUnlocked()
+            return@LaunchedEffect
+        }
         if (!canAuth) {
             error = if (lockEnabled) {
                 "This device no longer has a biometric or PIN set up. Disable App Lock below " +

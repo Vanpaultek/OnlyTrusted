@@ -11,10 +11,11 @@
   We wrap the bitmap in an <inset> so the shield sits inside the safe zone and the
   launcher-shape mask only ever hits the midnight background.
 
-  Inset = 20% on every side → effective artwork area is ~60% of the canvas, which keeps
-  the shield fully visible on circle launchers (the strictest shape) without pushing the
-  logo so small that it reads as a dot.
+  Inset = 25% on every side → effective artwork area is 50% of the 108dp canvas (54dp
+  circle), matching Google's official adaptive-icon safe-zone recommendation. Prevents
+  cropping on even the most aggressive circular masks (OnePlus / Samsung One UI). Bumped
+  up from 20% after a tester reported the shield edges being clipped on a real device.
 -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:inset="20%"
+    android:inset="25%"
     android:drawable="@drawable/ic_launcher_foreground_bitmap" />
