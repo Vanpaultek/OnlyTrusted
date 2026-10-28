@@ -18,9 +18,18 @@ android {
     defaultConfig {
         applicationId = "com.onlytrusted.app"
         minSdk = 29
-        targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Google Play (as of Nov 2025) requires new apps to target API 36
+        // (Android 16 "Baklava"). Bumping also enables the latest security
+        // + performance defaults on all shipping devices.
+        targetSdk = 36
+        versionCode = 2
+        versionName = "0.1.1"
+        // Include native debug symbols in the AAB so Play Console can
+        // de-obfuscate crashes + ANRs from the bundled .so files
+        // (Kotlin-native deps like SQLCipher ship native code).
+        ndk {
+            debugSymbolLevel = "FULL"
+        }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }
