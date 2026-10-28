@@ -107,6 +107,16 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
                             errorMessage = null
                             step = Step.Biometric
                         }
+                    },
+                    onSkip = {
+                        // Skipping is honest: no PIN is stored. The user can
+                        // create one later from Settings. App Lock + Duress
+                        // features that require a PIN remain disabled until
+                        // then. Clear local drafts to avoid any stale state.
+                        pinDraft = ""
+                        pinConfirm = ""
+                        errorMessage = null
+                        step = Step.Biometric
                     }
                 )
                 Step.Biometric -> BiometricStep(
@@ -201,7 +211,8 @@ private fun PinStep(
     confirm: String,
     onPin: (String) -> Unit,
     onConfirm: (String) -> Unit,
-    onNext: () -> Unit
+    onNext: () -> Unit,
+    onSkip: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedTextField(
@@ -228,6 +239,22 @@ private fun PinStep(
             colors = ButtonDefaults.buttonColors(containerColor = BrandAccentDark),
             modifier = Modifier.fillMaxWidth().height(48.dp)
         ) { Text("Set PIN", color = Color.White, fontWeight = FontWeight.SemiBold) }
+        OutlinedButton(
+            onClick = onSkip,
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) {
+            Text(
+                "Skip for now",
+                color = SecondaryTextDark,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Text(
+            "Skipping is fine. You can create a PIN later from Settings. " +
+                "Without one, App Lock and Duress features stay disabled.",
+            fontSize = 11.sp,
+            color = SecondaryTextDark,
+        )
     }
 }
 

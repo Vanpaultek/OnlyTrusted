@@ -12,6 +12,7 @@ object OnboardingState {
     private const val KEY_IS_ADULT = "is_adult"
     private const val KEY_OWNS_DEVICE = "owns_device"
     private const val KEY_UNDERSTOOD_LIMITS = "understood_limits"
+    private const val KEY_PERMISSIONS_REVIEWED = "permissions_reviewed_v1"
 
     fun hasOnboarded(ctx: Context): Boolean =
         prefs(ctx).getBoolean(KEY_ONBOARDED, false)
@@ -39,6 +40,17 @@ object OnboardingState {
             .putBoolean(KEY_OWNS_DEVICE, ownsDevice)
             .putBoolean(KEY_UNDERSTOOD_LIMITS, understandsLimits)
             .apply()
+    }
+
+    fun hasReviewedPermissions(ctx: Context): Boolean =
+        prefs(ctx).getBoolean(KEY_PERMISSIONS_REVIEWED, false)
+
+    /** Mark the permissions overview as reviewed, whether the user granted
+     *  everything, some, or nothing. The flag only tracks that we showed
+     *  the review screen; feature-level permission prompts still appear
+     *  when a specific permission is required. */
+    fun markPermissionsReviewed(ctx: Context) {
+        prefs(ctx).edit().putBoolean(KEY_PERMISSIONS_REVIEWED, true).apply()
     }
 
     fun reset(ctx: Context) {
