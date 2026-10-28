@@ -50,6 +50,24 @@ class ScreenStateReceiver private constructor(
                     )
                     return
                 }
+                // If the user is mid-call or playing media, cutting the mic
+                // would drop the call or kill audio. Defer the lock — the
+                // next screen-off after the audio session ends will fire
+                // enforceLock() cleanly. The user can still force a lock
+                // right now via the QS tile, launcher shortcut, Siri, or
+                // the in-app "Lock Now" button; those paths intentionally
+                // bypass this guard because they are explicit user intent.
+                val audio = ActiveAudioSession.snapshot(context)
+                if (audio.busy) {
+                    SensorPrivacyLog.append(
+                        context,
+                        kind = SensorPrivacyLog.Kind.SCREEN_LOCK,
+                        detail = "screen locked during active audio session " +
+                            "(${audio.reason()}). enforceLock() deferred so " +
+                            "mic/camera stay available for the call or media.",
+                    )
+                    return
+                }
                 scope.launch { controller.enforceLock() }
             }
             // Intentional: restore ONLY on USER_PRESENT, not on SCREEN_ON.
