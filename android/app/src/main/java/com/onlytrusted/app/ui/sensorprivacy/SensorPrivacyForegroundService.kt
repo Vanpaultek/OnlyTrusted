@@ -52,6 +52,14 @@ class SensorPrivacyForegroundService : Service() {
         // the strongest available tier (Privileged > DeviceOwner > Consumer).
         val controller = pickController(this)
         ScreenStateReceiver.register(this, controller)
+        // Always-on mic activity tracker — used by the screen-off guard to
+        // tell a user-accepted VoIP call apart from a silent background mic
+        // activation. Independent of the opt-in Reactive Mic Alerts: the
+        // alerts post user-visible notifications, this one is internal
+        // state that drives lock decisions.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            MicActivityTracker.start(this)
+        }
         // Reactive mic-recording watcher — only runs if the user opted in from
         // the sensor-privacy screen. Share one lifecycle with the FGS so it
         // dies cleanly when the user turns the whole feature off.
@@ -73,6 +81,9 @@ class SensorPrivacyForegroundService : Service() {
 
     override fun onDestroy() {
         ScreenStateReceiver.unregister(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            MicActivityTracker.stop(this)
+        }
         AudioRecordingWatcherState.stop()
         SensorPrivacyLog.append(
             this,

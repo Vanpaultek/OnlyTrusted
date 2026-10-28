@@ -504,12 +504,15 @@ private fun AutoLockCard(
                 color = SecondaryTextDark, fontSize = 13.sp,
             )
             Text(
-                "Skips the lock automatically if you're on a cellular or VoIP call " +
-                    "(WhatsApp, Signal, Zoom, Meet, Teams…), a call is ringing, or " +
-                    "media is playing. Your call and audio won't be cut. The lock " +
-                    "fires on the next screen-off after the session ends. To force " +
-                    "a lock during a call, use the Quick Settings tile, launcher " +
-                    "shortcut, or Assistant.",
+                "Skips the lock when you're on a real call (cellular, or VoIP " +
+                    "like WhatsApp, Signal, Zoom, Meet, Teams, Discord), a call " +
+                    "is ringing, or media is playing — your call and audio won't " +
+                    "be cut. If an app silently activates the mic without your " +
+                    "input (e.g. in the background), the lock still fires. The " +
+                    "signal: recording must have started while the screen was on " +
+                    "and been active a few seconds — a silent flip into VoIP " +
+                    "mode doesn't qualify. QS tile, launcher shortcut, and " +
+                    "Assistant always lock immediately, no heuristic.",
                 color = TertiaryTextDark, fontSize = 12.sp,
             )
             // Enable toggle.

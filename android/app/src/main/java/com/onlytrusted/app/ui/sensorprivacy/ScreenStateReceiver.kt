@@ -57,8 +57,24 @@ class ScreenStateReceiver private constructor(
                 // right now via the QS tile, launcher shortcut, Siri, or
                 // the in-app "Lock Now" button; those paths intentionally
                 // bypass this guard because they are explicit user intent.
+                //
+                // Honest-call check: VoIP mode (MODE_IN_COMMUNICATION) is
+                // forgeable by any app, so we trust it only when
+                // [MicActivityTracker] confirms the recording started while
+                // the screen was on and has been running long enough to
+                // look like a user-accepted call. Silent auto-activation
+                // (background mic flip) is explicitly NOT a deferral.
                 val audio = ActiveAudioSession.snapshot(context)
-                if (audio.busy) {
+                if (audio.suspiciousVoipMode && !audio.shouldDeferLock) {
+                    SensorPrivacyLog.append(
+                        context,
+                        kind = SensorPrivacyLog.Kind.SCREEN_LOCK,
+                        detail = "VoIP audio mode is set but no user-accepted " +
+                            "call session was observed. Treating as silent " +
+                            "auto-activation — locking anyway.",
+                    )
+                }
+                if (audio.shouldDeferLock) {
                     SensorPrivacyLog.append(
                         context,
                         kind = SensorPrivacyLog.Kind.SCREEN_LOCK,
