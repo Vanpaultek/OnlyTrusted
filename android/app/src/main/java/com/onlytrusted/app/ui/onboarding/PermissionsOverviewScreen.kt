@@ -181,7 +181,7 @@ fun PermissionsOverviewScreen(onContinue: () -> Unit) {
                 modifier = Modifier.fillMaxWidth().height(54.dp),
             ) {
                 Text(
-                    "Grant selected",
+                    "Ask Android for selected",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -221,13 +221,40 @@ private fun Header() {
             textAlign = TextAlign.Center,
         )
         Text(
-            "Review everything OnlyTrusted uses, then grant them all in one " +
-                "step. Nothing leaves your device. You can un-check anything " +
-                "you don't want, or skip and grant later.",
+            "Pick which permissions to request. Nothing leaves your device. " +
+                "Un-check anything you don't want, or skip and grant later.",
             color = SecondaryTextDark,
             fontSize = 13.sp,
             textAlign = TextAlign.Center,
         )
+        // Honest banner — Android forces a system dialog per dangerous
+        // permission; our checklist cannot bypass that. State the limit
+        // up front so the user doesn't feel asked-twice.
+        Row(
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(MidnightCard)
+                .border(1.dp, BrandAccentDark.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+        ) {
+            Icon(
+                Icons.Filled.Notifications,
+                contentDescription = null,
+                tint = BrandAccentDark,
+                modifier = Modifier.size(16.dp).padding(top = 2.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Android will still show its own Allow / Deny prompt for each " +
+                    "one you select. That's a rule Google sets — no app can " +
+                    "pre-grant permissions for you.",
+                color = SecondaryTextDark,
+                fontSize = 12.sp,
+            )
+        }
     }
 }
 
@@ -390,10 +417,10 @@ private fun SpecialPermissionRow(
 @Composable
 private fun HonestLimitFootnote() {
     Text(
-        "Android shows one system dialog per permission — we can't combine " +
-            "them into a single \"Allow all\" tap. We can only line them up for " +
-            "you in advance. Expect that many Allow / Deny prompts after you " +
-            "tap Grant selected.",
+        "Tap \"Ask Android for selected\" and you'll see one quick Allow / " +
+            "Deny prompt per permission you ticked, in sequence. Deny any that " +
+            "you don't want — a feature that needs it will ask again when you " +
+            "first use it.",
         color = TertiaryTextDark,
         fontSize = 11.sp,
         textAlign = TextAlign.Center,

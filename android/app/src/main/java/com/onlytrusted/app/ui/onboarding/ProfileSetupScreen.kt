@@ -53,7 +53,9 @@ import com.onlytrusted.app.ui.theme.SecondaryTextDark
 
 /**
  * Mandatory first-launch profile setup — Android counterpart of iOS `ProfileSetupScreen`.
- * Three sequential sub-steps gated behind an in-screen enum: Email → PIN → Biometric.
+ * Two sequential sub-steps: Email → Biometric. The PIN step was removed in v0.1.7
+ * because testers reported it as unexpected friction; a PIN is still available via
+ * Settings for users who want App Lock or Duress Mode.
  * Writes to [ProfileStore]; calls [onComplete] when the user finishes the biometric step.
  */
 @Composable
@@ -61,8 +63,6 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
     val context = LocalContext.current
     var step by remember { mutableStateOf(Step.Email) }
     var emailDraft by remember { mutableStateOf("") }
-    var pinDraft by remember { mutableStateOf("") }
-    var pinConfirm by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     AppBackdropScaffold { padding ->
@@ -86,37 +86,10 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
                         } else {
                             ProfileStore.setEmail(context, normalised)
                             errorMessage = null
-                            step = Step.Pin
-                        }
-                    }
-                )
-                Step.Pin -> PinStep(
-                    pin = pinDraft,
-                    confirm = pinConfirm,
-                    onPin = { pinDraft = it.filter(Char::isDigit).take(6) },
-                    onConfirm = { pinConfirm = it.filter(Char::isDigit).take(6) },
-                    onNext = {
-                        if (pinDraft.length < 4) {
-                            errorMessage = "PIN must be 4 to 6 digits."
-                        } else if (pinDraft != pinConfirm) {
-                            errorMessage = "PINs don't match."
-                        } else {
-                            ProfileStore.setPIN(context, pinDraft)
-                            pinDraft = ""
-                            pinConfirm = ""
-                            errorMessage = null
+                            // PIN step removed in v0.1.7 — jump straight to
+                            // the (optional, Skippable) biometric step.
                             step = Step.Biometric
                         }
-                    },
-                    onSkip = {
-                        // Skipping is honest: no PIN is stored. The user can
-                        // create one later from Settings. App Lock + Duress
-                        // features that require a PIN remain disabled until
-                        // then. Clear local drafts to avoid any stale state.
-                        pinDraft = ""
-                        pinConfirm = ""
-                        errorMessage = null
-                        step = Step.Biometric
                     }
                 )
                 Step.Biometric -> BiometricStep(
@@ -155,7 +128,7 @@ fun ProfileSetupScreen(onComplete: () -> Unit) {
     }
 }
 
-private enum class Step { Email, Pin, Biometric }
+private enum class Step { Email, Biometric }
 
 @Composable
 private fun Header(step: Step) {
@@ -164,11 +137,6 @@ private fun Header(step: Step) {
             Icons.Filled.Email,
             "Your email",
             "Stored on this device only. OnlyTrusted does not have a server, so your email is never transmitted anywhere."
-        )
-        Step.Pin -> Triple(
-            Icons.Filled.Lock,
-            "Set a 4-6 digit PIN",
-            "Backup unlock for when your Passkey can't be used. PBKDF2-hashed with 100k iterations before storing — we can't read it back."
         )
         Step.Biometric -> Triple(
             Icons.Filled.Face,
@@ -202,59 +170,6 @@ private fun EmailStep(draft: String, onDraft: (String) -> Unit, onNext: () -> Un
             colors = ButtonDefaults.buttonColors(containerColor = BrandAccentDark),
             modifier = Modifier.fillMaxWidth().height(48.dp)
         ) { Text("Continue", color = Color.White, fontWeight = FontWeight.SemiBold) }
-    }
-}
-
-@Composable
-private fun PinStep(
-    pin: String,
-    confirm: String,
-    onPin: (String) -> Unit,
-    onConfirm: (String) -> Unit,
-    onNext: () -> Unit,
-    onSkip: () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
-            value = pin,
-            onValueChange = onPin,
-            singleLine = true,
-            placeholder = { Text("4-6 digit PIN") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = confirm,
-            onValueChange = onConfirm,
-            singleLine = true,
-            placeholder = { Text("Confirm PIN") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-            modifier = Modifier.fillMaxWidth()
-        )
-        Button(
-            onClick = onNext,
-            enabled = pin.length >= 4,
-            colors = ButtonDefaults.buttonColors(containerColor = BrandAccentDark),
-            modifier = Modifier.fillMaxWidth().height(48.dp)
-        ) { Text("Set PIN", color = Color.White, fontWeight = FontWeight.SemiBold) }
-        OutlinedButton(
-            onClick = onSkip,
-            modifier = Modifier.fillMaxWidth().height(48.dp)
-        ) {
-            Text(
-                "Skip for now",
-                color = SecondaryTextDark,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Text(
-            "Skipping is fine. You can create a PIN later from Settings. " +
-                "Without one, App Lock and Duress features stay disabled.",
-            fontSize = 11.sp,
-            color = SecondaryTextDark,
-        )
     }
 }
 
