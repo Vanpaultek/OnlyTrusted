@@ -123,30 +123,58 @@ struct SettingsScreen: View {
                 )
 
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
-                    sectionHeader("Device & data")
-                    securityCard
+                VStack(alignment: .leading, spacing: 20) {
+                    // Group 1 — Account first, then categories + system meta.
+                    SettingsGroupFrame {
+                        CollapsibleSection(
+                            "Account",
+                            icon: "creditcard.fill",
+                            iconTint: Color.settingsBlue,
+                        ) { premiumCard }
+                        CollapsibleSection(
+                            "Device & data",
+                            icon: "shield.fill",
+                            iconTint: Color.appAccent,
+                        ) { securityCard }
+                        CollapsibleSection(
+                            "Appearance",
+                            icon: "paintpalette.fill",
+                            iconTint: Color.settingsPurple,
+                        ) { appearanceCard }
+                        CollapsibleSection(
+                            "More",
+                            icon: "info.circle.fill",
+                            iconTint: Color.appSecondaryText,
+                        ) { moreCard }
+                    }
 
-                    sectionHeader("Account")
-                    premiumCard
+                    // Group 2 — FREE tier (own box)
+                    SettingsGroupFrame {
+                        CollapsibleTierSection("Free Features", chipText: "FREE", chipColor: Color.settingsBlue) {
+                            freeFeaturesCard
+                        }
+                    }
 
-                    sectionHeader("Appearance")
-                    appearanceCard
+                    // Group 3 — PREMIUM tier (own box)
+                    SettingsGroupFrame {
+                        CollapsibleTierSection("Premium Features", chipText: "PREMIUM", chipColor: Color.appAccent) {
+                            premiumFeaturesCard
+                        }
+                    }
 
-                    tierSectionHeader("Free Features", chipText: "FREE", chipColor: Color.settingsBlue)
-                    freeFeaturesCard
+                    // Group 4 — PRO tier (own box)
+                    SettingsGroupFrame {
+                        CollapsibleTierSection("Pro Features", chipText: "PRO", chipColor: Color.subGold) {
+                            proFeaturesCard
+                        }
+                    }
 
-                    tierSectionHeader("Premium Features", chipText: "PREMIUM", chipColor: Color.appAccent)
-                    premiumFeaturesCard
-
-                    tierSectionHeader("Pro Features", chipText: "PRO", chipColor: Color.subGold)
-                    proFeaturesCard
-
-                    tierSectionHeader("Elite Features", chipText: "ELITE", chipColor: Color.subGold)
-                    eliteFeaturesCard
-
-                    sectionHeader("More")
-                    moreCard
+                    // Group 5 — ELITE tier (own box)
+                    SettingsGroupFrame {
+                        CollapsibleTierSection("Elite Features", chipText: "ELITE", chipColor: Color.subGold) {
+                            eliteFeaturesCard
+                        }
+                    }
 
                     footerCard
                 }
@@ -590,7 +618,7 @@ struct SettingsScreen: View {
     }
 
 
-    // MARK: - Section header
+    // MARK: - Section header (static — kept for anywhere not using collapsible)
 
     private func sectionHeader(_ title: String) -> some View {
         Text(title)
@@ -1660,6 +1688,145 @@ struct AutoLockPickerSheet: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done", action: onDone)
                     .tint(Color.appAccent)
+            }
+        }
+    }
+}
+
+// MARK: - Settings group frame
+
+/// Rounded card that visually groups several [CollapsibleSection] / [CollapsibleTierSection]
+/// headers into one container. Mirrors Android's GroupFrame — makes a long Settings list
+/// read as a few distinct cards instead of nine floating headers.
+struct SettingsGroupFrame<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            content()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 4)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.appElevatedSurface)
+        )
+    }
+}
+
+// MARK: - Collapsible section views (iOS counterparts of Android's CollapsibleSection / CollapsibleTierSection)
+
+/// Collapsible Settings section with a tap-to-expand header + a coloured
+/// SF Symbol chip on the left. Default state is COLLAPSED so the Settings
+/// screen is short on first open. State persists across view recomposition
+/// but NOT across app restarts.
+struct CollapsibleSection<Content: View>: View {
+    let title: String
+    let iconSystemName: String
+    let iconTint: Color
+    var defaultExpanded: Bool = false
+    @ViewBuilder let content: () -> Content
+    @State private var isExpanded: Bool = false
+
+    init(
+        _ title: String,
+        icon: String,
+        iconTint: Color,
+        defaultExpanded: Bool = false,
+        @ViewBuilder content: @escaping () -> Content,
+    ) {
+        self.title = title
+        self.iconSystemName = icon
+        self.iconTint = iconTint
+        self.defaultExpanded = defaultExpanded
+        self.content = content
+        _isExpanded = State(initialValue: defaultExpanded)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack(spacing: 12) {
+                    // Colored icon tile — same visual language as the row icons inside.
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(iconTint.opacity(0.18))
+                            .frame(width: 36, height: 36)
+                        Image(systemName: iconSystemName)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(iconTint)
+                    }
+                    Text(title)
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                content()
+            }
+        }
+    }
+}
+
+/// Tier-badged collapsible section (Free / Premium / Pro / Elite).
+struct CollapsibleTierSection<Content: View>: View {
+    let title: String
+    let chipText: String
+    let chipColor: Color
+    var defaultExpanded: Bool = false
+    @ViewBuilder let content: () -> Content
+    @State private var isExpanded: Bool = false
+
+    init(_ title: String, chipText: String, chipColor: Color, defaultExpanded: Bool = false, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.chipText = chipText
+        self.chipColor = chipColor
+        self.defaultExpanded = defaultExpanded
+        self.content = content
+        _isExpanded = State(initialValue: defaultExpanded)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack(spacing: 12) {
+                    Text(chipText)
+                        .font(.system(size: 10, weight: .heavy, design: .rounded))
+                        .kerning(0.5)
+                        .foregroundStyle(chipColor)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(chipColor.opacity(0.18), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    Text(title)
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Spacer()
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                content()
             }
         }
     }

@@ -139,9 +139,40 @@ internal object MicActivityTracker {
         synchronized(sessions) { return sessions.values.toList() }
     }
 
-    private fun recordingPackage(config: AudioRecordingConfiguration): String? =
-        runCatching {
-            val m = AudioRecordingConfiguration::class.java.getMethod("getClientPackageName")
+    // Resolved once per process (nullable: null means the method isn't
+    // available on this device / Android version — stop retrying reflection
+    // on every single callback invocation). AudioRecordingConfiguration's
+    // getClientPackageName was added in API 29 and remains in API 36; this
+    // guard is here in case a future AOSP release renames or removes it.
+    @Volatile private var resolvedMethod: java.lang.reflect.Method? = null
+    @Volatile private var methodResolutionFailed: Boolean = false
+
+    private fun recordingPackage(config: AudioRecordingConfiguration): String? {
+        if (methodResolutionFailed) return null
+        val m = resolvedMethod ?: synchronized(this) {
+            resolvedMethod ?: try {
+                AudioRecordingConfiguration::class.java
+                    .getMethod("getClientPackageName")
+                    .also { resolvedMethod = it }
+            } catch (_: NoSuchMethodException) {
+                methodResolutionFailed = true
+                android.util.Log.w(
+                    "OTMicTracker",
+                    "AudioRecordingConfiguration.getClientPackageName() missing on this " +
+                        "device (API ${android.os.Build.VERSION.SDK_INT}); mic-origin " +
+                        "detection disabled.",
+                )
+                return null
+            } catch (t: Throwable) {
+                methodResolutionFailed = true
+                android.util.Log.w("OTMicTracker", "Reflection failed", t)
+                return null
+            }
+        }
+        return try {
             m.invoke(config) as? String
-        }.getOrNull()
+        } catch (_: Throwable) {
+            null
+        }
+    }
 }

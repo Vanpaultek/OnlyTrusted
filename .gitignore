@@ -28,5 +28,9 @@ Images/
 *.keystore
 SECRETS.txt
 
+# Keystore backup instructions — contain plaintext upload-key password + the
+# base64 recovery steps. MUST stay local; store secrets in 1Password instead.
+docs/KEYSTORE_BACKUP.md
+
 # Video generator scratch (regenerated per-run)
 tools/video/_frames_*/

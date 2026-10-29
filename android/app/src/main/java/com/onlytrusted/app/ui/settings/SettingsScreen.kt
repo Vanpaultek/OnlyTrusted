@@ -5,6 +5,7 @@ package com.onlytrusted.app.ui.settings
 import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.clickable
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.BluetoothSearching
@@ -140,6 +143,7 @@ fun SettingsScreen(
     onOpenShieldLog: () -> Unit = {},
     onOpenLegal: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
+    onOpenDeviceCompatibility: () -> Unit = {},
     onOpenLanguageRegion: () -> Unit = {},
     onOpenSensorPrivacy: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
@@ -343,9 +347,41 @@ fun SettingsScreen(
                     .padding(top = 4.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-            // --- Security & data (Android-preserved functionality) ---
-            SectionHeader("Device & data")
-            SettingsCard {
+            // --- Group 1: Account first, then categories + system ---
+            GroupFrame {
+            // --- Account & reports (not tier-exclusive — plan management) ---
+            CollapsibleSection(
+                title = "Account",
+                icon = Icons.Filled.CreditCard,
+                iconTint = settingsBlue,
+            ) {
+                SettingsNavRow(
+                    icon = Icons.AutoMirrored.Filled.ShowChart,
+                    tint = settingsBlue,
+                    title = "Reports",
+                    onClick = onOpenReports
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.CreditCard,
+                    tint = settingsBlue,
+                    title = "Billing & Subscription",
+                    onClick = onOpenBilling
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.EmojiEvents,
+                    tint = subGold,
+                    title = "Upgrade",
+                    onClick = onOpenUpgrade
+                )
+            }
+
+            CollapsibleSection(
+                title = "Device & data",
+                icon = Icons.Filled.Shield,
+                iconTint = BrandAccentDark,
+            ) {
                 // Region row — read-only summary of what the app detected from the OS.
                 // Used by Identity Protection to pick the right action catalog.
                 val regionSnapshot = remember { com.onlytrusted.app.ui.region.RegionState.snapshot(context) }
@@ -374,6 +410,24 @@ fun SettingsScreen(
                             return@ToggleRow
                         }
                         vm.setAppLock(enable)
+                    }
+                )
+                RowDivider()
+                // Master kill switch for the "please enable App Lock" nag
+                // (SecurityNagPolicy). Default on. Turning off = user never
+                // sees the Dashboard card or modal again.
+                var suggestSetup by remember {
+                    mutableStateOf(com.onlytrusted.app.security.SecurityNagPolicy.suggestionsEnabled(context))
+                }
+                ToggleRow(
+                    icon = Icons.Filled.Lock,
+                    tint = BrandAccentDark,
+                    title = "Suggest security setup",
+                    detail = "Shows a reminder on Dashboard when App Lock is off.",
+                    checked = suggestSetup,
+                    onChange = { enabled ->
+                        suggestSetup = enabled
+                        com.onlytrusted.app.security.SecurityNagPolicy.setSuggestionsEnabled(context, enabled)
                     }
                 )
                 RowDivider()
@@ -513,34 +567,12 @@ fun SettingsScreen(
                 )
             }
 
-            // --- Account & reports (not tier-exclusive — plan management) ---
-            SectionHeader("Account")
-            SettingsCard {
-                SettingsNavRow(
-                    icon = Icons.AutoMirrored.Filled.ShowChart,
-                    tint = settingsBlue,
-                    title = "Reports",
-                    onClick = onOpenReports
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.CreditCard,
-                    tint = settingsBlue,
-                    title = "Billing & Subscription",
-                    onClick = onOpenBilling
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.EmojiEvents,
-                    tint = subGold,
-                    title = "Upgrade",
-                    onClick = onOpenUpgrade
-                )
-            }
-
             // --- Appearance (iOS-aligned: PURPLE gradient chips) ---
-            SectionHeader("Appearance")
-            SettingsCard {
+            CollapsibleSection(
+                title = "Appearance",
+                icon = Icons.Filled.Palette,
+                iconTint = settingsPurple,
+            ) {
                 SettingsNavRow(
                     icon = Icons.Filled.Palette,
                     tint = settingsPurple,
@@ -574,9 +606,89 @@ fun SettingsScreen(
                 )
             }
 
+            // --- Shield watermark (Android-only feature, kept inside Group 1) ---
+            CollapsibleSection(
+                title = "Shield watermark",
+                icon = Icons.Filled.Shield,
+                iconTint = WarningDark,
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Owner tag printed in the on-screen watermark. Short labels work best.",
+                        fontSize = 12.sp,
+                        color = SecondaryTextDark
+                    )
+                    OutlinedTextField(
+                        value = state.ownerTag,
+                        onValueChange = vm::setOwnerTag,
+                        singleLine = true,
+                        label = { Text("Owner tag") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    SettingsNavRow(
+                        icon = Icons.Filled.Shield,
+                        tint = BrandAccentDark,
+                        title = "Shield session log",
+                        onClick = onOpenShieldLog
+                    )
+                }
+            }
+
+            // --- More (also kept inside Group 1) ---
+            CollapsibleSection(
+                title = "More",
+                icon = Icons.Filled.Info,
+                iconTint = SecondaryTextDark,
+            ) {
+                SettingsNavRow(
+                    icon = Icons.Filled.Shield,
+                    tint = BrandAccentDark,
+                    title = "Permission audit",
+                    onClick = onOpenPermissions
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Shield,
+                    tint = BrandAccentDark,
+                    title = "Device posture check",
+                    onClick = onOpenPosture
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Policy,
+                    tint = BrandAccentDark,
+                    title = "Privacy, terms & honest claims",
+                    onClick = onOpenLegal
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Language,
+                    tint = BrandAccentDark,
+                    title = androidx.compose.ui.res.stringResource(com.onlytrusted.app.R.string.settings_language_region),
+                    onClick = onOpenLanguageRegion
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Info,
+                    tint = BrandAccentDark,
+                    title = "About OnlyTrusted",
+                    onClick = onOpenAbout
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Info,
+                    tint = BrandAccentDark,
+                    title = "Device compatibility",
+                    onClick = onOpenDeviceCompatibility
+                )
+            }
+
+            }
+
+            // --- Group 2: FREE tier (own box) ---
+            GroupFrame {
                 // --- FREE Features (always available — core comms + system settings) ---
-            TierSectionHeader("Free Features", chipText = "FREE", chipColor = settingsBlue)
-            SettingsCard {
+            CollapsibleTierSection(title = "Free Features", chipText = "FREE", chipColor = settingsBlue) {
                 SettingsNavRow(
                     icon = Icons.Filled.PersonSearch,
                     tint = settingsBlue,
@@ -643,14 +755,17 @@ fun SettingsScreen(
                 )
             }
 
+            } // close Group 2 FREE
+
+            // --- Group 3: PREMIUM tier (own box) ---
+            GroupFrame {
             // --- PREMIUM Features ($4.99/yr — privacy & identity monitoring) ---
             // Privacy Shield, Breach Watch, Private Aliases, Identity Protection were in
             // Free Features through v0.2.0; moved to Premium per product repositioning
             // so Free covers calls/SMS/system settings only and Premium covers active
             // privacy monitoring. Each screen also enforces the gate internally so
             // Free users deep-linking in see the upsell card.
-            TierSectionHeader("Premium Features", chipText = "PREMIUM", chipColor = BrandAccentDark)
-            SettingsCard {
+            CollapsibleTierSection(title = "Premium Features", chipText = "PREMIUM", chipColor = BrandAccentDark) {
                 SettingsNavRow(
                     icon = Icons.Filled.Security,
                     tint = BrandAccentDark,
@@ -694,9 +809,12 @@ fun SettingsScreen(
                 )
             }
 
+            } // close Group 3 PREMIUM
+
+            // --- Group 4: PRO tier (own box) ---
+            GroupFrame {
             // --- PRO Features ($19.99/yr) ---
-            TierSectionHeader("Pro Features", chipText = "PRO", chipColor = subGold)
-            SettingsCard {
+            CollapsibleTierSection(title = "Pro Features", chipText = "PRO", chipColor = subGold) {
                 SettingsNavRow(
                     icon = Icons.Filled.Warning,
                     tint = if (duressEnabled) BrandAccentDark else subGold,
@@ -795,9 +913,12 @@ fun SettingsScreen(
                 )
             }
 
+            } // close Group 4 PRO
+
+            // --- Group 5: ELITE tier (own box) ---
+            GroupFrame {
             // --- ELITE Features ($29.99/yr) ---
-            TierSectionHeader("Elite Features", chipText = "ELITE", chipColor = subGold)
-            SettingsCard {
+            CollapsibleTierSection(title = "Elite Features", chipText = "ELITE", chipColor = subGold) {
                 SettingsNavRow(
                     icon = Icons.Filled.Shield,
                     tint = when {
@@ -1106,68 +1227,6 @@ fun SettingsScreen(
                 )
             }
 
-            // --- Shield watermark (Android-only feature) ---
-            SectionHeader("Shield watermark")
-            SettingsCard {
-                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        "Owner tag printed in the on-screen watermark. Short labels work best.",
-                        fontSize = 12.sp,
-                        color = SecondaryTextDark
-                    )
-                    OutlinedTextField(
-                        value = state.ownerTag,
-                        onValueChange = vm::setOwnerTag,
-                        singleLine = true,
-                        label = { Text("Owner tag") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    SettingsNavRow(
-                        icon = Icons.Filled.Shield,
-                        tint = BrandAccentDark,
-                        title = "Shield session log",
-                        onClick = onOpenShieldLog
-                    )
-                }
-            }
-
-            // --- More ---
-            SectionHeader("More")
-            SettingsCard {
-                SettingsNavRow(
-                    icon = Icons.Filled.Shield,
-                    tint = BrandAccentDark,
-                    title = "Permission audit",
-                    onClick = onOpenPermissions
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.Shield,
-                    tint = BrandAccentDark,
-                    title = "Device posture check",
-                    onClick = onOpenPosture
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.Policy,
-                    tint = BrandAccentDark,
-                    title = "Privacy, terms & honest claims",
-                    onClick = onOpenLegal
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.Language,
-                    tint = BrandAccentDark,
-                    title = androidx.compose.ui.res.stringResource(com.onlytrusted.app.R.string.settings_language_region),
-                    onClick = onOpenLanguageRegion
-                )
-                RowDivider()
-                SettingsNavRow(
-                    icon = Icons.Filled.Info,
-                    tint = BrandAccentDark,
-                    title = "About OnlyTrusted",
-                    onClick = onOpenAbout
-                )
             }
 
             Spacer(Modifier.height(8.dp))
@@ -1178,7 +1237,23 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text("OnlyTrusted", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SecondaryTextDark)
-                Text("© 2026 VanPaulTek Inc · GNU AGPL-3.0", fontSize = 10.sp, color = TertiaryTextDark)
+                // AGPL-3.0 §4-5 require the license + source link to be visible to EVERY
+                // user, not buried in a sub-menu. Tapping either line opens the GitHub
+                // repo directly so Play Store compliance is one tap, not three.
+                val sourceOpen = {
+                    val intent = android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://github.com/Vanpaultek/OnlyTrusted")
+                    ).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    runCatching { context.startActivity(intent) }
+                    Unit
+                }
+                Text(
+                    "© 2026 VanPaulTek Inc · GNU AGPL-3.0 · View source",
+                    fontSize = 10.sp,
+                    color = BrandAccentDark,
+                    modifier = Modifier.clickable { sourceOpen() }
+                )
                 Text("admin@vanpaultek.com", fontSize = 10.sp, color = TertiaryTextDark)
             }
             }
@@ -1884,6 +1959,178 @@ fun SettingsScreen(
                 containerColor = MidnightCard
             )
         }
+    }
+}
+
+// ========== Section primitives (collapsible) ==========
+
+/**
+ * Visual frame grouping several collapsible sections into a single rounded
+ * card. Used to visually cluster related sections (categories vs. tiers
+ * vs. misc) so a long Settings list reads as three distinct cards instead
+ * of nine floating headers.
+ */
+@Composable
+private fun GroupFrame(content: @Composable () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MidnightElevated,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+            content()
+        }
+    }
+}
+
+/**
+ * Collapsible Settings section. Designed to sit inside a [GroupFrame] — the
+ * header is tap-to-toggle, expanded content renders inline (no nested
+ * card). State persists across recomposition via `rememberSaveable` but
+ * NOT across app restarts (deliberate — most users don't want yesterday's
+ * open sections to persist).
+ *
+ * Takes an [icon] + [iconTint] so each section header carries a distinct
+ * colored chip — matches the visual language of the tier sections and the
+ * rows inside each section.
+ */
+@Composable
+private fun CollapsibleSection(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    defaultExpanded: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(defaultExpanded) }
+    Column {
+        CollapsibleHeader(
+            title = title,
+            icon = icon,
+            iconTint = iconTint,
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+        )
+        androidx.compose.animation.AnimatedVisibility(visible = expanded) {
+            Column(modifier = Modifier.padding(bottom = 8.dp)) { content() }
+        }
+    }
+}
+
+/** Collapsible variant with a tier badge (Free / Premium / Pro / Elite). */
+@Composable
+private fun CollapsibleTierSection(
+    title: String,
+    chipText: String,
+    chipColor: Color,
+    defaultExpanded: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    var expanded by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(defaultExpanded) }
+    Column {
+        CollapsibleTierHeader(
+            title = title,
+            chipText = chipText,
+            chipColor = chipColor,
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+        )
+        androidx.compose.animation.AnimatedVisibility(visible = expanded) {
+            Column(modifier = Modifier.padding(bottom = 8.dp)) { content() }
+        }
+    }
+}
+
+@Composable
+private fun CollapsibleHeader(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 4.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // Colored icon tile — same visual language as the SettingsNavRow
+        // icon tiles so the headers feel consistent with the rows inside.
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(36.dp)
+                .background(iconTint.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+        ) {
+            Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
+        }
+        Text(
+            text = title,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = PrimaryTextDark,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            imageVector = if (expanded)
+                Icons.Filled.KeyboardArrowUp
+            else
+                Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (expanded) "Collapse" else "Expand",
+            tint = SecondaryTextDark,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+@Composable
+private fun CollapsibleTierHeader(
+    title: String,
+    chipText: String,
+    chipColor: Color,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 4.dp, vertical = 12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = chipColor.copy(alpha = 0.18f),
+        ) {
+            Text(
+                chipText,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = chipColor,
+                letterSpacing = 0.5.sp,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+            )
+        }
+        Text(
+            text = title,
+            fontSize = 17.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = PrimaryTextDark,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            imageVector = if (expanded)
+                Icons.Filled.KeyboardArrowUp
+            else
+                Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (expanded) "Collapse" else "Expand",
+            tint = SecondaryTextDark,
+            modifier = Modifier.size(22.dp)
+        )
     }
 }
 

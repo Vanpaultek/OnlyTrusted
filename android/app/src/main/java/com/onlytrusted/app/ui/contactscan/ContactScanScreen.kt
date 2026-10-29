@@ -137,6 +137,26 @@ fun ContactScanScreen(onBack: () -> Unit) {
                 }
             }
 
+            // Honest disclosure of the current feed size. Hidden once the
+            // real feed loads (REAL_FEED_MIN_ENTRIES = 500).
+            val feedSize = remember { ContactsScamScanner.loadedFeedSize(context) }
+            if (!ContactsScamScanner.isRealFeed(context)) {
+                CardBox {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        HeaderRow(Icons.Filled.Info, "Sample feed only", DangerDark)
+                        Text(
+                            "The threat-intel feed shipping in this build is a sample for " +
+                                "development: $feedSize entries. The production feed " +
+                                "(500,000+ numbers sourced from FTC Consumer Sentinel + FCC + EU " +
+                                "regulators) is scheduled for a later release. A \"0 matches\" " +
+                                "result right now means your contacts don't match this small " +
+                                "sample — NOT that no number in your phone is a scammer.",
+                            fontSize = 12.sp, color = SecondaryTextDark
+                        )
+                    }
+                }
+            }
+
             if (!permissionGranted) {
                 CardBox {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {

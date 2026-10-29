@@ -125,6 +125,22 @@ fun DashboardScreen(
     val runtime by vm.runtimeState.collectAsStateWithLifecycle()
     var showHonestLimitsSheet by remember { mutableStateOf(false) }
     var showNoContactAlert by remember { mutableStateOf(false) }
+    // Security-nag state — hoisted here (not inside nested Column) so the
+    // modal block near the end of the composable can read + mutate it.
+    var securityNagPrompt by remember {
+        mutableStateOf(com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE)
+    }
+    var showSecurityNagModal by remember { mutableStateOf(false) }
+    // Contact-import consent state — populated after the LaunchedEffect
+    // counts available contacts; drives the ContactImportConsentModal.
+    var showContactImportModal by remember { mutableStateOf(false) }
+    var pendingContactImportCount by remember { mutableStateOf(0) }
+    // Scam-match count — hoisted so both the Dashboard tile row (inside the
+    // scrollable Column) and the import-modal handler (outside it) read + mutate
+    // the same backing state.
+    var scamContactsCount by remember {
+        mutableStateOf(com.onlytrusted.app.ui.contactscan.ContactScanState.matchCount(context))
+    }
     // Security Lock sheet state — opens from the Dashboard card below the quick
     // actions. Edits persist via AppLockManager + AutoLockPrefs so SettingsScreen
     // stays in sync automatically.
@@ -228,37 +244,71 @@ fun DashboardScreen(
                     awaitingToggle = hasTrustedContacts && !trustedOnlyEnabled
                 )
             }
-            // Live match count — recomposes when the auto-import+scan below
-            // flips the stored value.
-            var scamContactsCount by remember {
-                mutableStateOf(com.onlytrusted.app.ui.contactscan.ContactScanState.matchCount(context))
-            }
+            // (scamContactsCount + security-nag state hoisted to the top of
+            // DashboardScreen so the modal handlers below can mutate them.)
 
-            // First-time auto-import of device contacts + scam scan. Fires
-            // exactly once per install (gated by TrustedContactsAutoImporter's
-            // own prefs flag), only after READ_CONTACTS has been granted.
-            // Mirrors the WhatsApp first-launch "we found your contacts"
-            // behaviour. All reads + inserts are local — nothing transmitted.
+            // (Security-nag state is hoisted to the DashboardScreen scope
+            // so the modal below can access it.)
+
+            // First-time contact-import flow:
+            //   1. Check if READ_CONTACTS granted + import flag unset
+            //   2. Count how many contacts would be imported
+            //   3. Show the ContactImportConsentModal so the user sees exactly
+            //      what we're about to do before we silently read their whole
+            //      address book — avoids the "privacy app that scraped me" look
+            //   4. On "Import N contacts" tap → run importer + scam scan
+            //   5. On "Not now" tap → mark done, never prompt again
+            // All reads + inserts are local; nothing is transmitted.
             LaunchedEffect(Unit) {
                 if (com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.shouldRun(context)) {
-                    runCatching {
-                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.importAll(context)
+                    val count = runCatching {
+                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.countAvailable(context)
+                    }.getOrDefault(0)
+                    if (count > 0) {
+                        pendingContactImportCount = count
+                        showContactImportModal = true
+                    } else {
+                        // No contacts to import → silently mark done so the
+                        // modal never fires on a device with an empty book.
+                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.markDone(context)
                     }
-                    val report = runCatching {
-                        com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
-                    }.getOrNull()
-                    if (report != null) {
-                        com.onlytrusted.app.ui.contactscan.ContactScanState.save(context, report)
-                        scamContactsCount = report.matches.size
-                    }
+                }
+                // Security-nag decision happens on every Dashboard mount.
+                val appLockEnabled = com.onlytrusted.app.security.AppLockManager.isEnabled(context)
+                securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy
+                    .registerDashboardVisit(context, appLockEnabled)
+                if (securityNagPrompt == com.onlytrusted.app.security.SecurityNagPolicy.Prompt.MODAL) {
+                    showSecurityNagModal = true
                 }
             }
 
+            // --- Security nag (soft card variant) --------------------------
+            if (securityNagPrompt == com.onlytrusted.app.security.SecurityNagPolicy.Prompt.CARD) {
+                com.onlytrusted.app.ui.security.SecurityNagCard(
+                    onEnable = {
+                        enableAppLockWithBiometric(context) {
+                            com.onlytrusted.app.security.SecurityNagPolicy.markCompleted(context)
+                            securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE
+                        }
+                    },
+                    onSnooze = {
+                        com.onlytrusted.app.security.SecurityNagPolicy.snooze(context)
+                        securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE
+                    },
+                )
+            }
+
+            // Scam-feed state is checked once per Dashboard mount; it only
+            // changes between app releases.
+            val scamFeedIsReal = remember {
+                com.onlytrusted.app.ui.contactscan.ContactsScamScanner.isRealFeed(context)
+            }
             StatsRow(
                 trusted = state.trustedContactCount,
                 blockedToday = state.blockedCalls24h,
                 blockedWeek = state.flaggedSms24h,
                 scamContacts = scamContactsCount,
+                scamFeedIsReal = scamFeedIsReal,
                 onTrustedClick = onGoToVault,
                 onBlockedClick = onGoToBlockList,
                 onScamClick = onGoToContactScan,
@@ -367,6 +417,61 @@ fun DashboardScreen(
     if (showSensorPrivacyScreen) {
         com.onlytrusted.app.ui.sensorprivacy.SensorPrivacyScreen(
             onBack = { showSensorPrivacyScreen = false }
+        )
+    }
+
+    // Contact-import consent modal — fires once after READ_CONTACTS is
+    // granted, before anything is actually read from the address book.
+    // Confirms count + explains what will happen so the user is not
+    // surprised by their contacts appearing inside the app.
+    if (showContactImportModal) {
+        val scope2 = rememberCoroutineScope()
+        com.onlytrusted.app.ui.contactscan.ContactImportConsentModal(
+            contactCount = pendingContactImportCount,
+            onImport = {
+                showContactImportModal = false
+                scope2.launch {
+                    runCatching {
+                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.importAll(context)
+                    }
+                    val report = runCatching {
+                        com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
+                    }.getOrNull()
+                    if (report != null) {
+                        com.onlytrusted.app.ui.contactscan.ContactScanState.save(context, report)
+                        scamContactsCount = report.matches.size
+                    }
+                }
+            },
+            onSkip = {
+                showContactImportModal = false
+                com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.markDone(context)
+            },
+        )
+    }
+
+    // Security-nag MODAL — fires at or after Dashboard visit MODAL_VISIT_THRESHOLD
+    // when App Lock is still disabled. Honest: three real buttons, dismiss-on-tap-outside
+    // treated as "Not now" / snooze.
+    if (showSecurityNagModal) {
+        com.onlytrusted.app.ui.security.SecurityNagModal(
+            onEnable = {
+                showSecurityNagModal = false
+                enableAppLockWithBiometric(context) {
+                    com.onlytrusted.app.security.SecurityNagPolicy.markCompleted(context)
+                    securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE
+                }
+            },
+            onLater = {
+                showSecurityNagModal = false
+                com.onlytrusted.app.security.SecurityNagPolicy.snooze(context)
+                securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE
+            },
+            onNeverAgain = {
+                showSecurityNagModal = false
+                com.onlytrusted.app.security.SecurityNagPolicy.optOut(context)
+                securityNagPrompt = com.onlytrusted.app.security.SecurityNagPolicy.Prompt.NONE
+            },
         )
     }
 
@@ -591,6 +696,7 @@ private fun StatsRow(
     blockedToday: Int,
     blockedWeek: Int,
     scamContacts: Int,
+    scamFeedIsReal: Boolean,
     onTrustedClick: () -> Unit,
     onBlockedClick: () -> Unit,
     onScamClick: () -> Unit,
@@ -615,15 +721,59 @@ private fun StatsRow(
             blockedWeek = blockedWeek,
             onClick = onBlockedClick,
         )
-        // Scam Contacts tile — populated by the last Contact Safety Scan.
-        StatTile(
-            modifier = Modifier.weight(1f),
-            icon = Icons.Filled.Warning,
-            tint = if (scamContacts > 0) DangerDark else BrandAccentDark,
-            value = scamContacts,
-            label = stringResource(R.string.dash_scam_contacts),
-            onClick = onScamClick,
-        )
+        // Scam Contacts tile.
+        //  - Real feed loaded: show the actual match count (0 or more).
+        //  - Sample feed (<500 entries): show "—" + "Sample feed" label so a
+        //    "0" result isn't mistaken for "the detector ran and you're
+        //    clean." Honest about the current state of the threat intel.
+        if (scamFeedIsReal) {
+            StatTile(
+                modifier = Modifier.weight(1f),
+                icon = Icons.Filled.Warning,
+                tint = if (scamContacts > 0) DangerDark else BrandAccentDark,
+                value = scamContacts,
+                label = stringResource(R.string.dash_scam_contacts),
+                onClick = onScamClick,
+            )
+        } else {
+            ScamSampleFeedTile(
+                modifier = Modifier.weight(1f),
+                onClick = onScamClick,
+            )
+        }
+    }
+}
+
+/**
+ * Fallback for the Scam Contacts tile when the bundled threat-intel feed
+ * is still placeholder-sized. Shows an em-dash + "Sample feed" rather than
+ * a "0" that would mislead users into thinking the detector verified them
+ * clean against a full database.
+ */
+@Composable
+private fun ScamSampleFeedTile(modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .background(MidnightElevated)
+            .clickable(onClick = onClick)
+            .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(SecondaryTextDark.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
+            ) {
+                Icon(Icons.Filled.Warning, null, tint = SecondaryTextDark, modifier = Modifier.size(15.dp))
+            }
+            Spacer(Modifier.weight(1f))
+            Text("—", color = SecondaryTextDark, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        }
+        Text("Scam Contacts", color = PrimaryTextDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Text("Sample feed", color = TertiaryTextDark, fontSize = 10.sp)
     }
 }
 
@@ -1066,5 +1216,35 @@ private fun SensorStatus(label: String, muted: Boolean?) {
         Icon(Icons.Filled.Shield, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(8.dp))
         Text("$label: $text", color = PrimaryTextDark, fontSize = 13.sp)
+    }
+}
+
+/**
+ * One-shot flow invoked by the security nag CTA: verifies the device has
+ * enrolled biometrics, fires BiometricPrompt, and on success enables App
+ * Lock + markUnlocked so the user doesn't get a second prompt immediately.
+ * On failure or no-biometric device, falls back to just toggling App Lock
+ * on — AppLockGate will then explain the degraded state on next launch.
+ */
+private fun enableAppLockWithBiometric(context: android.content.Context, onDone: () -> Unit) {
+    val activity = context as? androidx.fragment.app.FragmentActivity
+    if (activity != null && com.onlytrusted.app.ui.lock.BiometricPrompter.canAuthenticate(activity)) {
+        com.onlytrusted.app.ui.lock.BiometricPrompter.prompt(
+            activity = activity,
+            title = "Enable App Lock",
+            subtitle = "Face / fingerprint will protect OnlyTrusted when you close it.",
+            onSuccess = {
+                com.onlytrusted.app.security.AppLockManager.setEnabled(context, true)
+                com.onlytrusted.app.security.AppLockManager.markUnlocked(context)
+                onDone()
+            },
+            onFailure = { onDone() },
+        )
+    } else {
+        // No biometric enrolled — enable App Lock anyway; the next AppLockGate
+        // launch will show the "set up biometric / disable" recovery path.
+        com.onlytrusted.app.security.AppLockManager.setEnabled(context, true)
+        com.onlytrusted.app.security.AppLockManager.markUnlocked(context)
+        onDone()
     }
 }

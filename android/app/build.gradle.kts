@@ -193,3 +193,51 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+// --------------------------------------------------------------------------
+// Launcher icon render smoke test.
+//
+// Extracts the compiled mipmap PNGs from the just-built APK so a reviewer
+// can visually confirm the icon looks right at every density. Added after
+// a long debug session where the bitmap `gravity="center"` attribute meant
+// adaptive-icon inset changes had NO visible effect — hard to notice until
+// you compare the rendered PNGs side by side.
+//
+// Usage:
+//     ./gradlew extractLauncherIcons
+//
+// Output:
+//     app/build/reports/launcher-icons/mipmap-<density>-<name>.png
+//
+// Depends on assembleDebug so the APK exists.
+// --------------------------------------------------------------------------
+tasks.register<Copy>("extractLauncherIcons") {
+    group = "verification"
+    description = "Extract rendered launcher-icon PNGs from the debug APK into build/reports/launcher-icons/ for visual review."
+    dependsOn("assembleDebug")
+    val apkFile = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk")
+    val outDir = layout.buildDirectory.dir("reports/launcher-icons")
+
+    from(zipTree(apkFile)) {
+        include("res/mipmap*/ic_launcher*.png")
+        eachFile {
+            // Flatten res/mipmap-xxxhdpi-v4/ic_launcher.png →
+            //          mipmap-xxxhdpi-v4-ic_launcher.png so a single
+            //          Finder window shows every density side by side.
+            path = relativePath.segments.drop(1).joinToString("-")
+        }
+        includeEmptyDirs = false
+    }
+    into(outDir)
+
+    doLast {
+        val listing = outDir.get().asFile.listFiles()?.sortedBy { it.name } ?: emptyList()
+        println("Extracted ${listing.size} launcher-icon PNGs to:")
+        println("  ${outDir.get().asFile.absolutePath}")
+        listing.forEach { println("    ${it.name} (${it.length() / 1024} KB)") }
+        println()
+        println("Open any of the above PNGs to visually confirm the launcher icon.")
+        println("If the icon looks wrong, the adaptive-icon XML change didn't take effect — ")
+        println("most likely the bitmap wrapper has gravity=\"center\" instead of \"fill\".")
+    }
+}

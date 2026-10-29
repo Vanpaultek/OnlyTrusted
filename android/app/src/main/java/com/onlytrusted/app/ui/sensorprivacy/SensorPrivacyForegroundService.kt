@@ -48,6 +48,10 @@ class SensorPrivacyForegroundService : Service() {
         super.onCreate()
         createChannel()
         startForegroundCompat()
+        // Record this start for the Device Compatibility screen — testers
+        // use the restart count to tell us how aggressive their OEM's
+        // battery killer is.
+        FgsRestartTracker.recordStart(this)
         // Register the receiver on the active controller. The controller picks
         // the strongest available tier (Privileged > DeviceOwner > Consumer).
         val controller = pickController(this)

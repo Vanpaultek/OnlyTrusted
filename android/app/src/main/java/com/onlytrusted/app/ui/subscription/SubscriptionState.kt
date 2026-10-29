@@ -47,6 +47,19 @@ enum class SubscriptionTier(val displayName: String, val rank: Int, val seats: I
 object SubscriptionState {
     private const val PREFS = "subscription_prefs_v1"
 
+    /**
+     * Tester-build override. When `true`, every `has*()` gate returns true
+     * regardless of the user's actual subscription state — so Internal
+     * Testing track users can exercise Elite features without paying.
+     *
+     * MUST FLIP TO `false` before promoting past Open Testing to Production,
+     * otherwise the entire monetization model collapses.
+     *
+     * TODO(launch): flip this to `false` + remove the pre-launch note from
+     * the Billing screen that mentions "tester access."
+     */
+    const val TESTER_BUILD_UNLOCK_EVERYTHING = true
+
     // Keys match the iOS UserDefaults keys so the strings stay recognisable.
     private const val KEY_ACTIVE = "subscription.v1.active"
     private const val KEY_TIER = "subscription.v1.tier"
@@ -74,15 +87,18 @@ object SubscriptionState {
 
     /** True on any paid tier (Premium Individual/Family, Pro Individual/Family, Elite Individual/Family). */
     fun hasPremium(ctx: Context): Boolean =
-        isActive(ctx) && tier(ctx).rank >= SubscriptionTier.PREMIUM.rank
+        TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive(ctx) && tier(ctx).rank >= SubscriptionTier.PREMIUM.rank)
 
     /** True on Pro Individual, Pro Family, Elite Individual, Elite Family. */
     fun hasHighPremium(ctx: Context): Boolean =
-        isActive(ctx) && tier(ctx).rank >= SubscriptionTier.HIGH_PREMIUM.rank
+        TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive(ctx) && tier(ctx).rank >= SubscriptionTier.HIGH_PREMIUM.rank)
 
     /** True on Elite Individual + Elite Family. */
     fun hasElite(ctx: Context): Boolean =
-        isActive(ctx) && tier(ctx).rank >= SubscriptionTier.ELITE.rank
+        TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive(ctx) && tier(ctx).rank >= SubscriptionTier.ELITE.rank)
 
     fun planName(ctx: Context): String =
         prefs(ctx).getString(KEY_PLAN_NAME, null) ?: "Premium"

@@ -290,6 +290,8 @@ struct DashboardScreen: View {
                 statsRow
                 quickActionsSection
                 securityLockCard
+                TrustedOnlyModeCard()
+                SensorOwnershipCard()
                 HonestLimitsCallout(onTap: { showHonestLimitsSheet = true })
             }
             .padding(.horizontal, 18)
@@ -972,6 +974,141 @@ private struct HonestLimitsSheet: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.appPrimaryText)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+// MARK: - Trusted-Only Mode card (iOS counterpart of Android's TrustedModeContent)
+
+/// Dashboard card exposing the two "silence everyone not in my vault" toggles
+/// that live on Android's Dashboard. iOS has honest limits here — we don't
+/// enforce call rejection in-app; the toggles signal the CallKit + Messages
+/// Filter extensions.
+struct TrustedOnlyModeCard: View {
+    @ObservedObject private var state = TrustedOnlyModeState.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(state.isActive ? Color.appAccent : Color.appSecondaryText)
+                    .frame(width: 36, height: 36)
+                    .background((state.isActive ? Color.appAccent : Color.appSecondaryText).opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Trusted-Only Mode")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Text(state.isActive ? "Active — vault whitelist in effect"
+                                        : "Off — all calls and SMS reach you")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+                Spacer()
+            }
+            Toggle(isOn: $state.silenceCallsNotInVault) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Silence calls not in vault").font(.system(size: 13, weight: .semibold))
+                    Text("Routes unknown callers to voicemail via Call Blocking extension.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+            }
+            .tint(Color.appAccent)
+            Toggle(isOn: $state.flagSmsNotInVault) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Flag SMS not in vault").font(.system(size: 13, weight: .semibold))
+                    Text("Marks messages from unknown senders as junk via Messages Filter.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+            }
+            .tint(Color.appAccent)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.appElevatedSurface)
+        )
+    }
+}
+
+// MARK: - Mic & Camera ownership card (iOS counterpart of Android's SensorOwnershipContent)
+
+/// Dashboard status card showing live mic + camera availability as observed
+/// via `AVCaptureDevice.authorizationStatus`. Honest about iOS limits — on
+/// iOS we can only report what our app sees; we cannot system-wide mute the
+/// mic or disable the camera the way Android's four-tier controller can.
+struct SensorOwnershipCard: View {
+    @State private var sensorState: SensorState = SensorState(microphoneBlocked: nil, cameraBlocked: nil)
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "mic.and.signal.meter.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.appAccent)
+                    .frame(width: 36, height: 36)
+                    .background(Color.appAccent.opacity(0.18))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Mic & Camera ownership")
+                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.appPrimaryText)
+                    Text("What OnlyTrusted can see about sensor state on iOS.")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.appSecondaryText)
+                }
+                Spacer()
+            }
+            SensorRow(label: "Microphone", blocked: sensorState.microphoneBlocked)
+            SensorRow(label: "Camera", blocked: sensorState.cameraBlocked)
+            Text("iOS doesn't let apps system-wide mute the mic or disable the camera. The Mic & Camera Lock screen explains what you can do instead.")
+                .font(.system(size: 10))
+                .foregroundStyle(Color.appTertiaryText)
+                .padding(.top, 2)
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.appElevatedSurface)
+        )
+        .task {
+            sensorState = ConsumerSensorPrivacyController().readState()
+        }
+    }
+}
+
+private struct SensorRow: View {
+    let label: String
+    let blocked: Bool?
+
+    private var statusText: String {
+        switch blocked {
+        case .some(true): return "muted / denied"
+        case .some(false): return "available"
+        case .none: return "state unknown"
+        }
+    }
+
+    private var statusColor: Color {
+        switch blocked {
+        case .some(true): return Color.appAccent
+        case .some(false): return Color.appSecondaryText
+        case .none: return Color.appTertiaryText
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "shield.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(statusColor)
+            Text("\(label): \(statusText)")
+                .font(.system(size: 12))
+                .foregroundStyle(Color.appPrimaryText)
+            Spacer()
         }
     }
 }

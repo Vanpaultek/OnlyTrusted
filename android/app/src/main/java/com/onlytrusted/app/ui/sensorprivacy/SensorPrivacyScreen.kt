@@ -41,7 +41,6 @@ import com.onlytrusted.app.ui.theme.PrimaryTextDark
 import com.onlytrusted.app.ui.theme.SecondaryTextDark
 import com.onlytrusted.app.ui.theme.TertiaryTextDark
 import com.onlytrusted.app.ui.theme.appBackdropBackground
-import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
 

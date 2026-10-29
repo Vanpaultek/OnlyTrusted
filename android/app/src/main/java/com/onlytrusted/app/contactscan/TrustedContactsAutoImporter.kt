@@ -47,6 +47,25 @@ object TrustedContactsAutoImporter {
     private const val PREFS = "ot_contact_import_prefs"
     private const val KEY_IMPORT_DONE = "import_done_v1"
 
+    /** ITU E.164: minimum 7 digits (shortest valid country-code + subscriber),
+     *  maximum 15 digits. Anything outside that range is almost certainly not
+     *  a real phone number — reject rather than import. */
+    private const val MIN_PHONE_DIGITS = 7
+    private const val MAX_PHONE_DIGITS = 15
+    private const val MAX_NAME_LENGTH = 120
+    private const val MAX_LABEL_LENGTH = 32
+
+    /** True iff [raw] looks like a plausible phone number: between 7 and 15
+     *  digits (ignoring +, -, spaces, parens) and contains no control chars.
+     *  Rejects obviously-corrupt rows from the system address book. */
+    private fun isPlausiblePhoneNumber(raw: String): Boolean {
+        if (raw.isBlank()) return false
+        if (raw.length > 64) return false // defensive upper bound
+        if (raw.any { it.isISOControl() }) return false
+        val digits = raw.count { it.isDigit() }
+        return digits in MIN_PHONE_DIGITS..MAX_PHONE_DIGITS
+    }
+
     /** True iff the device has granted READ_CONTACTS AND we haven't already
      *  completed an import. Call before launching [importAll]. */
     fun shouldRun(context: Context): Boolean {
@@ -65,6 +84,28 @@ object TrustedContactsAutoImporter {
     fun markDone(context: Context) {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .edit().putBoolean(KEY_IMPORT_DONE, true).apply()
+    }
+
+    /**
+     * Reads the number of distinct contacts (by CONTACT_ID) that WOULD be
+     * imported if [importAll] ran now. Used to populate the "We found N
+     * contacts" prompt before the user confirms. Returns 0 if permission
+     * is missing or the query fails.
+     */
+    suspend fun countAvailable(context: Context): Int = withContext(Dispatchers.IO) {
+        if (!shouldRun(context)) return@withContext 0
+        val ids = HashSet<Long>()
+        runCatching {
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Phone.CONTACT_ID),
+                null, null, null,
+            )?.use { c ->
+                val idIdx = c.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+                while (c.moveToNext()) ids.add(c.getLong(idIdx))
+            }
+        }
+        ids.size
     }
 
     /**
@@ -106,14 +147,19 @@ object TrustedContactsAutoImporter {
             val labelIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.LABEL)
             while (cursor.moveToNext()) {
                 val contactId = cursor.getLong(idIdx)
-                val name = cursor.getString(nameIdx)?.trim().orEmpty()
-                val number = cursor.getString(numIdx)?.trim().orEmpty()
-                if (number.isBlank()) continue
+                val name = cursor.getString(nameIdx)?.trim().orEmpty().take(MAX_NAME_LENGTH)
+                val rawNumber = cursor.getString(numIdx)?.trim().orEmpty()
+                // Defensive validation — reject malformed entries rather than
+                // trusting the system address book blindly. A corrupted
+                // ContactsContract row (long garbage string, control chars,
+                // non-phone-like data) could otherwise end up in our vault
+                // and poison downstream blocking + scam-match comparisons.
+                if (!isPlausiblePhoneNumber(rawNumber)) continue
                 val typeInt = cursor.getInt(typeIdx)
-                val customLabel = cursor.getString(labelIdx)
+                val customLabel = cursor.getString(labelIdx)?.take(MAX_LABEL_LENGTH)
                 val label = labelForType(typeInt, customLabel)
                 val entry = byContact.getOrPut(contactId) { name to mutableListOf() }
-                entry.second += number to label
+                entry.second += rawNumber to label
             }
         }
 

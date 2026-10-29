@@ -67,6 +67,26 @@ object ContactsScamScanner {
         )
     }
 
+    /**
+     * Minimum entry count below which the bundled feed is treated as
+     * "sample / illustrative only" by the UI (Dashboard shows a different
+     * tile state so users aren't misled by a "0 scam contacts" count that
+     * actually means "we don't have a real feed yet").
+     *
+     * Current shipping file: 34 entries (placeholder for development).
+     * Production target: 500,000+ entries sourced from FTC Consumer
+     * Sentinel + FCC Do-Not-Call violator list + EU equivalents.
+     */
+    const val REAL_FEED_MIN_ENTRIES = 500
+
+    /** How many non-comment entries are in the currently-bundled feed. */
+    fun loadedFeedSize(ctx: Context): Int = loadScamNumbers(ctx).size
+
+    /** True iff the loaded feed is large enough to be considered a real
+     *  (not placeholder) scam-detection source. */
+    fun isRealFeed(ctx: Context): Boolean =
+        loadedFeedSize(ctx) >= REAL_FEED_MIN_ENTRIES
+
     /** Load the bundled scam-numbers list into a set for O(1) lookup during scan. */
     private fun loadScamNumbers(ctx: Context): Set<String> {
         return runCatching {

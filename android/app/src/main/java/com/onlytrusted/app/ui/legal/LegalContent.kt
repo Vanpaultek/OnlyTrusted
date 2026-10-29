@@ -4,7 +4,7 @@ package com.onlytrusted.app.ui.legal
 
 object LegalContent {
 
-    const val LAST_UPDATED = "2026-10-19"
+    const val LAST_UPDATED = "2026-10-28"
 
     val audienceStatement = """
 # Who this app is for
@@ -43,37 +43,48 @@ OnlyTrusted is designed around a single principle: your data stays on your phone
 
 Nothing is collected by us. The app has no server. It does not use the internet. No account is required.
 
-Inside your device, the app records:
+Inside your device, the app records the following, stored encrypted on-device only:
 
-- Timestamps of microphone or camera use detected by Android.
+- Your in-app settings (which features are turned on, your email, your selected locale).
+- Timestamps and metadata of microphone or camera use detected by Android — including which package name was recording, when it started, and whether the screen was on at the time (used by the Mic & Camera Lock feature to decide when an auto-lock would disrupt a legitimate call).
 - Timestamps of calls your block list rejected and SMS senders your block list flagged.
-- The phone numbers you choose to add to your block list.
-- Your in-app settings (which features are turned on).
+- The phone numbers you choose to add to your trusted-contacts list OR your block list.
+- A copy of your device's contact names + numbers if you grant Contacts access AND confirm the "Import N contacts" prompt on first Dashboard mount. You can un-trust any individual contact later from the Vault screen, or clear the whole set from Settings.
+- A log of lock-and-unlock events, mic activity alerts, and the sensor-privacy foreground service's restart history. Used by the in-app Device Compatibility screen so you can see how aggressively your phone's OS is killing the background lock service.
 
-All of this is stored encrypted on this device only (SQLCipher-encrypted SQLite + AES-256 keys protected by Android Keystore). It is never transmitted off the phone by this app.
+All of the above is stored encrypted on this device only (SQLCipher-encrypted SQLite for structured data + EncryptedSharedPreferences / AES-256 for small settings, with keys protected by the Android Keystore). It is never transmitted off the phone by this app.
 
 ## Third parties
 
-We do not share, sell, rent, trade, or disclose your information to any third party. We cannot. The app has no network access. We do not use analytics SDKs, advertising SDKs, crash reporters that transmit data, or tag managers.
+We do not share, sell, rent, trade, or disclose your information to any third party. We cannot. The app has no network access. We do not use analytics SDKs, advertising SDKs, crash reporters that transmit data, or tag managers. The only on-device machine-learning models (Google ML Kit face detection + barcode scanning) run entirely offline — their model files ship inside the APK and never contact Google.
+
+If you tap the "Share" button on the Device Compatibility screen, you can send the diagnostic text yourself via email, messaging apps, or similar. That is a user-initiated action; nothing is uploaded automatically.
 
 ## Permissions and how they are used
 
-- Microphone and camera: only to detect when another app starts using them, so we can alert you. The app itself does not record audio or capture images.
-- Phone, call log, call screening: to let your block list reject unwanted incoming calls.
-- SMS: to flag messages from numbers in your block list. The app does not read or forward message content elsewhere.
-- Contacts: not requested.
-- Location: not requested.
-- Internet: not requested.
+- **Contacts**: to populate your trusted-contacts list and cross-check against an offline scam-numbers list. If you grant this permission, we will ask for your explicit confirmation (with a count of your contacts) before actually importing anything. You can decline the import and still use the app.
+- **Microphone**: ONLY to detect when another app starts using the microphone (via Android's AudioRecordingCallback) so we can alert you and avoid disrupting legitimate calls when the auto-lock fires. The app itself does not record audio.
+- **Camera**: ONLY for the in-app QR scanner (Smart Link Guard) and the optional Face-Change Shoulder-Surfing Lock. The app does not capture, store, or transmit images.
+- **Phone + call log + call screening**: to let your block list reject unwanted incoming calls and show you an audit log of recent call activity.
+- **SMS**: to filter and flag messages from numbers on your block list, and to send the SOS alert text when you trigger the Distress Signal. The app does not read, store, or forward unrelated message content elsewhere.
+- **Notifications**: to post the Mic & Camera Lock status notification (required by Android for foreground services), mic-activity alerts (if you opted in), and SOS confirmations.
+- **Battery optimization exemption**: to keep the Mic & Camera Lock service running when the screen is off; without it, your phone's OS will kill the service and the lock will not fire.
+- **Location**: not requested by default. (The optional Geo-fence Auto-Lock Elite feature requests location only if you enable it.)
+- **Internet**: not requested.
 
 ## Your rights
 
 You have the right to access, correct, export, restrict, and delete your data at any time. Because the data lives on this device, you exercise these rights directly:
 
-- Access: see every event in the Events screen and every blocked number in the Blocked screen.
-- Export: Settings, Export sends an encrypted JSON copy to a location you choose.
-- Delete: Settings, Clear event history, or uninstall the app to remove everything.
+- Access: see every event in the Events screen, every blocked number in the Blocked screen, every imported contact in the Vault screen, and your sensor-privacy history in the Mic & Camera Lock screen.
+- Export: Settings → Export sends an encrypted JSON copy to a location you choose.
+- Delete: Settings → Clear event history, un-trust any contact from Vault, or uninstall the app to remove everything.
 
 These rights apply regardless of where you live. We honour, at minimum, protections required by the EU GDPR, UK GDPR, California CCPA/CPRA, Virginia VCDPA, Colorado CPA, Connecticut CTDPA, Utah UCPA, Brazil LGPD, Canada PIPEDA, Australia Privacy Act, Japan APPI, Singapore PDPA, South Korea PIPA, India DPDP Act 2023, and South Africa POPIA.
+
+## Open source
+
+OnlyTrusted is licensed under GNU AGPL-3.0. Source code is available at https://github.com/Vanpaultek/OnlyTrusted — the "View source" link at the bottom of Settings opens this directly. You can verify every claim in this policy by reading the code yourself.
 
 ## Children
 

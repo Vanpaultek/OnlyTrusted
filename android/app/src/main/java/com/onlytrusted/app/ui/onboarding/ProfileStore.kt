@@ -6,30 +6,26 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
-import java.security.SecureRandom
-import javax.crypto.SecretKeyFactory
-import javax.crypto.spec.PBEKeySpec
 
 /**
  * EncryptedSharedPreferences-backed profile store. Mirrors iOS `ProfileStore`.
  *
- *   * email             — stored on-device only; prefills Breach Watch, personalises copy.
- *   * pinHash + pinSalt — PBKDF2-HMAC-SHA256 of the 4–6 digit app PIN, 100k iterations.
- *   * biometricEnabled  — opt-in flag for BiometricPrompter fast-path.
+ *   * email            — stored on-device only; prefills Breach Watch, personalises copy.
+ *   * biometricEnabled — opt-in flag for BiometricPrompter fast-path.
  *
  * No field ever leaves the device. The honest claim stays intact.
+ *
+ * Note: the general-app PIN originally stored here was removed in v0.1.10.
+ * The only live PIN in the app is the Duress Mode PIN (see DuressState) — a
+ * separate purpose-built secret, not an app-wide lock credential. App Lock
+ * now relies on biometric via AppLockManager + BiometricPrompter.
  */
 object ProfileStore {
 
     private const val PREFS = "profile_prefs_v1"
     private const val KEY_EMAIL = "email"
-    private const val KEY_PIN_HASH = "pin_hash_hex"
-    private const val KEY_PIN_SALT = "pin_salt_hex"
     private const val KEY_BIOMETRIC = "biometric_enabled"
     private const val KEY_COMPLETED_AT = "setup_completed_at"
-
-    private const val PBKDF2_ITERATIONS = 100_000
-    private const val PBKDF2_KEY_BITS = 256
 
     @Volatile private var cachedMasterKey: MasterKey? = null
 
@@ -59,15 +55,6 @@ object ProfileStore {
         prefs(ctx).edit().putString(KEY_EMAIL, raw.trim().lowercase()).apply()
     }
 
-    fun setPIN(ctx: Context, pin: String) {
-        val salt = ByteArray(16).also { SecureRandom().nextBytes(it) }
-        val hash = pbkdf2(pin, salt)
-        prefs(ctx).edit()
-            .putString(KEY_PIN_SALT, salt.toHex())
-            .putString(KEY_PIN_HASH, hash.toHex())
-            .apply()
-    }
-
     fun setBiometricEnabled(ctx: Context, enabled: Boolean) {
         prefs(ctx).edit().putBoolean(KEY_BIOMETRIC, enabled).apply()
     }
@@ -79,15 +66,4 @@ object ProfileStore {
     fun clearAll(ctx: Context) {
         prefs(ctx).edit().clear().apply()
     }
-
-    // --- Internals ---------------------------------------------------------------
-
-    private fun pbkdf2(pin: String, salt: ByteArray): ByteArray {
-        val spec = PBEKeySpec(pin.toCharArray(), salt, PBKDF2_ITERATIONS, PBKDF2_KEY_BITS)
-        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-        return factory.generateSecret(spec).encoded
-    }
-
-    private fun ByteArray.toHex(): String =
-        joinToString("") { "%02x".format(it) }
 }

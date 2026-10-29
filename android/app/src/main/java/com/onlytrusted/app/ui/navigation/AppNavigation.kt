@@ -129,6 +129,10 @@ sealed class Destination(val route: String, val label: String, val icon: ImageVe
     // dialer + WhatsApp group fan-out. Settings for triggers + WhatsApp group URL.
     data object DistressSignal : Destination("distress_signal", "Distress Signal", Icons.Filled.Security)
     data object LanguageRegion : Destination("language_region", "Language & Region", Icons.Filled.Language)
+    // Diagnostics — in-app Device Compatibility report. Tester tool: shows
+    // battery exemption, FGS alive/restart counts, permissions, notification
+    // channel state, OEM-specific tips, with copy-to-clipboard / share buttons.
+    data object DeviceCompatibility : Destination("device_compatibility", "Device compatibility", Icons.Filled.Settings)
     // Mic & Camera Lock — honest sensor-privacy screen. Picks the active controller
     // tier (Consumer / Device Owner / Privileged) and surfaces what this install can
     // + cannot do around screen-lock sensor enforcement. See
@@ -247,6 +251,7 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onOpenShieldLog = { navController.navigate(Destination.ShieldLog.route) },
                     onOpenLegal = { navController.navigate(Destination.Legal.route) },
                     onOpenAbout = { navController.navigate(Destination.About.route) },
+                    onOpenDeviceCompatibility = { navController.navigate(Destination.DeviceCompatibility.route) },
                     onOpenNotifications = { navController.navigate(Destination.Notifications.route) },
                     onOpenReports = { navController.navigate(Destination.Reports.route) },
                     onOpenBilling = { navController.navigate(Destination.BillingSubscription.route) },
@@ -486,6 +491,11 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                 LegalScreen(onBack = { navController.popBackStack() })
             }
             composable(Destination.About.route) { AboutScreen() }
+            composable(Destination.DeviceCompatibility.route) {
+                com.onlytrusted.app.diagnostics.DeviceCompatibilityScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
             composable(Destination.Notifications.route) {
                 NotificationsScreen(onBack = { navController.popBackStack() })
             }

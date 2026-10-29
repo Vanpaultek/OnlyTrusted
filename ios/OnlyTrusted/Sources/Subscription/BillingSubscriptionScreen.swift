@@ -387,13 +387,33 @@ final class SubscriptionState: ObservableObject {
         didSet { d.set(lastFour, forKey: Keys.lastFour) }
     }
 
+    /// Tester-build override. When `true`, every `has*` gate returns true
+    /// regardless of the user's actual subscription state — so Internal
+    /// Testing track users can exercise Elite features without paying.
+    ///
+    /// MUST FLIP TO `false` before promoting past Open Testing to Production,
+    /// otherwise the entire monetization model collapses.
+    ///
+    /// TODO(launch): flip this to `false` + remove the pre-launch note from
+    /// the Billing screen that mentions "tester access."
+    static let TESTER_BUILD_UNLOCK_EVERYTHING = true
+
     /// Convenience: does the current tier include Premium-level perks?
-    var hasPremium: Bool { isActive && tier.rank >= SubscriptionTier.premium.rank }
+    var hasPremium: Bool {
+        Self.TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive && tier.rank >= SubscriptionTier.premium.rank)
+    }
     /// Convenience: does the current tier include every High Premium / Pro feature?
-    var hasHighPremium: Bool { isActive && tier.rank >= SubscriptionTier.highPremium.rank }
+    var hasHighPremium: Bool {
+        Self.TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive && tier.rank >= SubscriptionTier.highPremium.rank)
+    }
     /// Convenience: does the current tier include Elite features (hardware key, dead-man wipe,
     /// encrypted vault backup)? Elite also unlocks everything Pro ships.
-    var hasElite: Bool { isActive && tier.rank >= SubscriptionTier.elite.rank }
+    var hasElite: Bool {
+        Self.TESTER_BUILD_UNLOCK_EVERYTHING ||
+            (isActive && tier.rank >= SubscriptionTier.elite.rank)
+    }
 
     let invoiceHistory: [InvoiceEntry] = [
         .init(date: Date().addingTimeInterval(-365 * 86400), description: "Premium yearly", amountCents: 499),

@@ -20,10 +20,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.Shield
@@ -49,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -111,6 +109,12 @@ fun ConsentScreen(onConfirmed: () -> Unit) {
         TitleBlock()
 
         Spacer(Modifier.height(10.dp))
+        // Non-interactive heads-up: tells the user what Android will ask for
+        // after Continue and what the Dashboard will do with Contacts, so
+        // the auto-import flow doesn't feel surprising.
+        PermissionHeadsUpCard()
+
+        Spacer(Modifier.height(8.dp))
         // Three toggle cards share the remaining space between the title
         // and the CTA. weight(1f) keeps them visible without scroll even
         // on short screens — cards get a tighter vertical padding to fit.
@@ -223,6 +227,43 @@ private fun TitleBlock() {
             fontSize = 14.sp,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+// MARK: - Permission heads-up card
+
+@Composable
+private fun PermissionHeadsUpCard() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(MidnightCard)
+            .border(1.dp, BrandAccentDark.copy(alpha = 0.30f), RoundedCornerShape(12.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Icon(
+            Icons.Filled.Groups,
+            contentDescription = null,
+            tint = BrandAccentDark,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                "After Continue",
+                color = PrimaryTextDark,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                "Android will ask for Contacts, SMS, Phone, Mic, Camera. If you " +
+                    "grant Contacts, we'll show how many we found before importing anything.",
+                color = SecondaryTextDark,
+                fontSize = 11.sp,
+            )
+        }
     }
 }
 

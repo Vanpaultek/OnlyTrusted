@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package com.onlytrusted.app
 
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -187,12 +186,11 @@ class MainActivity : FragmentActivity() {
             }
         }
 
-        // v0.1.9 removed the in-app PermissionsOverviewScreen entirely —
-        // the only "ask" the user sees is Android's own system dialogs,
-        // matching WhatsApp / Signal UX. The batched request is kicked off
-        // from the Consent screen's onConfirmed path (see setContent below)
-        // so it fires after the user has agreed to use the app, not before
-        // Onboarding renders.
+        // Permission prompts are triggered from the Consent screen's
+        // onConfirmed path (see setContent below) rather than onCreate, so
+        // the user has already agreed to use the app before Android's system
+        // dialogs fire. There is no in-app pre-review screen — matches the
+        // WhatsApp / Signal pattern of surfacing OS dialogs directly.
     }
 
     override fun onResume() {
