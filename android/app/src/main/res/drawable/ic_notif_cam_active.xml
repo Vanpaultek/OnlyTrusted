@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Notification small icon: camera currently in use. Status-bar silhouette
+  will render as a camera shape even though the OS forces monochrome tint.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <!-- Camera body with lens cutout + viewfinder bump -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M9,4 L7.5,6 L4,6 C2.9,6 2,6.9 2,8 L2,18 C2,19.1 2.9,20 4,20 L20,20 C21.1,20 22,19.1 22,18 L22,8 C22,6.9 21.1,6 20,6 L16.5,6 L15,4 Z M12,17 C9.24,17 7,14.76 7,12 C7,9.24 9.24,7 12,7 C14.76,7 17,9.24 17,12 C17,14.76 14.76,17 12,17 Z" />
+    <!-- Lens iris -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M12,9 C10.34,9 9,10.34 9,12 C9,13.66 10.34,15 12,15 C13.66,15 15,13.66 15,12 C15,10.34 13.66,9 12,9 Z" />
+</vector>

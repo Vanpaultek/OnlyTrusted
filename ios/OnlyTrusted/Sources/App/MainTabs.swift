@@ -291,7 +291,9 @@ struct DashboardScreen: View {
                 quickActionsSection
                 securityLockCard
                 TrustedOnlyModeCard()
-                SensorOwnershipCard()
+                // SensorOwnershipCard moved to Settings → Device & data —
+                // it's a read-only status + Settings shortcut, not Dashboard
+                // real estate.
                 HonestLimitsCallout(onTap: { showHonestLimitsSheet = true })
             }
             .padding(.horizontal, 18)
@@ -980,57 +982,110 @@ private struct HonestLimitsSheet: View {
 
 // MARK: - Trusted-Only Mode card (iOS counterpart of Android's TrustedModeContent)
 
-/// Dashboard card exposing the two "silence everyone not in my vault" toggles
-/// that live on Android's Dashboard. iOS has honest limits here — we don't
-/// enforce call rejection in-app; the toggles signal the CallKit + Messages
-/// Filter extensions.
+/// Dashboard entry card for Trusted-Only Mode. Matches the Security Lock
+/// card's visual language — one row, icon tile + title + subtitle + chevron
+/// — and opens a sheet with the two toggles. Keeps the Dashboard a tidy
+/// stack of same-shaped entry rows.
 struct TrustedOnlyModeCard: View {
     @ObservedObject private var state = TrustedOnlyModeState.shared
+    @State private var showSheet: Bool = false
+
+    private var subtitle: String {
+        let active = (state.silenceCallsNotInVault ? 1 : 0) + (state.flagSmsNotInVault ? 1 : 0)
+        switch active {
+        case 0: return "No filters active · tap to configure"
+        case 1: return "1 filter active"
+        default: return "Both filters active"
+        }
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "shield.lefthalf.filled")
+        Button {
+            showSheet = true
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "person.3.sequence.fill")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(state.isActive ? Color.appAccent : Color.appSecondaryText)
-                    .frame(width: 36, height: 36)
-                    .background((state.isActive ? Color.appAccent : Color.appSecondaryText).opacity(0.18))
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Trusted-Only Mode")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundStyle(Color.appAccent)
+                    .frame(width: 44, height: 44)
+                    .background(Color.appAccent.opacity(0.16))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Trusted-only mode")
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.appPrimaryText)
-                    Text(state.isActive ? "Active — vault whitelist in effect"
-                                        : "Off — all calls and SMS reach you")
-                        .font(.system(size: 11))
+                    Text(subtitle)
+                        .font(.caption)
                         .foregroundStyle(Color.appSecondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.appSecondaryText)
             }
-            Toggle(isOn: $state.silenceCallsNotInVault) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Silence calls not in vault").font(.system(size: 13, weight: .semibold))
-                    Text("Routes unknown callers to voicemail via Call Blocking extension.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.appSecondaryText)
-                }
-            }
-            .tint(Color.appAccent)
-            Toggle(isOn: $state.flagSmsNotInVault) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Flag SMS not in vault").font(.system(size: 13, weight: .semibold))
-                    Text("Marks messages from unknown senders as junk via Messages Filter.")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.appSecondaryText)
-                }
-            }
-            .tint(Color.appAccent)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.appAccent.opacity(0.08))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.appAccent.opacity(0.3), lineWidth: 1)
+            )
         }
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.appElevatedSurface)
-        )
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showSheet) {
+            TrustedOnlyModeSheet(state: state, onDismiss: { showSheet = false })
+                .presentationDetents([.medium])
+        }
+    }
+}
+
+/// Sheet variant — contains the two Trusted-Only Mode toggles that were
+/// previously inlined on the Dashboard. Opens from the entry card.
+private struct TrustedOnlyModeSheet: View {
+    @ObservedObject var state: TrustedOnlyModeState
+    let onDismiss: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Toggle(isOn: $state.silenceCallsNotInVault) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Silence calls not in vault")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Routes unknown callers to voicemail via Call Blocking extension.")
+                                .font(.caption)
+                                .foregroundStyle(Color.appSecondaryText)
+                        }
+                    }
+                    .tint(Color.appAccent)
+                    Toggle(isOn: $state.flagSmsNotInVault) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Flag SMS not in vault")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Marks messages from unknown senders as junk via Messages Filter.")
+                                .font(.caption)
+                                .foregroundStyle(Color.appSecondaryText)
+                        }
+                    }
+                    .tint(Color.appAccent)
+                } header: {
+                    Text("Filter unknown contacts")
+                } footer: {
+                    Text("iOS doesn't let apps literally mute the ringer or delete SMS. The CallKit extension marks blocked calls so iOS routes them to voicemail; Messages Filter marks SMS as junk.")
+                }
+            }
+            .navigationTitle("Trusted-only mode")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done", action: onDismiss).tint(Color.appAccent)
+                }
+            }
+        }
     }
 }
 

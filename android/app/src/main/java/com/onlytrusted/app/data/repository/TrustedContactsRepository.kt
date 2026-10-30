@@ -19,7 +19,12 @@ data class TrustedContactDraft(
     val email: String?,
     val address: String?,
     val notes: String?,
-    val phoneNumbers: List<Pair<String, String?>> // raw number -> optional label
+    val phoneNumbers: List<Pair<String, String?>>, // raw number -> optional label
+    /** ContactsContract LOOKUP_KEY when auto-imported from the system address book.
+     *  Null for manually-entered contacts. Used by the auto-importer to detect
+     *  which vault entries should be removed when they're deleted from device
+     *  contacts (bi-directional sync). */
+    val systemContactLookupKey: String? = null,
 )
 
 data class RevealedContact(
@@ -64,7 +69,8 @@ class TrustedContactsRepository(private val dao: TrustedContactDao) {
             addressEncrypted = FieldCrypto.encrypt(draft.address?.trim()),
             notesEncrypted = FieldCrypto.encrypt(draft.notes?.trim()),
             createdAt = if (draft.id == 0L) now else now,
-            updatedAt = now
+            updatedAt = now,
+            systemContactLookupKey = draft.systemContactLookupKey,
         )
         val contactId = if (draft.id == 0L) {
             dao.insertContact(entity)

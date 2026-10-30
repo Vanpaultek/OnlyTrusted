@@ -18,11 +18,11 @@
     <string name="pocket_text_running">Pocket-dial protection running.</string>
 
     <string name="alert_mic_title">Microphone is in use</string>
-    <string name="alert_mic_body_generic">Something on your phone is using the microphone.</string>
-    <string name="alert_mic_body_with_pkg">%1$s is using the microphone.</string>
+    <string name="alert_mic_body_generic">An app opened the microphone at %1$s. Android didn\'t report which one.</string>
+    <string name="alert_mic_body_with_pkg">%1$s opened the microphone at %2$s.</string>
 
     <string name="alert_camera_title">Camera is in use</string>
-    <string name="alert_camera_body">Camera %1$s was just opened.</string>
+    <string name="alert_camera_body">%1$s camera was opened at %2$s. Android doesn\'t let apps see which other app opened it.</string>
 
     <string name="alert_call_blocked_title">Call blocked</string>
     <string name="alert_call_blocked_body">Blocked an incoming call from %1$s.</string>
@@ -207,6 +207,9 @@ Contacts</string>
          The notification is required by Android for any foreground service. -->
     <string name="sensor_privacy_notif_title">OnlyTrusted — Mic &amp; Camera Lock active</string>
     <string name="sensor_privacy_notif_body">Watching screen state to mute mic + block camera when locked. No audio or video is recorded.</string>
+    <string name="sensor_privacy_notif_body_mic">Microphone is in use. OnlyTrusted is watching but not recording.</string>
+    <string name="sensor_privacy_notif_body_camera">Camera is in use. OnlyTrusted is watching but not recording.</string>
+    <string name="sensor_privacy_notif_body_both">Microphone and camera are in use. OnlyTrusted is watching but not recording.</string>
     <string name="sensor_privacy_channel_name">Mic &amp; Camera Lock</string>
     <string name="sensor_privacy_channel_desc">Keeps the lock-watcher service running so OnlyTrusted can toggle mic + camera when the screen locks.</string>
     <string name="sensor_privacy_tile_label">OnlyTrusted mic/cam</string>

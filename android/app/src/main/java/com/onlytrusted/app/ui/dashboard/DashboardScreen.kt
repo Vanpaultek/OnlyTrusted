@@ -7,6 +7,7 @@ import android.provider.Settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.material.icons.filled.GppGood
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Warning
@@ -145,8 +147,31 @@ fun DashboardScreen(
     // actions. Edits persist via AppLockManager + AutoLockPrefs so SettingsScreen
     // stays in sync automatically.
     var showSecurityLockSheet by remember { mutableStateOf(false) }
+    var showTrustedOnlySheet by remember { mutableStateOf(false) }
     var showSensorPrivacyScreen by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    // Contacts permission state — the Dashboard LaunchedEffect writes this on
+    // mount so the nudge card can render conditionally. Also updated after
+    // the permission launcher result.
+    var contactsPermissionGranted by remember { mutableStateOf(false) }
+    val contactsPermissionLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        contactsPermissionGranted = granted
+        // If just granted — kick a sync without waiting for the next mount.
+        if (granted) {
+            scope.launch {
+                runCatching { com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.syncAll(context) }
+                val report = runCatching {
+                    com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
+                }.getOrNull()
+                if (report != null) {
+                    com.onlytrusted.app.ui.contactscan.ContactScanState.save(context, report)
+                    scamContactsCount = report.matches.size
+                }
+            }
+        }
+    }
     // Distress Signal: the countdown overlay + dispatcher + result dialog all live at
     // MainActivity level so they work above any screen (triggered by SOS button, shake
     // from MainActivity, or volume-down 4× from MainActivity.onKeyDown). This Dashboard
@@ -250,27 +275,46 @@ fun DashboardScreen(
             // (Security-nag state is hoisted to the DashboardScreen scope
             // so the modal below can access it.)
 
-            // First-time contact-import flow:
-            //   1. Check if READ_CONTACTS granted + import flag unset
-            //   2. Count how many contacts would be imported
-            //   3. Show the ContactImportConsentModal so the user sees exactly
-            //      what we're about to do before we silently read their whole
-            //      address book — avoids the "privacy app that scraped me" look
-            //   4. On "Import N contacts" tap → run importer + scam scan
-            //   5. On "Not now" tap → mark done, never prompt again
-            // All reads + inserts are local; nothing is transmitted.
+            // Contact-vault sync on every Dashboard mount:
+            //   - READ_CONTACTS not granted  → nothing happens here (nudge card
+            //     below prompts the user to grant it).
+            //   - Granted + first-time       → show the consent modal
+            //     (ContactImportConsentModal) so the user sees "we found N
+            //     contacts" before any reads land.
+            //   - Granted + already-consented → run syncAll() silently; it
+            //     adds any new device contacts AND removes vault entries whose
+            //     lookup-key is no longer in device contacts.
+            // Then runs the scam scan + security-nag decision.
             LaunchedEffect(Unit) {
-                if (com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.shouldRun(context)) {
-                    val count = runCatching {
-                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.countAvailable(context)
-                    }.getOrDefault(0)
-                    if (count > 0) {
-                        pendingContactImportCount = count
-                        showContactImportModal = true
+                val readContactsGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.READ_CONTACTS,
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                contactsPermissionGranted = readContactsGranted
+
+                if (readContactsGranted) {
+                    if (com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.shouldRun(context)) {
+                        // First time — show the consent modal with a count.
+                        val count = runCatching {
+                            com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.countAvailable(context)
+                        }.getOrDefault(0)
+                        if (count > 0) {
+                            pendingContactImportCount = count
+                            showContactImportModal = true
+                        } else {
+                            com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.markDone(context)
+                        }
                     } else {
-                        // No contacts to import → silently mark done so the
-                        // modal never fires on a device with an empty book.
-                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.markDone(context)
+                        // Repeat visit — silently sync (adds + removes).
+                        runCatching {
+                            com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.syncAll(context)
+                        }
+                        val report = runCatching {
+                            com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
+                        }.getOrNull()
+                        if (report != null) {
+                            com.onlytrusted.app.ui.contactscan.ContactScanState.save(context, report)
+                            scamContactsCount = report.matches.size
+                        }
                     }
                 }
                 // Security-nag decision happens on every Dashboard mount.
@@ -303,10 +347,23 @@ fun DashboardScreen(
             val scamFeedIsReal = remember {
                 com.onlytrusted.app.ui.contactscan.ContactsScamScanner.isRealFeed(context)
             }
+            // Nudge card: Contacts permission not yet granted. Tapping fires
+            // the Android permission dialog. Once granted the auto-sync runs
+            // immediately (not waiting for next Dashboard entry).
+            if (!contactsPermissionGranted) {
+                ContactsPermissionNudgeCard(
+                    onGrant = {
+                        contactsPermissionLauncher.launch(android.Manifest.permission.READ_CONTACTS)
+                    }
+                )
+            }
+            // Clear-notifications card: shows count of currently-posted
+            // OnlyTrusted notifications; "Clear all" dismisses them in one tap.
+            // Only visible when there's anything to clear.
+            AppNotificationsClearCard()
             StatsRow(
                 trusted = state.trustedContactCount,
                 blockedToday = state.blockedCalls24h,
-                blockedWeek = state.flaggedSms24h,
                 scamContacts = scamContactsCount,
                 scamFeedIsReal = scamFeedIsReal,
                 onTrustedClick = onGoToVault,
@@ -322,8 +379,19 @@ fun DashboardScreen(
             HonestLimitsCallout(onTap = { showHonestLimitsSheet = true })
 
             // --- Android-only advanced protections (preserved) ---
-            androidx.compose.material3.Card { TrustedModeContent(vm, state, runtime, onGoToVault) }
-            androidx.compose.material3.Card { SensorOwnershipContent(context, runtime) }
+            // Trusted-only mode compact entry card — tap opens a bottom
+            // sheet with the two toggles. Matches the Security Lock card's
+            // visual language so the Dashboard reads as a tidy stack of
+            // same-shaped entry rows instead of mixed-height panels.
+            TrustedOnlyModeEntryCard(
+                trustedCount = state.trustedContactCount,
+                silenceCallsOn = runtime.trustedOnlyCalls,
+                flagSmsOn = runtime.trustedOnlySms,
+                onClick = { showTrustedOnlySheet = true },
+            )
+            // (SensorOwnershipContent moved to Settings → Device & data —
+            // it's a read-only status screen + Settings shortcut, doesn't
+            // earn Dashboard real estate.)
         }
 
         // F1 — Panic quick-dial floating button, bottom-right above the bottom nav.
@@ -420,6 +488,21 @@ fun DashboardScreen(
         )
     }
 
+    // Trusted-only mode sheet — contains the two toggles previously inlined
+    // on the Dashboard. Opening/closing driven by the entry card above.
+    if (showTrustedOnlySheet) {
+        TrustedOnlyModeSheet(
+            vm = vm,
+            state = state,
+            runtime = runtime,
+            onManageVault = {
+                showTrustedOnlySheet = false
+                onGoToVault()
+            },
+            onDismiss = { showTrustedOnlySheet = false },
+        )
+    }
+
     // Contact-import consent modal — fires once after READ_CONTACTS is
     // granted, before anything is actually read from the address book.
     // Confirms count + explains what will happen so the user is not
@@ -431,8 +514,11 @@ fun DashboardScreen(
             onImport = {
                 showContactImportModal = false
                 scope2.launch {
+                    // Use syncAll instead of importAll — syncAll uses the
+                    // LOOKUP_KEY so subsequent Dashboard mounts can detect
+                    // device-side deletions and keep the vault in step.
                     runCatching {
-                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.importAll(context)
+                        com.onlytrusted.app.contactscan.TrustedContactsAutoImporter.syncAll(context)
                     }
                     val report = runCatching {
                         com.onlytrusted.app.ui.contactscan.ContactsScamScanner.scan(context)
@@ -694,7 +780,6 @@ private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = fa
 private fun StatsRow(
     trusted: Int,
     blockedToday: Int,
-    blockedWeek: Int,
     scamContacts: Int,
     scamFeedIsReal: Boolean,
     onTrustedClick: () -> Unit,
@@ -715,10 +800,15 @@ private fun StatsRow(
             label = stringResource(R.string.dash_trusted_contacts),
             onClick = onTrustedClick,
         )
-        BlockedCombinedTile(
+        // Blocked tile — just the today count, matching the other two tiles'
+        // size + layout. Weekly breakdown moved to the Reports screen; we no
+        // longer stuff two numbers into a single compact dashboard tile.
+        StatTile(
             modifier = Modifier.weight(1f),
-            blockedToday = blockedToday,
-            blockedWeek = blockedWeek,
+            icon = Icons.Filled.Block,
+            tint = DangerDark,
+            value = blockedToday,
+            label = stringResource(R.string.dash_blocked),
             onClick = onBlockedClick,
         )
         // Scam Contacts tile.
@@ -777,46 +867,8 @@ private fun ScamSampleFeedTile(modifier: Modifier, onClick: () -> Unit) {
     }
 }
 
-/**
- * Combined "Blocked" tile that stacks today's count prominently with the 7-day total
- * underneath. Replaces the former pair of Blocked Today + Blocked This Week tiles so
- * the dashboard reads 1x3 instead of 2x2.
- */
-@Composable
-private fun BlockedCombinedTile(
-    modifier: Modifier,
-    blockedToday: Int,
-    blockedWeek: Int,
-    onClick: () -> Unit,
-) {
-    Column(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MidnightElevated)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Row(verticalAlignment = Alignment.Top) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(DangerDark.copy(alpha = 0.18f), RoundedCornerShape(8.dp))
-            ) {
-                Icon(Icons.Filled.Block, null, tint = DangerDark, modifier = Modifier.size(15.dp))
-            }
-            Spacer(Modifier.weight(1f))
-            Text(blockedToday.toString(), color = DangerDark, fontSize = 26.sp, fontWeight = FontWeight.Bold)
-        }
-        Text(stringResource(R.string.dash_blocked), color = PrimaryTextDark, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-        Text(
-            stringResource(R.string.dash_today_week_fmt, blockedWeek),
-            color = SecondaryTextDark,
-            fontSize = 10.sp
-        )
-    }
-}
+// BlockedCombinedTile removed in favour of plain StatTile — all three dashboard
+// stat tiles now share identical layout + size. Weekly rollup moved to Reports.
 
 @Composable
 private fun StatTile(
@@ -975,6 +1027,230 @@ private fun SecurityLockEntryCard(onClick: () -> Unit) {
                      color = SecondaryTextDark, fontSize = 12.sp)
             }
             Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+// MARK: - Clear app notifications card
+
+/**
+ * Shows the number of OnlyTrusted notifications currently posted + a
+ * one-tap "Clear all" button. Honest about the FGS limit: Android requires
+ * the Mic & Camera Lock foreground-service notification to stay visible
+ * while the service is running, so it can't be dismissed by cancelAll().
+ * We note that remaining count in the subtitle so the user isn't surprised.
+ *
+ * Hidden entirely when there's nothing posted.
+ */
+@Composable
+private fun AppNotificationsClearCard() {
+    val context = LocalContext.current
+    // Re-check on every recomposition — cheap, O(1) query against the OS.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    var activeCount by remember { mutableStateOf(countActiveNotifications(context)) }
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                activeCount = countActiveNotifications(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (activeCount <= 0) return
+
+    androidx.compose.material3.Surface(
+        onClick = {
+            // Dismiss everything OnlyTrusted posted; the Mic Lock FGS one
+            // re-posts immediately because setOngoing(true), which is the
+            // Android-enforced way to signal "this service is running."
+            androidx.core.app.NotificationManagerCompat.from(context).cancelAll()
+            activeCount = countActiveNotifications(context)
+        },
+        shape = RoundedCornerShape(14.dp),
+        color = WarningDark.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, WarningDark.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(14.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(WarningDark.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+            ) {
+                Icon(
+                    Icons.Filled.Notifications,
+                    null,
+                    tint = WarningDark,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(
+                    "$activeCount app notification(s)",
+                    color = PrimaryTextDark,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "Tap to clear. The Mic Lock status notification may stay — Android requires it while that service runs.",
+                    color = SecondaryTextDark,
+                    fontSize = 11.sp,
+                )
+            }
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = "Clear all",
+                tint = SecondaryTextDark,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+private fun countActiveNotifications(context: android.content.Context): Int {
+    if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) return 0
+    val nm = context.getSystemService(android.content.Context.NOTIFICATION_SERVICE)
+        as? android.app.NotificationManager ?: return 0
+    return runCatching { nm.activeNotifications.size }.getOrDefault(0)
+}
+
+// MARK: - Contacts permission nudge card
+
+@Composable
+private fun ContactsPermissionNudgeCard(onGrant: () -> Unit) {
+    androidx.compose.material3.Surface(
+        onClick = onGrant,
+        shape = RoundedCornerShape(14.dp),
+        color = WarningDark.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, WarningDark.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(14.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(WarningDark.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+            ) {
+                Icon(Icons.Filled.Groups, null, tint = WarningDark, modifier = Modifier.size(20.dp))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text("Grant Contacts access",
+                     color = PrimaryTextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Auto-import your contacts so the Trusted / Blocked / Scam counts above actually reflect your phone.",
+                     color = SecondaryTextDark, fontSize = 11.sp)
+            }
+            Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+// MARK: - Trusted-only mode entry card (matches Security Lock card)
+
+@Composable
+private fun TrustedOnlyModeEntryCard(
+    trustedCount: Int,
+    silenceCallsOn: Boolean,
+    flagSmsOn: Boolean,
+    onClick: () -> Unit,
+) {
+    val activeCount = (if (silenceCallsOn) 1 else 0) + (if (flagSmsOn) 1 else 0)
+    val subtitle = when (activeCount) {
+        0 -> "No filters active · tap to configure"
+        1 -> "1 filter active · $trustedCount trusted contact(s)"
+        else -> "Both filters active · $trustedCount trusted contact(s)"
+    }
+    androidx.compose.material3.Surface(
+        onClick = onClick,
+        shape = RoundedCornerShape(14.dp),
+        color = BrandAccentDark.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BrandAccentDark.copy(alpha = 0.3f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(14.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(44.dp)
+                    .background(BrandAccentDark.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+            ) {
+                Icon(Icons.Filled.Groups, null, tint = BrandAccentDark, modifier = Modifier.size(22.dp))
+            }
+            Column(Modifier.weight(1f)) {
+                Text("Trusted-only mode",
+                     color = PrimaryTextDark, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(subtitle,
+                     color = SecondaryTextDark, fontSize = 12.sp)
+            }
+            Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun TrustedOnlyModeSheet(
+    vm: DashboardViewModel,
+    state: DashboardState,
+    runtime: DashboardViewModel.RuntimeState,
+    onManageVault: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = MidnightCard,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Groups, null, tint = BrandAccentDark)
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "Trusted-only mode",
+                    color = PrimaryTextDark,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(onClick = onManageVault) { Text("Vault →", color = BrandAccentDark) }
+            }
+            Text(
+                "${state.trustedContactCount} trusted contact(s). Add people to your vault from the Vault tab.",
+                color = SecondaryTextDark,
+                fontSize = 13.sp,
+            )
+            SwitchRow(
+                stringResource(R.string.dash_silence_calls_not_vault),
+                runtime.trustedOnlyCalls,
+                vm::setTrustedOnlyCalls,
+            )
+            SwitchRow(
+                stringResource(R.string.dash_flag_sms_not_vault),
+                runtime.trustedOnlySms,
+                vm::setTrustedOnlySms,
+            )
         }
     }
 }
@@ -1143,31 +1419,8 @@ private fun HonestLimitsRefresherBanner(
 
 // MARK: - Android-only extras (preserved from previous dashboard)
 
-@Composable
-private fun TrustedModeContent(
-    vm: DashboardViewModel,
-    state: DashboardState,
-    runtime: DashboardViewModel.RuntimeState,
-    onManageVault: () -> Unit
-) {
-    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.Groups, contentDescription = null, tint = BrandAccentDark)
-            Spacer(Modifier.width(8.dp))
-            Text(
-                stringResource(R.string.dash_trusted_only_mode),
-                color = PrimaryTextDark,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f)
-            )
-            TextButton(onClick = onManageVault) { Text("Vault →", color = BrandAccentDark) }
-        }
-        Text("${state.trustedContactCount} trusted contact(s).", color = SecondaryTextDark, fontSize = 13.sp)
-        SwitchRow(stringResource(R.string.dash_silence_calls_not_vault), runtime.trustedOnlyCalls, vm::setTrustedOnlyCalls)
-        SwitchRow(stringResource(R.string.dash_flag_sms_not_vault), runtime.trustedOnlySms, vm::setTrustedOnlySms)
-    }
-}
+// TrustedModeContent removed — replaced by TrustedOnlyModeEntryCard +
+// TrustedOnlyModeSheet which match the Security Lock entry-card pattern.
 
 @Composable
 private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Unit) {

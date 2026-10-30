@@ -20,6 +20,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.DateFormat
+import java.util.Date
 
 class SensorMonitorService : Service() {
 
@@ -101,35 +103,60 @@ class SensorMonitorService : Service() {
             micAlertedSessions.clear()
             return
         }
+        val now = System.currentTimeMillis()
+        val timeString = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(now))
         for (config in configs) {
             if (config.isClientSilenced) continue
             val id = config.clientAudioSessionId
             if (!micAlertedSessions.add(id)) continue
 
             val packageName = resolveOwnerForAudioSession(config)
+            val appLabel = packageName?.let { labelForPackage(it) }
             val repo = (application as? OnlyTrustedApp)?.repository
             scope.launch {
                 repo?.log(
                     type = SecurityEvent.TYPE_MIC,
                     packageName = packageName,
-                    detail = "session=$id"
+                    detail = "session=$id, time=$timeString"
                 )
             }
             NotificationHelper.postAlert(
                 context = this,
                 title = getString(com.onlytrusted.app.R.string.alert_mic_title),
-                body = packageName?.let {
-                    getString(com.onlytrusted.app.R.string.alert_mic_body_with_pkg, it)
-                } ?: getString(com.onlytrusted.app.R.string.alert_mic_body_generic),
+                body = if (appLabel != null) {
+                    getString(com.onlytrusted.app.R.string.alert_mic_body_with_pkg, appLabel, timeString)
+                } else {
+                    getString(com.onlytrusted.app.R.string.alert_mic_body_generic, timeString)
+                },
                 tag = "mic-$id"
             )
         }
     }
 
+    /**
+     * [AudioRecordingConfiguration] exposes `getClientPackageName()` on API 29+
+     * but through a hidden method accessible only via reflection. Resolve it
+     * once per lookup; return null on failure (any API, any OEM-stripped build)
+     * so the notification falls back to the honest generic message.
+     */
     private fun resolveOwnerForAudioSession(config: AudioRecordingConfiguration): String? {
-        // AudioRecordingConfiguration does not expose the UID/package publicly on all API levels.
-        // We expose what we can — if nothing is available, we return null and show a generic alert.
-        return null
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        return runCatching {
+            val m = AudioRecordingConfiguration::class.java.getMethod("getClientPackageName")
+            m.invoke(config) as? String
+        }.getOrNull()
+    }
+
+    /**
+     * Resolve a package name to its user-visible app label (e.g.
+     * "com.whatsapp" → "WhatsApp"). Falls back to the package name itself if
+     * the label can't be read (uninstalled, blocked, etc.).
+     */
+    private fun labelForPackage(packageName: String): String {
+        val pm = packageManager
+        return runCatching {
+            pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)).toString()
+        }.getOrDefault(packageName)
     }
 
     private fun logCameraInUse(cameraId: String) {
@@ -138,20 +165,44 @@ class SensorMonitorService : Service() {
         if (now - last < CAMERA_ALERT_COOLDOWN_MS) return
         cameraAlertCooldown[cameraId] = now
 
+        val timeString = DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(now))
+        val cameraDescription = describeCamera(cameraId)
         val repo = (application as? OnlyTrustedApp)?.repository
         scope.launch {
             repo?.log(
                 type = SecurityEvent.TYPE_CAMERA,
                 packageName = null,
-                detail = "cameraId=$cameraId"
+                detail = "cameraId=$cameraId, which=$cameraDescription, time=$timeString"
             )
         }
         NotificationHelper.postAlert(
             context = this,
             title = getString(com.onlytrusted.app.R.string.alert_camera_title),
-            body = getString(com.onlytrusted.app.R.string.alert_camera_body, cameraId),
+            body = getString(com.onlytrusted.app.R.string.alert_camera_body, cameraDescription, timeString),
             tag = "cam-$cameraId"
         )
+    }
+
+    /**
+     * Translate the opaque camera ID into "Front" / "Back" / "External" by
+     * reading its [CameraCharacteristics] LENS_FACING. More useful than
+     * "Camera 2" in a user-facing notification. Falls back to the raw ID.
+     *
+     * Android does NOT expose which app opened the camera to third-party
+     * apps — [AppOpsManager.OnOpActiveChangedListener] can do it but needs
+     * GET_APP_OPS_STATS which is signature|privileged. Documenting that
+     * limit honestly in the notification body.
+     */
+    private fun describeCamera(cameraId: String): String {
+        return runCatching {
+            val chars = cameraManager?.getCameraCharacteristics(cameraId) ?: return@runCatching "Camera $cameraId"
+            when (chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)) {
+                android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "Front"
+                android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> "Back"
+                android.hardware.camera2.CameraCharacteristics.LENS_FACING_EXTERNAL -> "External"
+                else -> "Camera $cameraId"
+            }
+        }.getOrDefault("Camera $cameraId")
     }
 
     companion object {

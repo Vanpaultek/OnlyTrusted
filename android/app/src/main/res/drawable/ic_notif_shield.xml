@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Notification small icon: idle shield (no sensor in use). White silhouette;
+  Android tints to match the status-bar theme. Must be alpha-only (no colors);
+  OS strips colors anyway for status-bar display.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2 L4,5 L4,11 C4,16 7.5,20.5 12,22 C16.5,20.5 20,16 20,11 L20,5 Z" />
+</vector>

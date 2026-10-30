@@ -1,0 +1,140 @@
+# OnlyTrusted — Offline Threat Intel: scam PATTERNS v1
+#
+# Prefix-match ruleset. The scanner tries each pattern against normalised
+# E.164 phone numbers (digits only, leading +) using startsWith semantics.
+# Comments start with '#'; blank lines ignored.
+#
+# Format per line:
+#   <prefix>  <severity>  <label>
+#
+#   <prefix>    required — digits with leading '+' (e.g. +1876)
+#   <severity>  required — one of: critical | high | medium
+#   <label>     required — short human-readable reason (no commas)
+#
+# Severity meaning:
+#   critical  always a scam / premium-rate trap in >95% of calls to US targets
+#   high      documented scam-heavy range; most legitimate users won't call it
+#   medium    frequently abused but has legitimate users too; show as warning
+#
+# Sources (all public record, no proprietary data):
+#   - FCC Enforcement Bureau robocall citations (fcc.gov/robocalls)
+#   - FTC Consumer Sentinel Network data book (ftc.gov/sentinel)
+#   - FCC Call Blocking rules (47 CFR § 64.1200)
+#   - UK Ofcom enforcement notices (ofcom.org.uk)
+#   - CRTC enforcement advisories (crtc.gc.ca)
+#   - BBB Scam Tracker trend reports (bbb.org/scamtracker)
+#   - Public FCC filings on "one-ring" cousin scams (Caribbean +1-xxx)
+#
+# Review cadence: this file is a snapshot. Patterns change as scammers rotate
+# ranges. Refresh quarterly or when FCC publishes new enforcement actions.
+#
+# Last updated: 2026-10-29
+
+# ─────────────────────────────────────────────────────────────
+# CARIBBEAN "COUSIN SCAM" / ONE-RING SCAM — critical
+#
+# All these are North American Numbering Plan (NANP) country code +1,
+# so US callers answering a missed call pay international premium
+# rates. FCC + CRTC have issued multiple public warnings. Legitimate
+# calls from these territories exist but are rare for US users.
+# ─────────────────────────────────────────────────────────────
++1876  critical  Jamaica — most-documented cousin-scam range
++1809  critical  Dominican Republic — same-pattern cousin scam
++1829  critical  Dominican Republic — overlay for +1809
++1849  critical  Dominican Republic — overlay for +1809
++1473  critical  Grenada — one-ring premium-rate trap
++1664  critical  Montserrat — one-ring trap
++1758  critical  St. Lucia — one-ring trap
++1868  critical  Trinidad and Tobago — one-ring trap
++1268  critical  Antigua and Barbuda — one-ring trap
++1242  critical  Bahamas — one-ring trap
++1284  critical  British Virgin Islands — one-ring trap
++1345  critical  Cayman Islands — one-ring trap
++1767  critical  Dominica — one-ring trap
++1649  critical  Turks and Caicos — one-ring trap
++1784  critical  St. Vincent and Grenadines — one-ring trap
++1721  critical  Sint Maarten — one-ring trap
++1264  critical  Anguilla — one-ring trap
++1246  critical  Barbados — one-ring trap
++1441  critical  Bermuda — one-ring trap
++1869  critical  St. Kitts and Nevis — one-ring trap
++1340  critical  US Virgin Islands — unusual pattern for US-mainland users
++1671  critical  Guam — unusual pattern for US-mainland users
++1684  critical  American Samoa — unusual pattern for US-mainland users
++1670  critical  Northern Mariana Islands — unusual pattern for US-mainland users
+
+# ─────────────────────────────────────────────────────────────
+# INTERNATIONAL 419 / ADVANCE-FEE FRAUD — high
+#
+# Nigeria + West Africa origin for the classic "Nigerian prince" and
+# modernised business-email-compromise patterns. Any unsolicited call
+# from these country codes to a US recipient should be treated as
+# suspicious.
+# ─────────────────────────────────────────────────────────────
++234  high  Nigeria — 419 advance-fee origin
++233  high  Ghana — romance-scam origin
++229  high  Benin — advance-fee origin
++228  high  Togo — advance-fee origin
++221  high  Senegal — advance-fee origin
+
+# ─────────────────────────────────────────────────────────────
+# TECH-SUPPORT SCAM origins — high
+#
+# India + Pakistan are the documented origin of ~90% of tech-support
+# scam calls targeting English-speaking users (per FTC 2023 Consumer
+# Sentinel). Legitimate business calls exist, but inbound tech-support
+# from these codes is a near-certain fraud.
+# ─────────────────────────────────────────────────────────────
++91  medium  India — frequent tech-support scam origin
++92  medium  Pakistan — frequent tech-support scam origin
+
+# ─────────────────────────────────────────────────────────────
+# EUROPEAN PREMIUM-RATE TRAPS — critical
+# ─────────────────────────────────────────────────────────────
++44909  critical  UK premium-rate (£1.50+/min)
++44908  critical  UK premium-rate
++44871  critical  UK national-rate hidden-cost
++44872  critical  UK national-rate hidden-cost
++44873  critical  UK national-rate hidden-cost
++44907  critical  UK personal-numbering ad-fraud range
+
+# ─────────────────────────────────────────────────────────────
+# UK VIRTUAL-NUMBER SMS SCAM — high
+# ─────────────────────────────────────────────────────────────
++447700  high   UK virtual-number range — SMS-scam common
++447777  high   UK virtual-number range — SMS-scam common
+
+# ─────────────────────────────────────────────────────────────
+# EUROPEAN SATELLITE / HIGH-COST RANGES — critical
+# ─────────────────────────────────────────────────────────────
++881  critical  Global Mobile Satellite — premium rates on inbound
++882  critical  International Networks — premium rates
++883  critical  International Networks — premium rates
++87810  critical  Iridium satellite — premium rates
++88213  critical  International premium rate
+
+# ─────────────────────────────────────────────────────────────
+# BALKAN + EASTERN EUROPE SCAM ORIGINS — high
+# ─────────────────────────────────────────────────────────────
++355  high  Albania — frequent crypto / investment scam origin
++383  high  Kosovo — call-centre scam origin
++381  high  Serbia — call-centre scam origin
+
+# ─────────────────────────────────────────────────────────────
+# NANP ROBOCALL TOLL-FREE WITH HIGH COMPLAINT RATES — medium
+#
+# These toll-free area codes top the FCC Robocall Response Team's
+# monthly complaint reports. Not all toll-free is scam, but any
+# unsolicited call from these ranges should be treated with suspicion.
+# ─────────────────────────────────────────────────────────────
+# (We deliberately do NOT list the full 800 / 833 / 844 / 855 / 866 /
+# 877 / 888 range as 'high' because that would false-positive on
+# every legitimate business. If a tester wants this stricter check,
+# add it manually.)
++1800 medium  Toll-free — common robocall vector, verify caller
++1833 medium  Toll-free — common robocall vector, verify caller
++1844 medium  Toll-free — common robocall vector, verify caller
+
+# ─────────────────────────────────────────────────────────────
+# END OF FILE
+# ─────────────────────────────────────────────────────────────

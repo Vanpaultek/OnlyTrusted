@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MarkEmailUnread
 import androidx.compose.material.icons.filled.PersonSearch
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.MicNone
 import androidx.compose.material.icons.filled.NetworkCheck
@@ -144,6 +145,8 @@ fun SettingsScreen(
     onOpenLegal: () -> Unit = {},
     onOpenAbout: () -> Unit = {},
     onOpenDeviceCompatibility: () -> Unit = {},
+    onOpenMyScamReports: () -> Unit = {},
+    onOpenReduceAdTracking: () -> Unit = {},
     onOpenLanguageRegion: () -> Unit = {},
     onOpenSensorPrivacy: () -> Unit = {},
     onOpenNotifications: () -> Unit = {},
@@ -564,6 +567,41 @@ fun SettingsScreen(
                     titleTint = DangerDark,
                     showChevron = false,
                     onClick = { confirmWipe = true }
+                )
+                RowDivider()
+                // Shortcut to Android's own mic / camera system controls.
+                // Moved here (from the Dashboard) because it's a read-only
+                // link, not an actionable Dashboard surface. The in-app Mic
+                // & Camera Lock screen is still accessible via the Dashboard
+                // Security Lock card for deeper controls.
+                SettingsNavRow(
+                    icon = Icons.Filled.Shield,
+                    tint = BrandAccentDark,
+                    title = "Mic & camera system settings",
+                    onClick = {
+                        val intent = Intent(Settings.ACTION_PRIVACY_SETTINGS)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        runCatching { context.startActivity(intent) }
+                    }
+                )
+                RowDivider()
+                SettingsNavRow(
+                    icon = Icons.Filled.Warning,
+                    tint = WarningDark,
+                    title = "My scam reports",
+                    value = "${com.onlytrusted.app.scamreport.ReportedScamStore.count(context)}",
+                    onClick = onOpenMyScamReports,
+                )
+                RowDivider()
+                // One-screen helper: deep-links to Google's own ad/activity
+                // controls + system App-info pages for the apps the user wants
+                // to review. We don't scrape or auto-toggle anything; the
+                // screen is honest about that limit.
+                SettingsNavRow(
+                    icon = Icons.Filled.PrivacyTip,
+                    tint = BrandAccentDark,
+                    title = "Reduce ad tracking",
+                    onClick = onOpenReduceAdTracking,
                 )
             }
 

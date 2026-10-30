@@ -55,6 +55,7 @@ import com.onlytrusted.app.ui.theme.BrandAccentDark
 import com.onlytrusted.app.ui.theme.BrandCyanDark
 import com.onlytrusted.app.ui.theme.DangerDark
 import com.onlytrusted.app.ui.theme.MidnightElevated
+import com.onlytrusted.app.ui.theme.WarningDark
 import com.onlytrusted.app.ui.theme.PrimaryTextDark
 import com.onlytrusted.app.ui.theme.SecondaryTextDark
 import kotlinx.coroutines.Dispatchers
@@ -256,21 +257,54 @@ fun ContactScanScreen(onBack: () -> Unit) {
                     }
 
                     // Matches list
+                    var reportTarget by remember { mutableStateOf<ContactsScamScanner.ScamMatch?>(null) }
                     existingReport.matches.forEach { match ->
+                        val tint = when (match.severity) {
+                            ContactsScamScanner.Severity.CRITICAL -> DangerDark
+                            ContactsScamScanner.Severity.HIGH -> WarningDark
+                            ContactsScamScanner.Severity.MEDIUM -> SecondaryTextDark
+                        }
+                        val heading = when (match.matchType) {
+                            ContactsScamScanner.MatchType.KNOWN_SCAM -> "Documented scam"
+                            ContactsScamScanner.MatchType.SUSPICIOUS_PATTERN -> "Suspicious pattern"
+                        }
                         CardBox {
                             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Filled.Warning, null, tint = DangerDark, modifier = Modifier.size(16.dp))
+                                    Icon(Icons.Filled.Warning, null, tint = tint, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.size(6.dp))
                                     Text(match.contactName, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = PrimaryTextDark)
+                                    Spacer(Modifier.weight(1f))
+                                    Text(heading, fontSize = 10.sp, color = tint, fontWeight = FontWeight.Bold)
                                 }
                                 Text(match.phoneNumber, fontSize = 12.sp, color = SecondaryTextDark)
-                                Text(
-                                    "Matched against bundled scam numbers list.",
-                                    fontSize = 10.sp, color = SecondaryTextDark
-                                )
+                                Text(match.label, fontSize = 10.sp, color = SecondaryTextDark)
+                                TextButton(
+                                    onClick = { reportTarget = match },
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 0.dp, vertical = 4.dp),
+                                ) {
+                                    Text(
+                                        "+ Report as scam",
+                                        color = BrandAccentDark,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
                             }
                         }
+                    }
+                    reportTarget?.let { target ->
+                        com.onlytrusted.app.scamreport.ReportScamDialog(
+                            phoneNumber = target.phoneNumber,
+                            normalisedNumber = target.normalisedNumber,
+                            onDismiss = { reportTarget = null },
+                            onReported = { category ->
+                                com.onlytrusted.app.scamreport.ReportedScamStore.add(
+                                    context, target.normalisedNumber, category,
+                                )
+                                reportTarget = null
+                            },
+                        )
                     }
                 }
             }

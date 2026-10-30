@@ -4,4 +4,11 @@
     <color name="brand_on_primary">#06131D</color>
     <color name="midnight_background">#06131D</color>
     <color name="midnight_card">#12313A</color>
+    <!-- Dynamic FGS notification tints for mic/camera-in-use states. The
+         status-bar icon is forced monochrome by the OS, but the pulled-down
+         notification body + accent color honor these values. -->
+    <color name="notif_tint_mic">#00C853</color>      <!-- green when mic in use -->
+    <color name="notif_tint_camera">#2962FF</color>   <!-- blue when camera in use -->
+    <color name="notif_tint_both">#AA00FF</color>     <!-- purple when both active -->
+    <color name="notif_tint_idle">#54C7BD</color>     <!-- brand teal when idle -->
 </resources>

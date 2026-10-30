@@ -13,6 +13,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.onlytrusted.app.MainActivity
 import com.onlytrusted.app.R
 
@@ -42,12 +43,25 @@ import com.onlytrusted.app.R
  */
 class SensorPrivacyForegroundService : Service() {
 
+    @Volatile private var liveState: LiveSensorStateObserver.State = LiveSensorStateObserver.State.IDLE
+    private var liveObserver: LiveSensorStateObserver? = null
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         createChannel()
         startForegroundCompat()
+        // Live sensor-state observer — swaps the notification icon + color
+        // between shield (idle), mic (green), camera (blue), both (purple).
+        // Independent of SensorMonitorService's user-visible alerts; this
+        // only drives the FGS icon so users can glance at the status bar.
+        liveObserver = LiveSensorStateObserver(this) { state ->
+            if (state != liveState) {
+                liveState = state
+                refreshNotification()
+            }
+        }.also { it.start() }
         // Record this start for the Device Compatibility screen — testers
         // use the restart count to tell us how aggressive their OEM's
         // battery killer is.
@@ -85,6 +99,8 @@ class SensorPrivacyForegroundService : Service() {
 
     override fun onDestroy() {
         ScreenStateReceiver.unregister(this)
+        liveObserver?.stop()
+        liveObserver = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             MicActivityTracker.stop(this)
         }
@@ -118,16 +134,47 @@ class SensorPrivacyForegroundService : Service() {
             this, 0, tapIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
+        val state = liveState
+        val smallIcon = when (state) {
+            LiveSensorStateObserver.State.MIC_ONLY -> R.drawable.ic_notif_mic_active
+            LiveSensorStateObserver.State.CAMERA_ONLY -> R.drawable.ic_notif_cam_active
+            // "Both" doesn't have a composite icon — pick mic (speech is
+            // usually the more sensitive capture). The purple tint still
+            // signals the combined state in the shade.
+            LiveSensorStateObserver.State.BOTH -> R.drawable.ic_notif_mic_active
+            LiveSensorStateObserver.State.IDLE -> R.drawable.ic_notif_shield
+        }
+        val tintRes = when (state) {
+            LiveSensorStateObserver.State.MIC_ONLY -> R.color.notif_tint_mic
+            LiveSensorStateObserver.State.CAMERA_ONLY -> R.color.notif_tint_camera
+            LiveSensorStateObserver.State.BOTH -> R.color.notif_tint_both
+            LiveSensorStateObserver.State.IDLE -> R.color.notif_tint_idle
+        }
+        val bodyRes = when (state) {
+            LiveSensorStateObserver.State.MIC_ONLY -> R.string.sensor_privacy_notif_body_mic
+            LiveSensorStateObserver.State.CAMERA_ONLY -> R.string.sensor_privacy_notif_body_camera
+            LiveSensorStateObserver.State.BOTH -> R.string.sensor_privacy_notif_body_both
+            LiveSensorStateObserver.State.IDLE -> R.string.sensor_privacy_notif_body
+        }
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(smallIcon)
+            .setColor(ContextCompat.getColor(this, tintRes))
+            .setColorized(true)
             .setContentTitle(getString(R.string.sensor_privacy_notif_title))
-            .setContentText(getString(R.string.sensor_privacy_notif_body))
+            .setContentText(getString(bodyRes))
             .setOngoing(true)
             .setContentIntent(tap)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
+    }
+
+    /** Repost the ongoing FGS notification so Android picks up the new icon
+     *  + tint. Same NOTIFICATION_ID preserves the FGS pin. */
+    private fun refreshNotification() {
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        nm.notify(NOTIFICATION_ID, buildNotification())
     }
 
     private fun createChannel() {

@@ -12,9 +12,11 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NetworkCheck
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -133,6 +135,11 @@ sealed class Destination(val route: String, val label: String, val icon: ImageVe
     // battery exemption, FGS alive/restart counts, permissions, notification
     // channel state, OEM-specific tips, with copy-to-clipboard / share buttons.
     data object DeviceCompatibility : Destination("device_compatibility", "Device compatibility", Icons.Filled.Settings)
+    data object MyScamReports : Destination("my_scam_reports", "My scam reports", Icons.Filled.Warning)
+    // "Reduce ad tracking" — honest quick-links to Google's ad/activity controls
+    // and system App-info pages. We can't toggle any of them for the user; this
+    // is a pure helper surface. See ui/privacy/ReduceAdTrackingScreen.kt.
+    data object ReduceAdTracking : Destination("reduce_ad_tracking", "Reduce ad tracking", Icons.Filled.PrivacyTip)
     // Mic & Camera Lock — honest sensor-privacy screen. Picks the active controller
     // tier (Consumer / Device Owner / Privileged) and surfaces what this install can
     // + cannot do around screen-lock sensor enforcement. See
@@ -252,6 +259,8 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
                     onOpenLegal = { navController.navigate(Destination.Legal.route) },
                     onOpenAbout = { navController.navigate(Destination.About.route) },
                     onOpenDeviceCompatibility = { navController.navigate(Destination.DeviceCompatibility.route) },
+                    onOpenMyScamReports = { navController.navigate(Destination.MyScamReports.route) },
+                    onOpenReduceAdTracking = { navController.navigate(Destination.ReduceAdTracking.route) },
                     onOpenNotifications = { navController.navigate(Destination.Notifications.route) },
                     onOpenReports = { navController.navigate(Destination.Reports.route) },
                     onOpenBilling = { navController.navigate(Destination.BillingSubscription.route) },
@@ -493,6 +502,16 @@ fun AppNavigation(onPanic: () -> Unit = {}) {
             composable(Destination.About.route) { AboutScreen() }
             composable(Destination.DeviceCompatibility.route) {
                 com.onlytrusted.app.diagnostics.DeviceCompatibilityScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Destination.MyScamReports.route) {
+                com.onlytrusted.app.scamreport.ScamReportsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(Destination.ReduceAdTracking.route) {
+                com.onlytrusted.app.ui.privacy.ReduceAdTrackingScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

@@ -86,6 +86,121 @@ object TrustedContactsAutoImporter {
             .edit().putBoolean(KEY_IMPORT_DONE, true).apply()
     }
 
+    /** Result of a bi-directional sync pass. */
+    data class SyncResult(
+        val added: Int,
+        val removed: Int,
+        val totalInDevice: Int,
+        val permissionDenied: Boolean,
+    )
+
+    /**
+     * Bi-directional sync between device contacts and the trusted vault.
+     *  - Adds device contacts that aren't in the vault yet (same as [importAll]).
+     *  - Removes vault contacts whose `systemContactLookupKey` no longer
+     *    matches any current device contact (handles cases where the user
+     *    deleted a contact on the phone after importing).
+     *  - Leaves manually-added vault contacts (lookupKey == null) alone.
+     *  - Idempotent — safe to call on every Dashboard mount.
+     *
+     * Returns [SyncResult] with per-pass counts. If permission is missing,
+     * returns `permissionDenied = true` and performs no work.
+     */
+    suspend fun syncAll(context: Context): SyncResult = withContext(Dispatchers.IO) {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.READ_CONTACTS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) return@withContext SyncResult(0, 0, 0, permissionDenied = true)
+
+        val app = context.applicationContext as? OnlyTrustedApp
+            ?: return@withContext SyncResult(0, 0, 0, permissionDenied = false)
+        val repo = app.trustedContacts
+
+        val deviceContacts = readDeviceContacts(context)
+        val vaultEntries = repo.allContacts.first()
+        val vaultByLookupKey = vaultEntries.associateBy { it.contact.systemContactLookupKey ?: "" }
+
+        // ADDS: device contacts whose lookupKey isn't in vault yet.
+        var added = 0
+        for ((lookupKey, contact) in deviceContacts) {
+            if (vaultByLookupKey.containsKey(lookupKey)) continue
+            val draft = TrustedContactDraft(
+                displayName = contact.displayName.ifBlank { "Unknown" },
+                relation = null,
+                isOwner = false,
+                email = null,
+                address = null,
+                notes = null,
+                phoneNumbers = contact.numbers,
+                systemContactLookupKey = lookupKey,
+            )
+            runCatching { repo.save(draft) }.onSuccess { added++ }
+        }
+
+        // REMOVALS: vault entries that WERE auto-imported but whose lookupKey
+        // is no longer in the device contacts. Leaves lookupKey==null (manual)
+        // entries alone.
+        var removed = 0
+        val deviceKeys = deviceContacts.keys
+        for (entry in vaultEntries) {
+            val lookupKey = entry.contact.systemContactLookupKey ?: continue
+            if (lookupKey !in deviceKeys) {
+                runCatching { repo.delete(entry.contact.id) }.onSuccess { removed++ }
+            }
+        }
+
+        // Mark the one-shot flag so the first-time consent modal doesn't
+        // re-fire after a successful sync.
+        if (added > 0 || removed > 0 || !shouldRun(context)) markDone(context)
+
+        SyncResult(
+            added = added,
+            removed = removed,
+            totalInDevice = deviceContacts.size,
+            permissionDenied = false,
+        )
+    }
+
+    /** Snapshot of device contacts keyed by LOOKUP_KEY, with display name +
+     *  all phone numbers (validated via [isPlausiblePhoneNumber]). */
+    private data class DeviceContact(
+        val displayName: String,
+        val numbers: List<Pair<String, String?>>,
+    )
+
+    private fun readDeviceContacts(context: Context): Map<String, DeviceContact> {
+        val byLookupKey = HashMap<String, Pair<String, MutableList<Pair<String, String?>>>>()
+        val projection = arrayOf(
+            ContactsContract.CommonDataKinds.Phone.LOOKUP_KEY,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.TYPE,
+            ContactsContract.CommonDataKinds.Phone.LABEL,
+        )
+        context.contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            projection, null, null, null,
+        )?.use { cursor ->
+            val keyIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.LOOKUP_KEY)
+            val nameIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+            val numIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            val typeIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.TYPE)
+            val labelIdx = cursor.getColumnIndexOrThrow(ContactsContract.CommonDataKinds.Phone.LABEL)
+            while (cursor.moveToNext()) {
+                val lookupKey = cursor.getString(keyIdx)?.takeIf { it.isNotBlank() } ?: continue
+                val name = cursor.getString(nameIdx)?.trim().orEmpty().take(MAX_NAME_LENGTH)
+                val rawNumber = cursor.getString(numIdx)?.trim().orEmpty()
+                if (!isPlausiblePhoneNumber(rawNumber)) continue
+                val typeInt = cursor.getInt(typeIdx)
+                val customLabel = cursor.getString(labelIdx)?.take(MAX_LABEL_LENGTH)
+                val label = labelForType(typeInt, customLabel)
+                val entry = byLookupKey.getOrPut(lookupKey) { name to mutableListOf() }
+                entry.second += rawNumber to label
+            }
+        }
+        return byLookupKey.mapValues { (_, v) -> DeviceContact(v.first, v.second) }
+    }
+
     /**
      * Reads the number of distinct contacts (by CONTACT_ID) that WOULD be
      * imported if [importAll] ran now. Used to populate the "We found N

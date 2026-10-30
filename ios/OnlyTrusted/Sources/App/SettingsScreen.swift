@@ -1269,6 +1269,47 @@ struct SettingsScreen: View {
                 // reads top-to-bottom by subscription tier. See `tierSectionHeader` call
                 // sites in `body` for the new placement.
 
+                SettingsDivider()
+                // Shortcut to iOS's own Privacy settings (mic / camera
+                // system controls). Moved here from the Dashboard — it's a
+                // read-only link, not an actionable Dashboard surface.
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    HStack(spacing: 14) {
+                        settingsIcon("mic.and.signal.meter.fill", tint: Color.appAccent)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Mic & camera system settings")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.appPrimaryText)
+                            Text("Opens iOS Settings — mic and camera permissions, per-app controls.")
+                                .font(.caption)
+                                .foregroundStyle(Color.appSecondaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(Color.appSecondaryText)
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                SettingsDivider()
+                // One-screen helper: deep-links to Google's own ad/activity
+                // controls + iOS Privacy pages. Honest about the iOS limit:
+                // no third-party API opens *another* app's permissions page.
+                NavigationLink { ReduceAdTrackingScreen() } label: {
+                    SettingsNavRow(
+                        icon: "eye.slash.fill",
+                        iconTint: Color.appAccent,
+                        label: "Reduce ad tracking"
+                    )
+                }
             }
         }
     }

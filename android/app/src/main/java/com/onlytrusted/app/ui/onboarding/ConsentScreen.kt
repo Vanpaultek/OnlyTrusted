@@ -189,7 +189,7 @@ private fun CinematicHeader() {
             // to avoid the pure starry sky above the shield. The mountain /
             // lake at the bottom gets clipped — that's intentional, there's
             // no essential content there.
-            alignment = BiasAlignment(horizontalBias = 0f, verticalBias = -0.85f),
+            alignment = BiasAlignment(horizontalBias = 0f, verticalBias = -1f),
             modifier = Modifier.fillMaxSize()
         )
         // Fade bottom edge into screen bg
