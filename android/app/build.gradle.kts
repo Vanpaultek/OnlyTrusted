@@ -22,8 +22,8 @@ android {
         // (Android 16 "Baklava"). Bumping also enables the latest security
         // + performance defaults on all shipping devices.
         targetSdk = 36
-        versionCode = 12
-        versionName = "0.1.11"
+        versionCode = 13
+        versionName = "0.1.12"
         // Note on native debug symbols: our dep .so files (SQLCipher, face
         // detector, androidx.graphics.path, ML Kit) are shipped stripped by
         // their publishers. There's nothing for AGP to copy into the AAB,
