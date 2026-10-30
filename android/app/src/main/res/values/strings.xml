@@ -15,6 +15,11 @@
     <!-- Notifications / alerts -->
     <string name="monitor_title">Shield is active</string>
     <string name="monitor_text_idle">Watching mic and camera. Nothing suspicious right now.</string>
+    <string name="monitor_text_mic">Microphone is in use. OnlyTrusted is watching but not recording.</string>
+    <string name="monitor_text_camera">Camera is in use. OnlyTrusted is watching but not recording.</string>
+    <string name="monitor_text_both">Microphone and camera are in use. OnlyTrusted is watching but not recording.</string>
+    <string name="channel_silent_background_name">Background services (silent)</string>
+    <string name="channel_silent_background_desc">Required Android notifications for pocket detection and mic/camera lock. Hidden from the status bar to avoid clutter.</string>
     <string name="pocket_text_running">Pocket-dial protection running.</string>
 
     <string name="alert_mic_title">Microphone is in use</string>

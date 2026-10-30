@@ -13,7 +13,6 @@ import android.os.Build
 import android.os.IBinder
 import com.onlytrusted.app.OnlyTrustedApp
 import com.onlytrusted.app.data.db.entities.SecurityEvent
-import com.onlytrusted.app.util.NotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -43,7 +42,12 @@ class PocketDetectionService : Service(), SensorEventListener {
 
     override fun onCreate() {
         super.onCreate()
-        startForegroundInternal()
+        // No longer a foreground service — removes the duplicate status-bar
+        // icon that confused users ("why do I see two shields?"). The
+        // process stays alive because [SensorMonitorService] is an FGS in
+        // the same process, which holds the whole PID in memory. Pocket
+        // detection uses TYPE_PROXIMITY / TYPE_ACCELEROMETER which have no
+        // background-execution restrictions on any supported API level.
         val sm = sensorManager ?: return
         proximity = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY)
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -53,7 +57,6 @@ class PocketDetectionService : Service(), SensorEventListener {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startForegroundInternal()
         return START_STICKY
     }
 
@@ -63,14 +66,6 @@ class PocketDetectionService : Service(), SensorEventListener {
         scope.cancel()
         accelerometerActive = false
         pocketStateHolder = false
-    }
-
-    private fun startForegroundInternal() {
-        val notification = NotificationHelper.buildMonitorNotification(
-            this,
-            getString(com.onlytrusted.app.R.string.pocket_text_running)
-        )
-        startForeground(NotificationHelper.NOTIF_FG_POCKET, notification)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -129,12 +124,11 @@ class PocketDetectionService : Service(), SensorEventListener {
         fun isLikelyInPocket(): Boolean = pocketStateHolder
 
         fun start(context: Context) {
-            val intent = Intent(context, PocketDetectionService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                context.startForegroundService(intent)
-            } else {
-                context.startService(intent)
-            }
+            // Plain startService — this service no longer calls
+            // startForeground. The SensorMonitorService FGS in the same
+            // process keeps the PID alive so this service's sensor
+            // callbacks continue firing.
+            runCatching { context.startService(Intent(context, PocketDetectionService::class.java)) }
         }
 
         fun stop(context: Context) {

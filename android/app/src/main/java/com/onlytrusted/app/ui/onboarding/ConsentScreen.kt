@@ -5,6 +5,8 @@ package com.onlytrusted.app.ui.onboarding
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -115,13 +117,16 @@ fun ConsentScreen(onConfirmed: () -> Unit) {
         PermissionHeadsUpCard()
 
         Spacer(Modifier.height(8.dp))
-        // Three toggle cards share the remaining space between the title
-        // and the CTA. weight(1f) keeps them visible without scroll even
-        // on short screens — cards get a tighter vertical padding to fit.
+        // Toggle cards fill the remaining space. We wrap them in a vertical
+        // scroll so the third card is reachable on short / zoomed-display
+        // devices where fixed-weight layout clipped it off the bottom. The
+        // CTA button stays pinned below (outside this scroll region) so
+        // the user can confirm as soon as all three toggles are checked.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f),
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             ToggleCards(

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.Block
@@ -252,21 +253,30 @@ fun DashboardScreen(
 
             Box(
                 modifier = Modifier.clickable {
-                    // Hidden triple-tap panic exit for Duress Mode. Only reacts while a duress
-                    // session is live; otherwise this behaves like a no-op decorative shell.
-                    if (!duressActive) return@clickable
-                    val now = System.currentTimeMillis()
-                    tapCount = if (now - lastTapAt < 600) tapCount + 1 else 1
-                    lastTapAt = now
-                    if (tapCount >= 3) {
-                        tapCount = 0
-                        confirmDuressExit = true
+                    // Dual-use tap handler:
+                    //   - In Duress Mode: hidden triple-tap panic exit.
+                    //   - Otherwise: single tap opens the Trusted-only mode
+                    //     sheet so users can actually act on the "Almost
+                    //     there — turn on Silence calls not in vault" prompt
+                    //     instead of staring at a dead card.
+                    if (duressActive) {
+                        val now = System.currentTimeMillis()
+                        tapCount = if (now - lastTapAt < 600) tapCount + 1 else 1
+                        lastTapAt = now
+                        if (tapCount >= 3) {
+                            tapCount = 0
+                            confirmDuressExit = true
+                        }
+                        return@clickable
                     }
+                    showTrustedOnlySheet = true
                 }
             ) {
                 ProtectionActiveCard(
                     isActive = protectionActive,
-                    awaitingToggle = hasTrustedContacts && !trustedOnlyEnabled
+                    awaitingToggle = hasTrustedContacts && !trustedOnlyEnabled,
+                    silenceCallsOn = runtime.trustedOnlyCalls,
+                    flagSmsOn = runtime.trustedOnlySms,
                 )
             }
             // (scamContactsCount + security-nag state hoisted to the top of
@@ -378,17 +388,10 @@ fun DashboardScreen(
             SecurityLockEntryCard(onClick = { showSecurityLockSheet = true })
             HonestLimitsCallout(onTap = { showHonestLimitsSheet = true })
 
-            // --- Android-only advanced protections (preserved) ---
-            // Trusted-only mode compact entry card — tap opens a bottom
-            // sheet with the two toggles. Matches the Security Lock card's
-            // visual language so the Dashboard reads as a tidy stack of
-            // same-shaped entry rows instead of mixed-height panels.
-            TrustedOnlyModeEntryCard(
-                trustedCount = state.trustedContactCount,
-                silenceCallsOn = runtime.trustedOnlyCalls,
-                flagSmsOn = runtime.trustedOnlySms,
-                onClick = { showTrustedOnlySheet = true },
-            )
+            // (TrustedOnlyModeEntryCard removed — redundant with the hero
+            // ProtectionActiveCard above, which now opens the same bottom
+            // sheet on tap and surfaces the live call/SMS filter state via
+            // small phone/SMS badge icons on the hero shield itself.)
             // (SensorOwnershipContent moved to Settings → Device & data —
             // it's a read-only status screen + Settings shortcut, doesn't
             // earn Dashboard real estate.)
@@ -692,7 +695,12 @@ private fun CinematicHeader_Unused(name: String?, onSettings: () -> Unit) {
 // MARK: - Protection active card (previous version)
 
 @Composable
-private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = false) {
+private fun ProtectionActiveCard(
+    isActive: Boolean,
+    awaitingToggle: Boolean = false,
+    silenceCallsOn: Boolean = false,
+    flagSmsOn: Boolean = false,
+) {
     // Three distinct states:
     //   isActive=true  → contacts + "Silence calls not in vault" both on
     //   awaitingToggle → at least one contact added, but the toggle is still off
@@ -752,12 +760,23 @@ private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = fa
         )
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                headline,
-                color = BrandCyanDark,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+            // Headline + inline filter badges to the right of the title.
+            // Phone chip = Silence calls, SMS chip = Flag SMS. Each shows
+            // independently; hidden entirely when its filter is off so
+            // "Setup needed" / "Almost there" states show a clean title.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(
+                    headline,
+                    color = BrandCyanDark,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                if (silenceCallsOn) FilterBadge(Icons.Filled.Phone, "Silencing non-vault calls")
+                if (flagSmsOn) FilterBadge(Icons.AutoMirrored.Filled.Message, "Flagging non-vault SMS")
+            }
             Text(
                 subtitle,
                 color = SecondaryTextDark,
@@ -770,6 +789,31 @@ private fun ProtectionActiveCard(isActive: Boolean, awaitingToggle: Boolean = fa
             contentDescription = null,
             tint = TertiaryTextDark,
             modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+/** Small chip overlaid on the hero shield showing which Trusted-only filter
+ *  is live (phone = silence calls, message = flag SMS). Teal fill with a
+ *  dark border so it reads at a glance even over the shield artwork. */
+@Composable
+private fun FilterBadge(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(22.dp)
+            .background(BrandAccentDark, androidx.compose.foundation.shape.CircleShape)
+            .border(
+                1.dp,
+                MidnightElevated,
+                androidx.compose.foundation.shape.CircleShape,
+            ),
+    ) {
+        Icon(
+            icon,
+            contentDescription = label,
+            tint = Color.White,
+            modifier = Modifier.size(13.dp),
         )
     }
 }
@@ -1034,20 +1078,32 @@ private fun SecurityLockEntryCard(onClick: () -> Unit) {
 // MARK: - Clear app notifications card
 
 /**
- * Shows the number of OnlyTrusted notifications currently posted + a
- * one-tap "Clear all" button. Honest about the FGS limit: Android requires
- * the Mic & Camera Lock foreground-service notification to stay visible
- * while the service is running, so it can't be dismissed by cancelAll().
- * We note that remaining count in the subtitle so the user isn't surprised.
+ * Shows the number of OnlyTrusted notifications currently posted + two
+ * actions:
+ *   - Tap body → `NotificationManagerCompat.cancelAll()`. Clears every
+ *     dismissible OnlyTrusted notification. The ongoing Mic & Camera Lock
+ *     foreground-service notification cannot be cancelled this way
+ *     (`setOngoing(true)` is Android's required signal that the service is
+ *     running); if it's live, the count stays at 1 and the card re-shows
+ *     with the honest subtitle explaining why.
+ *   - Tap X → hides the card until the active-notification count rises
+ *     above the current level. Lets users mute the dashboard surface even
+ *     when the FGS notification is pinned.
  *
- * Hidden entirely when there's nothing posted.
+ * Hidden entirely when the count is zero.
  */
 @Composable
 private fun AppNotificationsClearCard() {
     val context = LocalContext.current
-    // Re-check on every recomposition — cheap, O(1) query against the OS.
+    val prefs = remember {
+        context.getSharedPreferences("ot_dashboard_prefs", android.content.Context.MODE_PRIVATE)
+    }
+    // Re-check on every resume so the card reflects what the status bar shows.
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     var activeCount by remember { mutableStateOf(countActiveNotifications(context)) }
+    var hideBelowOrEqual by remember {
+        mutableStateOf(prefs.getInt(PREF_NOTIF_CARD_DISMISS_AT, -1))
+    }
     androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
@@ -1059,12 +1115,12 @@ private fun AppNotificationsClearCard() {
     }
 
     if (activeCount <= 0) return
+    // User tapped X at <hideBelowOrEqual>; stay hidden until a new
+    // notification arrives above that watermark.
+    if (hideBelowOrEqual >= activeCount) return
 
     androidx.compose.material3.Surface(
         onClick = {
-            // Dismiss everything OnlyTrusted posted; the Mic Lock FGS one
-            // re-posts immediately because setOngoing(true), which is the
-            // Android-enforced way to signal "this service is running."
             androidx.core.app.NotificationManagerCompat.from(context).cancelAll()
             activeCount = countActiveNotifications(context)
         },
@@ -1099,20 +1155,31 @@ private fun AppNotificationsClearCard() {
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    "Tap to clear. The Mic Lock status notification may stay — Android requires it while that service runs.",
+                    "Tap to clear. The Mic Lock status notification may stay — Android requires it while that service runs. Tap X to hide this card.",
                     color = SecondaryTextDark,
                     fontSize = 11.sp,
                 )
             }
-            Icon(
-                Icons.Filled.Close,
-                contentDescription = "Clear all",
-                tint = SecondaryTextDark,
-                modifier = Modifier.size(18.dp),
-            )
+            androidx.compose.material3.IconButton(
+                onClick = {
+                    // Hide at the current count. Shows again when count > this.
+                    hideBelowOrEqual = activeCount
+                    prefs.edit().putInt(PREF_NOTIF_CARD_DISMISS_AT, activeCount).apply()
+                },
+                modifier = Modifier.size(32.dp),
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "Hide this card",
+                    tint = SecondaryTextDark,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }
+
+private const val PREF_NOTIF_CARD_DISMISS_AT = "notif_card_dismiss_at"
 
 private fun countActiveNotifications(context: android.content.Context): Int {
     if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) return 0

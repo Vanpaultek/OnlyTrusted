@@ -165,8 +165,12 @@ class SensorPrivacyForegroundService : Service() {
             .setOngoing(true)
             .setContentIntent(tap)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            // Group with SensorMonitorService's summary — Android merges
+            // the status-bar icons into one. Our own state-swap stays
+            // internal to this notification but the OS shows a single icon.
+            .setGroup(com.onlytrusted.app.util.NotificationHelper.GROUP_FGS)
             .build()
     }
 
@@ -181,13 +185,18 @@ class SensorPrivacyForegroundService : Service() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val nm = getSystemService(NotificationManager::class.java) ?: return
         if (nm.getNotificationChannel(CHANNEL_ID) != null) return
+        // IMPORTANCE_MIN — Android still requires the FGS notification to
+        // exist, but MIN hides the status-bar icon so SensorMonitorService's
+        // single state-driven icon is the only one shown. Keeps the status
+        // bar from carrying two shields side-by-side.
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.sensor_privacy_channel_name),
-            NotificationManager.IMPORTANCE_LOW,
+            NotificationManager.IMPORTANCE_MIN,
         ).apply {
             description = getString(R.string.sensor_privacy_channel_desc)
             setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_SECRET
         }
         nm.createNotificationChannel(channel)
     }

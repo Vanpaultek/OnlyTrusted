@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package com.onlytrusted.app.services
 
+import android.app.Notification
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -31,17 +32,36 @@ class SensorMonitorService : Service() {
     private val audioManager by lazy { getSystemService(AudioManager::class.java) }
     private val cameraManager by lazy { getSystemService(CameraManager::class.java) }
 
+    // Live sensor state — drives the state-colored FGS notification icon.
+    // mic/cam booleans are updated by the callbacks below; the derived
+    // State is passed into [buildMonitorNotificationForState] via
+    // [refreshNotificationIcon] whenever either flag flips.
+    private enum class LiveState { IDLE, MIC_ONLY, CAMERA_ONLY, BOTH }
+    @Volatile private var micLive = false
+    private val activeCameras = HashSet<String>()
+    @Volatile private var publishedState: LiveState = LiveState.IDLE
+
     private val recordingCallback = object : AudioManager.AudioRecordingCallback() {
         override fun onRecordingConfigChanged(configs: MutableList<AudioRecordingConfiguration>) {
             super.onRecordingConfigChanged(configs)
             handleAudioConfigs(configs)
+            val anyActive = configs.any { !it.isClientSilenced }
+            if (micLive != anyActive) {
+                micLive = anyActive
+                refreshNotificationIcon()
+            }
         }
     }
 
     private val cameraCallback = object : CameraManager.AvailabilityCallback() {
+        override fun onCameraAvailable(cameraId: String) {
+            super.onCameraAvailable(cameraId)
+            if (activeCameras.remove(cameraId)) refreshNotificationIcon()
+        }
         override fun onCameraUnavailable(cameraId: String) {
             super.onCameraUnavailable(cameraId)
             logCameraInUse(cameraId)
+            if (activeCameras.add(cameraId)) refreshNotificationIcon()
         }
     }
 
@@ -72,12 +92,80 @@ class SensorMonitorService : Service() {
     }
 
     private fun startForegroundInternal() {
-        val notification = NotificationHelper.buildMonitorNotification(
-            this,
-            getString(com.onlytrusted.app.R.string.monitor_text_idle)
-        )
+        val notification = buildStateNotification(publishedState)
         // The manifest already declares the foreground-service types; the system picks them up.
         startForeground(NotificationHelper.NOTIF_FG_MONITOR, notification)
+    }
+
+    /**
+     * Build the single visible status-bar notification with icon + color
+     * driven by live mic/camera state:
+     *   IDLE         → shield + brand teal
+     *   MIC_ONLY     → mic shape + green
+     *   CAMERA_ONLY  → camera shape + blue
+     *   BOTH         → mic shape + purple
+     *
+     * Status-bar icons are forced monochrome by Android, so the SHAPE
+     * conveys which sensor is active at a glance; the pulled-down
+     * notification body carries the real tint via setColor + setColorized.
+     */
+    private fun buildStateNotification(state: LiveState): Notification {
+        val iconRes = when (state) {
+            LiveState.MIC_ONLY -> com.onlytrusted.app.R.drawable.ic_notif_mic_active
+            LiveState.CAMERA_ONLY -> com.onlytrusted.app.R.drawable.ic_notif_cam_active
+            LiveState.BOTH -> com.onlytrusted.app.R.drawable.ic_notif_mic_active
+            LiveState.IDLE -> com.onlytrusted.app.R.drawable.ic_notif_shield
+        }
+        val tintRes = when (state) {
+            LiveState.MIC_ONLY -> com.onlytrusted.app.R.color.notif_tint_mic
+            LiveState.CAMERA_ONLY -> com.onlytrusted.app.R.color.notif_tint_camera
+            LiveState.BOTH -> com.onlytrusted.app.R.color.notif_tint_both
+            LiveState.IDLE -> com.onlytrusted.app.R.color.notif_tint_idle
+        }
+        val bodyRes = when (state) {
+            LiveState.MIC_ONLY -> com.onlytrusted.app.R.string.monitor_text_mic
+            LiveState.CAMERA_ONLY -> com.onlytrusted.app.R.string.monitor_text_camera
+            LiveState.BOTH -> com.onlytrusted.app.R.string.monitor_text_both
+            LiveState.IDLE -> com.onlytrusted.app.R.string.monitor_text_idle
+        }
+        val tap = android.app.PendingIntent.getActivity(
+            this, 0,
+            Intent(this, com.onlytrusted.app.MainActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return androidx.core.app.NotificationCompat.Builder(this, NotificationHelper.CHANNEL_MONITOR)
+            .setSmallIcon(iconRes)
+            .setColor(androidx.core.content.ContextCompat.getColor(this, tintRes))
+            .setColorized(true)
+            .setContentTitle(getString(com.onlytrusted.app.R.string.monitor_title))
+            .setContentText(getString(bodyRes))
+            .setOngoing(true)
+            .setContentIntent(tap)
+            .setCategory(androidx.core.app.NotificationCompat.CATEGORY_STATUS)
+            .setPriority(androidx.core.app.NotificationCompat.PRIORITY_LOW)
+            .setVisibility(androidx.core.app.NotificationCompat.VISIBILITY_SECRET)
+            // Owns the group summary — Android collapses sibling FGS
+            // notifications into this icon in the status bar.
+            .setGroup(NotificationHelper.GROUP_FGS)
+            .setGroupSummary(true)
+            .build()
+    }
+
+    /** Called whenever mic/camera activity changes. Repost the ongoing
+     *  notification with the new icon + tint. Same ID preserves the FGS pin. */
+    private fun refreshNotificationIcon() {
+        val cam = activeCameras.isNotEmpty()
+        val next = when {
+            micLive && cam -> LiveState.BOTH
+            micLive -> LiveState.MIC_ONLY
+            cam -> LiveState.CAMERA_ONLY
+            else -> LiveState.IDLE
+        }
+        if (next == publishedState) return
+        publishedState = next
+        val nm = getSystemService(android.app.NotificationManager::class.java) ?: return
+        nm.notify(NotificationHelper.NOTIF_FG_MONITOR, buildStateNotification(next))
     }
 
     private fun startPolling() {

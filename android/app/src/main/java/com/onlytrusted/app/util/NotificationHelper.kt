@@ -19,6 +19,25 @@ object NotificationHelper {
 
     const val CHANNEL_MONITOR = "monitor_channel"
     const val CHANNEL_ALERTS = "alerts_channel"
+    /**
+     * Silent channel for secondary foreground services (pocket detection,
+     * sensor-privacy lock, etc.). Posted with IMPORTANCE_MIN so Android
+     * hides their status-bar icon — only the shade entry remains, as the
+     * FGS spec requires. The primary user-facing status-bar icon lives on
+     * SensorMonitorService's [CHANNEL_MONITOR] (LOW importance, visible)
+     * so there is exactly ONE OnlyTrusted icon in the status bar that
+     * reflects live mic/camera activity.
+     */
+    const val CHANNEL_SILENT_BG = "ot_background_services_silent"
+
+    /**
+     * Shared group key for every OnlyTrusted foreground-service notification.
+     * Android collapses notifications sharing a group into a single
+     * status-bar icon when a summary notification is also posted. The
+     * summary belongs to SensorMonitorService — that's the one with the
+     * state-driven shield / mic / camera icon.
+     */
+    const val GROUP_FGS = "ot_foreground_services"
 
     const val NOTIF_FG_MONITOR = 1001
     const val NOTIF_FG_POCKET = 1002
@@ -36,6 +55,51 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setVisibility(NotificationCompat.VISIBILITY_SECRET)
             .build()
+    }
+
+    /**
+     * Build a silent FGS notification on the IMPORTANCE_MIN channel. Android
+     * requires every foreground service to have a visible notification, but
+     * MIN importance hides the status-bar icon so secondary services don't
+     * clutter the bar. Only SensorMonitorService's notification stays
+     * status-bar-visible so the user sees exactly one OnlyTrusted icon that
+     * tracks live mic/camera state.
+     */
+    fun buildSilentBackgroundNotification(context: Context, text: String): Notification {
+        return NotificationCompat.Builder(context, CHANNEL_SILENT_BG)
+            .setContentTitle(context.getString(R.string.monitor_title))
+            .setContentText(text)
+            .setSmallIcon(R.drawable.ic_shield)
+            .setOngoing(true)
+            .setContentIntent(mainActivityIntent(context))
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_MIN)
+            .setVisibility(NotificationCompat.VISIBILITY_SECRET)
+            // Group with the SensorMonitorService summary so Android shows
+            // one combined status-bar icon rather than one per service.
+            .setGroup(GROUP_FGS)
+            .build()
+    }
+
+    /**
+     * Create the silent channel on first use. Idempotent — safe to call
+     * from any FGS onCreate. Only has effect on API 26+ where channels
+     * exist at all.
+     */
+    fun ensureSilentChannel(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val nm = context.getSystemService(NotificationManager::class.java) ?: return
+        if (nm.getNotificationChannel(CHANNEL_SILENT_BG) != null) return
+        val channel = android.app.NotificationChannel(
+            CHANNEL_SILENT_BG,
+            context.getString(R.string.channel_silent_background_name),
+            NotificationManager.IMPORTANCE_MIN,
+        ).apply {
+            description = context.getString(R.string.channel_silent_background_desc)
+            setShowBadge(false)
+            lockscreenVisibility = Notification.VISIBILITY_SECRET
+        }
+        nm.createNotificationChannel(channel)
     }
 
     fun postAlert(context: Context, title: String, body: String, tag: String) {

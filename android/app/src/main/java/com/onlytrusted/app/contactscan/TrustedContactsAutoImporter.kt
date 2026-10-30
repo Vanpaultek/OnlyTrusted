@@ -121,11 +121,20 @@ object TrustedContactsAutoImporter {
         val vaultByLookupKey = vaultEntries.associateBy { it.contact.systemContactLookupKey ?: "" }
 
         // ADDS: device contacts whose lookupKey isn't in vault yet.
+        //
+        // We DELIBERATELY skip device contacts with a blank display name.
+        // Those are usually missed-call auto-saves or scam numbers that got
+        // added to the address book without the user ever typing a name.
+        // Auto-trusting them flooded the vault with nameless entries that
+        // the user then couldn't distinguish from real contacts (reported by
+        // tester: 614 nameless entries in a 1,423-contact vault). A trusted
+        // contact should be someone the user intentionally identified.
         var added = 0
         for ((lookupKey, contact) in deviceContacts) {
             if (vaultByLookupKey.containsKey(lookupKey)) continue
+            if (contact.displayName.isBlank()) continue
             val draft = TrustedContactDraft(
-                displayName = contact.displayName.ifBlank { "Unknown" },
+                displayName = contact.displayName,
                 relation = null,
                 isOwner = false,
                 email = null,
@@ -293,6 +302,10 @@ object TrustedContactsAutoImporter {
         var inserted = 0
         for ((_, pair) in byContact) {
             val (displayName, numbers) = pair
+            // Same rationale as syncAll(): skip blank-name device contacts
+            // so missed-call auto-saves and nameless scam numbers don't get
+            // auto-trusted.
+            if (displayName.isBlank()) continue
             val normalisedForThisContact = numbers
                 .map { (raw, _) -> PhoneUtils.normalise(raw) }
                 .filter { it.isNotBlank() }
@@ -300,7 +313,7 @@ object TrustedContactsAutoImporter {
             if (normalisedForThisContact.all { it in existingNormalised }) continue
 
             val draft = TrustedContactDraft(
-                displayName = displayName.ifBlank { "Unknown" },
+                displayName = displayName,
                 relation = null,
                 isOwner = false,
                 email = null,

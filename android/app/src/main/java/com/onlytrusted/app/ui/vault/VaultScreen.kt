@@ -28,9 +28,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PeopleAlt
@@ -180,6 +182,22 @@ fun VaultScreen(
                     .padding(padding)
                     .padding(horizontal = 20.dp)
             ) {
+                // Cleanup prompt for nameless auto-imports. "Unknown" is the
+                // literal placeholder the older auto-importer wrote whenever
+                // a device contact had no DISPLAY_NAME (missed-call auto-save,
+                // scam number, etc.). The current importer skips them, but
+                // we still need a cleanup path for the backlog.
+                val nameless = remember(contacts) {
+                    contacts.filter { it.displayName.equals("Unknown", ignoreCase = true) }
+                }
+                if (nameless.isNotEmpty()) {
+                    NamelessCleanupCard(
+                        count = nameless.size,
+                        onBlockAll = { vm.bulkMoveToBlocked(nameless) },
+                        onRemoveAll = { vm.bulkRemove(nameless) },
+                    )
+                    Spacer(Modifier.height(12.dp))
+                }
                 SearchField(
                     value = query,
                     onValueChange = { query = it }
@@ -217,7 +235,9 @@ fun VaultScreen(
                                     onCall = { placeCall(context, contact) },
                                     onMessage = { sendSms(context, contact) },
                                     onEdit = { onEdit(contact.id) },
-                                    onDelete = { pendingDelete = contact }
+                                    onDelete = { pendingDelete = contact },
+                                    onMoveToBlocked = { vm.moveToBlocked(contact) },
+                                    onMarkAsScam = { vm.markAsScam(contact) },
                                 )
                                 if (!isLast) {
                                     HorizontalDivider(
@@ -496,7 +516,9 @@ private fun ContactRow(
     onCall: () -> Unit,
     onMessage: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onMoveToBlocked: () -> Unit,
+    onMarkAsScam: () -> Unit,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val hasNumber = contact.normalisedNumbers.isNotEmpty()
@@ -586,6 +608,24 @@ private fun ContactRow(
                     }
                 )
                 DropdownMenuItem(
+                    text = { Text("Move to Blocked") },
+                    leadingIcon = { Icon(Icons.Filled.Block, contentDescription = null) },
+                    enabled = hasNumber,
+                    onClick = {
+                        menuOpen = false
+                        onMoveToBlocked()
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Mark as scam") },
+                    leadingIcon = { Icon(Icons.Filled.Warning, contentDescription = null) },
+                    enabled = hasNumber,
+                    onClick = {
+                        menuOpen = false
+                        onMarkAsScam()
+                    }
+                )
+                DropdownMenuItem(
                     text = { Text(stringResource(R.string.vault_delete)) },
                     leadingIcon = { Icon(Icons.Filled.Delete, contentDescription = null) },
                     onClick = {
@@ -593,6 +633,59 @@ private fun ContactRow(
                         onDelete()
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NamelessCleanupCard(
+    count: Int,
+    onBlockAll: () -> Unit,
+    onRemoveAll: () -> Unit,
+) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MidnightCard,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = BrandAccentDark)
+                Text(
+                    "$count contact(s) have no name",
+                    color = PrimaryTextDark,
+                    fontWeight = FontWeight.SemiBold,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
+            Text(
+                "These were auto-imported from your phone when the contact had no " +
+                    "display name — usually a missed-call auto-save or a scam number. " +
+                    "Review and clean up:",
+                color = SecondaryTextDark,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onBlockAll,
+                    modifier = Modifier.weight(1f),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFFEF4444),
+                    ),
+                ) {
+                    Icon(Icons.Filled.Block, contentDescription = null)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Block all", color = PrimaryTextDark)
+                }
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onRemoveAll,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = null, tint = BrandCyanDark)
+                    Spacer(Modifier.width(6.dp))
+                    Text("Just remove", color = BrandCyanDark)
+                }
             }
         }
     }

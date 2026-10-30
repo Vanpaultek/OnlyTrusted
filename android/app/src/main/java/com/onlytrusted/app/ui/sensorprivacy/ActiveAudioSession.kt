@@ -2,9 +2,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package com.onlytrusted.app.ui.sensorprivacy
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.media.AudioManager
+import android.media.MediaRecorder
 import android.os.Build
+import android.telecom.TelecomManager
+import android.telephony.TelephonyManager
+import androidx.core.content.ContextCompat
 
 /**
  * Lightweight guard that answers "is the user currently using the phone's
@@ -56,16 +62,32 @@ internal object ActiveAudioSession {
         val userAcceptedVoipCall: Boolean,
         val suspiciousVoipMode: Boolean,
         val mediaPlaying: Boolean,
+        /** TelecomManager says a call is active (cellular OR
+         *  ConnectionService-backed VoIP, e.g. WhatsApp / WhatsApp Business
+         *  / Signal on API 23+). Unforgeable by third-party apps. */
+        val telecomInCall: Boolean,
+        /** TelephonyManager.callState reports off-hook (cellular call). */
+        val telephonyOffHook: Boolean,
+        /** Any active mic recording is tagged as a call-grade audio source
+         *  (`VOICE_COMMUNICATION` or `VOICE_CALL`). Catches VoIP apps that
+         *  don't flip `AudioManager.mode` into communication mode but DO
+         *  tag their mic session correctly. */
+        val callGradeRecording: Boolean,
     ) {
-        /** True iff we should defer the lock. Suspicious VoIP is NOT busy. */
+        /** True iff we should defer the lock. */
         val shouldDeferLock: Boolean
-            get() = onCellularCall || ringing || userAcceptedVoipCall || mediaPlaying
+            get() = onCellularCall || ringing || userAcceptedVoipCall ||
+                mediaPlaying || telecomInCall || telephonyOffHook ||
+                callGradeRecording
 
         fun reason(): String = buildList {
-            if (onCellularCall) add("cellular call")
+            if (onCellularCall) add("cellular call (AudioManager)")
+            if (telephonyOffHook) add("cellular call (TelephonyManager)")
+            if (telecomInCall) add("Telecom in-call (cellular or ConnectionService VoIP)")
             if (ringing) add("incoming call ringing")
             if (userAcceptedVoipCall) add("VoIP call (user-accepted)")
             if (suspiciousVoipMode) add("VoIP mode set WITHOUT user call — not trusted")
+            if (callGradeRecording) add("call-grade mic recording")
             if (mediaPlaying) add("media playing")
         }.joinToString(", ").ifBlank { "idle" }
     }
@@ -73,7 +95,7 @@ internal object ActiveAudioSession {
     fun snapshot(context: Context): Snapshot {
         val am = context.applicationContext
             .getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-            ?: return Snapshot(false, false, false, false, false)
+            ?: return Snapshot(false, false, false, false, false, false, false, false)
         val mode = am.mode
         val inComm = mode == AudioManager.MODE_IN_COMMUNICATION
         val legit = if (inComm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -91,6 +113,63 @@ internal object ActiveAudioSession {
             userAcceptedVoipCall = inComm && legit,
             suspiciousVoipMode = inComm && !legit,
             mediaPlaying = am.isMusicActive,
+            telecomInCall = telecomInCall(context),
+            telephonyOffHook = telephonyOffHook(context),
+            callGradeRecording = callGradeRecording(am),
         )
+    }
+
+    /**
+     * TelecomManager.isInCall() returns true for cellular calls AND any
+     * ConnectionService-backed VoIP call. Modern WhatsApp, WhatsApp
+     * Business, Signal, Google Meet, Teams all plug into ConnectionService
+     * on API 23+, so this one signal catches the apps that silently fail
+     * the AudioManager.mode heuristic. Requires READ_PHONE_STATE — we
+     * already hold that for SIM-Swap Alarm, so it's a free win here.
+     */
+    private fun telecomInCall(context: Context): Boolean {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
+            != PackageManager.PERMISSION_GRANTED) return false
+        val tm = context.applicationContext
+            .getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: return false
+        return runCatching { tm.isInCall }.getOrDefault(false)
+    }
+
+    /**
+     * Cellular-only backstop. TelephonyManager.callState is unaffected by
+     * any user app — it reflects the modem state. Belt-and-suspenders with
+     * [telecomInCall] in case the Telecom service is temporarily
+     * unavailable (very rare but observed on some low-end OEM builds).
+     */
+    private fun telephonyOffHook(context: Context): Boolean {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE)
+            != PackageManager.PERMISSION_GRANTED) return false
+        val tm = context.applicationContext
+            .getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager ?: return false
+        return runCatching { tm.callState != TelephonyManager.CALL_STATE_IDLE }
+            .getOrDefault(false)
+    }
+
+    /**
+     * Inspect every active mic recording configuration. If any is tagged
+     * with [MediaRecorder.AudioSource.VOICE_COMMUNICATION] or
+     * [MediaRecorder.AudioSource.VOICE_CALL], it is a legitimate call-grade
+     * recording — the mic is being used for voice communication regardless
+     * of what AudioManager.mode says. Permissionless; API 24+.
+     *
+     * This catches apps that record for a call without setting the system
+     * audio mode (seen in some WhatsApp Business builds and third-party
+     * SIP clients that don't go through ConnectionService).
+     */
+    private fun callGradeRecording(am: AudioManager): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return false
+        return runCatching {
+            am.activeRecordingConfigurations.any { cfg ->
+                if (cfg.isClientSilenced) return@any false
+                val src = cfg.clientAudioSource
+                src == MediaRecorder.AudioSource.VOICE_COMMUNICATION ||
+                    src == MediaRecorder.AudioSource.VOICE_CALL
+            }
+        }.getOrDefault(false)
     }
 }
