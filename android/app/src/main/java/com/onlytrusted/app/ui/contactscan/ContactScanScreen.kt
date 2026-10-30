@@ -242,6 +242,20 @@ fun ContactScanScreen(onBack: () -> Unit) {
                                     "${existingReport.numbersScanned} phone number(s).",
                                 fontSize = 11.sp, color = SecondaryTextDark
                             )
+                            // Honest transparency: tell the user why we didn't
+                            // flag their 1,400 home-country contacts as scams.
+                            if (existingReport.homeCountryCode != null && existingReport.homeCountrySkipped > 0) {
+                                Text(
+                                    "Skipped ${existingReport.homeCountrySkipped} match(es) that only fired because of your home country code ${existingReport.homeCountryCode}. Specific scam ranges inside your country still show.",
+                                    fontSize = 11.sp, color = SecondaryTextDark
+                                )
+                            }
+                            if (existingReport.trustedSkipped > 0) {
+                                Text(
+                                    "Skipped ${existingReport.trustedSkipped} contact(s) already in your Trusted vault.",
+                                    fontSize = 11.sp, color = SecondaryTextDark
+                                )
+                            }
                             TextButton(onClick = {
                                 scope.launch {
                                     scanning = true

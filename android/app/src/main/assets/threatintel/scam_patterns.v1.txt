@@ -1,4 +1,4 @@
-# OnlyTrusted — Offline Threat Intel: scam PATTERNS v1
+# OnlyTrusted — Offline Threat Intel: scam PATTERNS v2
 #
 # Prefix-match ruleset. The scanner tries each pattern against normalised
 # E.164 phone numbers (digits only, leading +) using startsWith semantics.
@@ -28,7 +28,7 @@
 # Review cadence: this file is a snapshot. Patterns change as scammers rotate
 # ranges. Refresh quarterly or when FCC publishes new enforcement actions.
 #
-# Last updated: 2026-10-29
+# Last updated: 2026-10-30 (v2 — removed whole-country patterns, see note below)
 
 # ─────────────────────────────────────────────────────────────
 # CARIBBEAN "COUSIN SCAM" / ONE-RING SCAM — critical
@@ -63,30 +63,19 @@
 +1684  critical  American Samoa — unusual pattern for US-mainland users
 +1670  critical  Northern Mariana Islands — unusual pattern for US-mainland users
 
-# ─────────────────────────────────────────────────────────────
-# INTERNATIONAL 419 / ADVANCE-FEE FRAUD — high
-#
-# Nigeria + West Africa origin for the classic "Nigerian prince" and
-# modernised business-email-compromise patterns. Any unsolicited call
-# from these country codes to a US recipient should be treated as
-# suspicious.
-# ─────────────────────────────────────────────────────────────
-+234  high  Nigeria — 419 advance-fee origin
-+233  high  Ghana — romance-scam origin
-+229  high  Benin — advance-fee origin
-+228  high  Togo — advance-fee origin
-+221  high  Senegal — advance-fee origin
-
-# ─────────────────────────────────────────────────────────────
-# TECH-SUPPORT SCAM origins — high
-#
-# India + Pakistan are the documented origin of ~90% of tech-support
-# scam calls targeting English-speaking users (per FTC 2023 Consumer
-# Sentinel). Legitimate business calls exist, but inbound tech-support
-# from these codes is a near-certain fraud.
-# ─────────────────────────────────────────────────────────────
-+91  medium  India — frequent tech-support scam origin
-+92  medium  Pakistan — frequent tech-support scam origin
+# NOTE on whole-country patterns:
+# Previous versions of this file included broad patterns like "+91" (India),
+# "+92" (Pakistan), "+234" (Nigeria), etc. flagging any call from those
+# countries as a tech-support / 419 scam origin. We removed them in v2
+# because they generate massive false-positive storms for anyone whose
+# address book is in that country (e.g. 1,400+ Indian contacts getting
+# flagged just because +91 is their country code). The honest truth is
+# that FTC statistics describe where scam calls TO US targets originate —
+# they say nothing about calls between Indian friends or family. We now
+# only match SPECIFIC area / exchange / premium-rate ranges that are
+# documented scam-heavy regardless of the recipient's home country, and
+# the scanner additionally skips any pattern that matches the user's own
+# home country code to avoid flagging the user's local contacts.
 
 # ─────────────────────────────────────────────────────────────
 # EUROPEAN PREMIUM-RATE TRAPS — critical
@@ -113,12 +102,10 @@
 +87810  critical  Iridium satellite — premium rates
 +88213  critical  International premium rate
 
-# ─────────────────────────────────────────────────────────────
-# BALKAN + EASTERN EUROPE SCAM ORIGINS — high
-# ─────────────────────────────────────────────────────────────
-+355  high  Albania — frequent crypto / investment scam origin
-+383  high  Kosovo — call-centre scam origin
-+381  high  Serbia — call-centre scam origin
+# (Balkan + Eastern-Europe whole-country patterns removed in v2 —
+#  same reasoning as the India/Nigeria/Pakistan removals above. If
+#  specific area / exchange ranges inside those countries are documented
+#  as scam-heavy by regulator action, add them with ≥4-digit prefixes.)
 
 # ─────────────────────────────────────────────────────────────
 # NANP ROBOCALL TOLL-FREE WITH HIGH COMPLAINT RATES — medium
