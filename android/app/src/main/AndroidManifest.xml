@@ -204,6 +204,22 @@
             </intent-filter>
         </service>
 
+        <!-- Spam-label notification listener. Reads system Phone-app
+             notifications only (filtered inside the service by package)
+             to auto-learn carrier-flagged spam numbers into our Blocked
+             list. Requires the user to grant Notification Access from
+             Settings → Apps → Special app access → Notification access;
+             without that grant Android never binds this service. -->
+        <service
+            android:name=".services.SpamLabelNotificationListener"
+            android:exported="true"
+            android:label="@string/spam_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <!-- SMS receiver -->
         <receiver
             android:name=".services.SmsReceiver"

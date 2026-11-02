@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 package com.onlytrusted.app.services
 
+import android.os.Build
 import android.telecom.Call
 import android.telecom.CallScreeningService
+import android.telecom.Connection
 import com.onlytrusted.app.OnlyTrustedApp
 import com.onlytrusted.app.data.db.entities.SecurityEvent
 import com.onlytrusted.app.privacy.CallerInsight
@@ -72,10 +74,25 @@ class CallBlockerService : CallScreeningService() {
             insight = insight
         )
 
+        // STIR/SHAKEN attestation check. API 29+ exposes the carrier's
+        // caller-ID verification verdict. VERIFICATION_STATUS_FAILED means
+        // the originating carrier could not attest the Caller ID — the same
+        // signal Google Phone uses to render the "Spam Risk" label. Treat
+        // it as a definitive silence regardless of trusted vault status
+        // because a FAILED attestation on a number you "trust" means
+        // someone is actively spoofing that number TO you.
+        val stirShakenFailed =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
+                runCatching {
+                    callDetails.callerNumberVerificationStatus ==
+                        Connection.VERIFICATION_STATUS_FAILED
+                }.getOrDefault(false)
+
         val heuristicShouldSilence = heuristicSilenceEnabled && !isTrusted &&
             verdict.recommendation == RobocallHeuristics.Recommendation.SILENCE
 
         val block = when {
+            stirShakenFailed -> true
             isTrusted -> false
             isBlocked -> true
             trustedOnly && silenceUntrusted -> true
@@ -88,6 +105,29 @@ class CallBlockerService : CallScreeningService() {
         // Side-effects (DB write + notification) do not need to block the response.
         scope.launch {
             when {
+                stirShakenFailed -> {
+                    app.repository.log(
+                        type = SecurityEvent.TYPE_CALL_BLOCKED,
+                        detail = "from=$raw reason=stir_shaken_failed"
+                    )
+                    // Auto-learn: add to local scam reports so the user can
+                    // see the carrier-flagged number in Settings → My scam
+                    // reports and share it as a markdown/CSV export.
+                    runCatching {
+                        com.onlytrusted.app.scamreport.ReportedScamStore.add(
+                            context = this@CallBlockerService,
+                            normalisedNumber = com.onlytrusted.app.privacy.PhoneUtils.normalise(raw),
+                            category = com.onlytrusted.app.scamreport.ReportedScamStore.Category.ROBOCALL,
+                        )
+                    }
+                    NotificationHelper.postAlert(
+                        context = this@CallBlockerService,
+                        title = "Spoofed call silenced",
+                        body = "$raw — your carrier could not verify this Caller ID " +
+                            "(STIR/SHAKEN failed). Silenced automatically.",
+                        tag = "stir-$raw"
+                    )
+                }
                 isBlocked -> {
                     app.repository.log(
                         type = SecurityEvent.TYPE_CALL_BLOCKED,

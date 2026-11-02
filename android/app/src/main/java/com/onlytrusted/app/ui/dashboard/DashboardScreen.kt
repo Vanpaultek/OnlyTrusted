@@ -367,6 +367,15 @@ fun DashboardScreen(
                     }
                 )
             }
+            // Spam-call protection nudge: shows when OnlyTrusted isn't the
+            // default call screener OR notification access isn't granted.
+            // Without either we can't silence carrier-flagged "Spam Risk"
+            // calls. Only renders if something's actually missing.
+            SpamProtectionNudgeCard(
+                isDefaultScreener = runtime.isDefaultCallScreener,
+                notificationAccessGranted = com.onlytrusted.app.security.SpamProtectionStatus
+                    .hasNotificationAccess(context),
+            )
             // Clear-notifications card: shows count of currently-posted
             // OnlyTrusted notifications; "Clear all" dismisses them in one tap.
             // Only visible when there's anything to clear.
@@ -1217,6 +1226,63 @@ private fun ContactsPermissionNudgeCard(onGrant: () -> Unit) {
                      color = PrimaryTextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Text("Auto-import your contacts so the Trusted / Blocked / Scam counts above actually reflect your phone.",
                      color = SecondaryTextDark, fontSize = 11.sp)
+            }
+            Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
+        }
+    }
+}
+
+// MARK: - Spam protection nudge card (shown when call-screening or
+// notification-access grants are missing — both are prerequisites for
+// silencing "Spam Risk" labelled calls).
+
+@Composable
+private fun SpamProtectionNudgeCard(
+    isDefaultScreener: Boolean,
+    notificationAccessGranted: Boolean,
+) {
+    if (isDefaultScreener && notificationAccessGranted) return
+    val context = LocalContext.current
+
+    val (title, body, actionIntent) = when {
+        !isDefaultScreener -> Triple(
+            "Set OnlyTrusted as default call screener",
+            "Without this role OnlyTrusted can't silence \"Spam Risk\" calls — your Phone app handles them first. One-tap grant in Settings.",
+            android.content.Intent("android.settings.MANAGE_DEFAULT_APPS_SETTINGS")
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        !notificationAccessGranted -> Triple(
+            "Grant Notification access to auto-learn spam",
+            "Lets OnlyTrusted read your Phone app's \"Spam Risk\" labels and auto-add those numbers to your blocklist. Settings → Notification access.",
+            android.content.Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+        else -> return
+    }
+
+    androidx.compose.material3.Surface(
+        onClick = { runCatching { context.startActivity(actionIntent) } },
+        shape = RoundedCornerShape(14.dp),
+        color = WarningDark.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, WarningDark.copy(alpha = 0.4f)),
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(14.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(WarningDark.copy(alpha = 0.18f), RoundedCornerShape(10.dp)),
+            ) {
+                Icon(Icons.Filled.Phone, null, tint = WarningDark, modifier = Modifier.size(20.dp))
+            }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(title, color = PrimaryTextDark, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(body, color = SecondaryTextDark, fontSize = 11.sp)
             }
             Icon(Icons.Filled.ChevronRight, null, tint = SecondaryTextDark, modifier = Modifier.size(16.dp))
         }

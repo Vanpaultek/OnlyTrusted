@@ -13,6 +13,7 @@
     <string name="app_name">OnlyTrusted</string>
 
     <!-- Notifications / alerts -->
+    <string name="spam_listener_label">OnlyTrusted spam-label listener</string>
     <string name="monitor_title">Shield is active</string>
     <string name="monitor_text_idle">Watching mic and camera. Nothing suspicious right now.</string>
     <string name="monitor_text_mic">Microphone is in use. OnlyTrusted is watching but not recording.</string>
