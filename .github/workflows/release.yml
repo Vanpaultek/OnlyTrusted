@@ -115,7 +115,7 @@ jobs:
           fi
 
       - name: Attest build provenance (SLSA)
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: ${{ steps.locate.outputs.aab_path }}
 
@@ -171,7 +171,7 @@ jobs:
           echo "ipa_path=$RUNNER_TEMP/OnlyTrusted-${RELEASE_TAG}-unsigned.ipa" >> "$GITHUB_OUTPUT"
 
       - name: Attest build provenance (SLSA)
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: ${{ steps.pack.outputs.ipa_path }}
 
