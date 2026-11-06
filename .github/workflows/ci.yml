@@ -54,7 +54,7 @@ jobs:
         run: ./gradlew :app:lintDebug --no-daemon
       - name: Upload lint report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: android-lint-report
           path: android/app/build/reports/lint-results-debug.html
@@ -68,7 +68,7 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest --no-daemon
       - name: Upload Android test report
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: android-test-report
           path: android/app/build/reports/tests/testDebugUnitTest/
@@ -146,7 +146,7 @@ jobs:
           test "$FAILED" = "0"
       - name: Upload iOS test result bundle
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: ios-test-results
           path: ios/build/Logs/Test/
