@@ -167,3 +167,36 @@ jobs:
           # isn't committed. Real refreshes run locally with MAX_ENTRIES=50000.
           MAX_ENTRIES: "500"
         run: bash tools/refresh_threatintel.sh
+
+  # Keeps packages/vanpaultek-locale/data/strings/*.json in lock-step with
+  # android/app/src/main/res/values{,-xx}/strings.xml. Re-runs the extractor
+  # and fails if the output differs from what's committed, so a translator
+  # update to strings.xml can't silently leave the npm bundles stale.
+  # Only relevant while the locale package lives inside this monorepo — once
+  # it moves to its own repo, delete this job.
+  locale-drift:
+    name: Locale pack · Android strings drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Re-extract Android strings → JSON
+        working-directory: packages/vanpaultek-locale
+        run: python3 scripts/extract-android-strings.py
+      - name: Fail on drift
+        working-directory: packages/vanpaultek-locale
+        run: |
+          if ! git diff --quiet -- data/strings/; then
+            echo "::error::Android strings.xml and packages/vanpaultek-locale/data/strings/*.json are out of sync."
+            echo "Fix: cd packages/vanpaultek-locale && npm run extract:android && commit the result."
+            echo "--- changed files ---"
+            git diff --stat -- data/strings/
+            echo "--- diff (first 200 lines) ---"
+            git diff -- data/strings/ | head -200
+            exit 1
+          fi
+          echo "Locale pack is in sync with Android strings.xml."

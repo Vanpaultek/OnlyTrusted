@@ -1,0 +1,58 @@
+{
+  "name": "@vanpaultek/locale",
+  "version": "0.1.0",
+  "description": "195-country × 5-region locale directory and 9-language string bundles used by OnlyTrusted. Platform-neutral JSON + tiny TypeScript helpers.",
+  "keywords": [
+    "i18n",
+    "l10n",
+    "locale",
+    "countries",
+    "regions",
+    "iso-3166",
+    "bcp-47",
+    "onlytrusted",
+    "vanpaultek"
+  ],
+  "homepage": "https://github.com/vanpaultek/vanpaultek-locale#readme",
+  "bugs": {
+    "url": "https://github.com/vanpaultek/vanpaultek-locale/issues",
+    "email": "admin@vanpaultek.com"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "VanPaulTek Inc <admin@vanpaultek.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanpaultek/vanpaultek-locale.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./countries.json": "./data/countries.json",
+    "./strings/*.json": "./data/strings/*.json"
+  },
+  "files": [
+    "dist",
+    "data",
+    "docs",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.10.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build && npm test",
+    "test": "node --test test/smoke.test.mjs",
+    "extract:android": "python3 scripts/extract-android-strings.py"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}
